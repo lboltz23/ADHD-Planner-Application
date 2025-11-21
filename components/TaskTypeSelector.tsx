@@ -120,6 +120,7 @@ export function TaskTypeSelector({
     },
     buttonTextRegular: {
       fontSize: 14,
+      fontWeight: '600',
     },
   });
 

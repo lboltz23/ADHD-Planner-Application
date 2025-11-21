@@ -138,7 +138,7 @@ export function Dashboard({
       fontSize: 14,
     },
     focusCard: {
-      backgroundColor: '#a8d8ea',
+      backgroundColor: settings.colorBlindMode ?  "#209ce5ff" : '#96d7efff',
       borderRadius: 12,
       padding: 16,
       marginBottom: 20,
@@ -391,7 +391,7 @@ export function Dashboard({
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Upcoming</Text>
 
-            
+
             {upcomingTasks.length === 0 ? (
               <Text style={styles.noTasksMessage}>No upcoming tasks</Text>
             ) : (
