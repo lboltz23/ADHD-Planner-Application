@@ -136,7 +136,7 @@ export function TaskTypeSelector({
             style={[
               styles.button,
               {
-                backgroundColor: type.bgColor,
+                backgroundColor: isSelected ? "#ffffffff" : type.bgColor,
                 borderColor: colorBlindMode && isSelected ? type.color : 'transparent',
                 borderWidth: isSelected ? (colorBlindMode ? 2 : 0) : 0,
               },

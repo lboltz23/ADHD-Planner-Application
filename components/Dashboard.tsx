@@ -41,6 +41,7 @@ export function Dashboard({
 }: DashboardProps) {
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [selectedType, setSelectedType] = useState<TaskType>('basic');
+  const [taskView, setTaskView] = useState<'today' | 'upcoming'>('today');
   // Ref to track previous progress for confetti trigger
   const previousProgressRef = useRef(0);
 
@@ -332,35 +333,70 @@ export function Dashboard({
           </View>
         </View>
 
-        {/* Today's Tasks Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Today</Text>
-          {todayTasks.length === 0 ? (
-            <Text style={styles.noTasksMessage}>No tasks for today</Text>
-          ) : (
-            <View style={styles.tasksList}>
-              {todayTasks.map((task) => (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  onToggle={onToggleTask}
-                  onReschedule={onRescheduleTask}
-                  colorBlindMode={settings.colorBlindMode}
-                />
-              ))}
-            </View>
-          )}
+        {/* Task View Filter Buttons */}
+        <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 8, marginBottom: 20 }}>
+          <TouchableOpacity
+            onPress={() => setTaskView('today')}
+            style={{
+            paddingVertical: 8,
+            paddingHorizontal: 16,
+            borderRadius: 8,
+            backgroundColor: taskView === 'today' ? '#b8a4d9' : '#ffffff',
+            borderWidth: 1,
+            borderColor: '#e5d9f2',
+            }}
+          >
+            <Text style={{ color: taskView === 'today' ? '#ffffff' : '#6b5b7f', fontWeight: '600' }}>
+              Today
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => setTaskView('upcoming')}
+            style={{
+              paddingVertical: 8,
+              paddingHorizontal: 16,
+              borderRadius: 8,
+              backgroundColor: taskView === 'upcoming' ? '#a8d8ea' : '#ffffff',
+              borderWidth: 1,
+              borderColor: '#e5d9f2',
+            }}
+          >
+            <Text style={{ color: taskView === 'upcoming' ? '#ffffff' : '#6b5b7f', fontWeight: '600' }}>
+              Upcoming
+            </Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Upcoming Tasks Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Upcoming</Text>
-          {upcomingTasks.length === 0 ? (
-            <Text style={styles.noTasksMessage}>No upcoming tasks</Text>
-          ) : (
-            <View style={styles.tasksList}>
-              {upcomingTasks.map((task) => (
-                <View key={task.id}>
+        {taskView === 'today' ? (      
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Today</Text>
+            {todayTasks.length === 0 ? (
+              <Text style={styles.noTasksMessage}>No tasks for today</Text>
+            ) : (
+              <View style={styles.tasksList}>
+                {todayTasks.map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    onToggle={onToggleTask}
+                    onReschedule={onRescheduleTask}
+                    colorBlindMode={settings.colorBlindMode}
+                  />
+                ))}
+              </View>
+            )}
+          </View>
+        ) : (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Upcoming</Text>
+
+            
+            {upcomingTasks.length === 0 ? (
+              <Text style={styles.noTasksMessage}>No upcoming tasks</Text>
+            ) : (
+              <View style={styles.tasksList}>
+                {upcomingTasks.map((task) => (
                   <TaskCard
                     task={task}
                     onToggle={onToggleTask}
@@ -368,11 +404,13 @@ export function Dashboard({
                     colorBlindMode={settings.colorBlindMode}
                     showDate={true}
                   />
-                </View>
-              ))}
-            </View>
-          )}
-        </View>
+                ))}
+              </View>
+            )}
+          </View>
+        )}
+
+
       </ScrollView>
     </SafeAreaView>
   );
