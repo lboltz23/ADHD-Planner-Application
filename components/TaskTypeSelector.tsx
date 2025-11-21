@@ -6,7 +6,7 @@ import {
   StyleSheet,
   ViewStyle,
 } from 'react-native';
-import { Repeat, CheckSquare, Link as LinkIcon } from "lucide-react-native";
+import { Repeat, CheckSquare, Link as LinkIcon, Hourglass } from "lucide-react-native";
 import { TaskType } from "../App";
 import { getTaskTypeColor } from "./taskColors";
 
@@ -53,6 +53,13 @@ export function TaskTypeSelector({
           color: getTaskTypeColor("related", true),
           bgColor: "#f5f5f5",
         },
+        {          
+          value: "long_interval",
+          label: "Long-Interval",
+          icon: Hourglass,
+          color: getTaskTypeColor("long_interval", true),
+          bgColor: "#f5f5f5",
+        }
       ];
     }
 
@@ -77,6 +84,13 @@ export function TaskTypeSelector({
         icon: LinkIcon,
         color: "#ffc9d4",
         bgColor: "#fff5f7",
+      },
+      {
+        value: "long_interval",
+        label: "Long-Interval",
+        icon: Hourglass,
+        color: "#f5a4e0ff",
+        bgColor: "#f8edf5ff",
       },
     ];
   };

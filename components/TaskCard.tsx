@@ -11,6 +11,7 @@ import {
   Link as LinkIcon,
   CheckCircle2,
   CalendarClock,
+  Hourglass,
 } from "lucide-react-native";
 import { Task } from "../App";
 import { getTaskTypeColor } from "./taskColors";
@@ -49,6 +50,7 @@ export function TaskCard({
       routine: Repeat,
       basic: CheckSquare,
       related: LinkIcon,
+      long_interval: Hourglass,
     };
 
     if (colorBlindMode) {
@@ -89,6 +91,15 @@ export function TaskCard({
           completedColor: "#ffd9e1",
           backgroundColor: "#ffffff",
           Icon: LinkIcon,
+        };
+      case "long_interval":
+        return {
+          gradient: "#fff0fbff",
+          borderColor: "#f5a4e0ff",
+          iconColor: "#f5a4e0ff",
+          completedColor: "#f1cfe8ff",
+          backgroundColor: "#ffffff",
+          Icon: Hourglass,
         };
     }
   };

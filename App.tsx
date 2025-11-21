@@ -5,7 +5,7 @@ import { CalendarView } from "./components/CalendarView";
 import { OneThingMode } from "./components/OneThingMode";
 import { Settings, SettingsData } from "./components/Settings";
 
-export type TaskType = "routine" | "basic" | "related";
+export type TaskType = "routine" | "basic" | "related" | "long_interval";
 
 export interface Task {
   id: string;
@@ -53,6 +53,13 @@ export default function App() {
       date: new Date(Date.now() + 172800000), // Day after tomorrow
       completed: false,
       type: "basic",
+    },
+    {
+      id: "5",
+      title: "Organize workspace",
+      date: new Date(Date.now() + 259200000), // In three days
+      completed: false,
+      type: "long_interval",
     },
   ]);
 

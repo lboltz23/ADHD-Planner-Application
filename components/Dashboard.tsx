@@ -325,7 +325,7 @@ export function Dashboard({
             <TouchableOpacity
               style={styles.addButton}
               onPress={handleAddTask}
-              activeOpacity={0.8}
+              activeOpacity={0.9}
             >
               <Text style={{ fontSize: 24, color: '#ffffff' }}>+</Text>
             </TouchableOpacity>

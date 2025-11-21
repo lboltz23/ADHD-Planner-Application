@@ -23,7 +23,7 @@ export interface SettingsData {
   soundEnabled: boolean;
   confettiEnabled: boolean;
   theme: "auto" | "light" | "dark";
-  defaultTaskView: "all" | "routine" | "basic" | "related";
+  defaultTaskView: "all" | "routine" | "basic" | "related" | "long_interval" ;
   colorBlindMode: boolean;
 }
 
@@ -212,6 +212,7 @@ export function Settings({
     'routine',
     'basic',
     'related',
+    'long_interval',
   ];
 
   return (
