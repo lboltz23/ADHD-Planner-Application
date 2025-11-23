@@ -390,14 +390,13 @@ export function Dashboard({
         ) : (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Upcoming</Text>
-
-
             {upcomingTasks.length === 0 ? (
               <Text style={styles.noTasksMessage}>No upcoming tasks</Text>
             ) : (
               <View style={styles.tasksList}>
                 {upcomingTasks.map((task) => (
                   <TaskCard
+                    key={task.id}
                     task={task}
                     onToggle={onToggleTask}
                     onReschedule={onRescheduleTask}
