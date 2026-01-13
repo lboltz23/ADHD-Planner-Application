@@ -13,7 +13,7 @@ import {
   CalendarClock,
   Hourglass,
 } from "lucide-react-native";
-import { Task } from "../../../App";
+import { Task } from "../types";
 import { getTaskTypeColor } from "./taskColors";
 import RescheduleDialog from "./RescheduleDialog";
 

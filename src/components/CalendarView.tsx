@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Plus } from 'lucide-react-native';
-import { Task, TaskType } from '../../../App';
+import { Task, TaskType } from '../types';
 import { SettingsData } from './Settings';
 import { ProgressCircle } from './ProgressCircle';
 import { TaskTypeSelector } from './TaskTypeSelector';

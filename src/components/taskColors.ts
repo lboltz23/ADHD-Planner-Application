@@ -1,4 +1,4 @@
-import { Task } from "../../../App";
+import { Task } from "../types";
 
 export interface TaskColorScheme {
   routine: string;
