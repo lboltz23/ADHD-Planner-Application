@@ -13,9 +13,9 @@ import {
   CalendarClock,
   Hourglass,
 } from "lucide-react-native";
-import { Task } from "../App";
+import { Task } from "../../../App";
 import { getTaskTypeColor } from "./taskColors";
-import RescheduleDialog from "../components/RescheduleDialog";
+import RescheduleDialog from "./RescheduleDialog";
 
 interface TaskCardProps {
   task: Task;

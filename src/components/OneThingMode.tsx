@@ -14,7 +14,7 @@ import {
   RotateCcw,
   CheckCircle2,
 } from 'lucide-react-native';
-import { Task } from '../App';
+import { Task } from '../../../App';
 import { SettingsData } from './Settings';
 import { getTaskTypeColor } from './taskColors';
 import { SafeAreaView } from 'react-native-safe-area-context';

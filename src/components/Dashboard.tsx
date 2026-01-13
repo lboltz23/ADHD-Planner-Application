@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Settings, Calendar, Zap } from 'lucide-react-native';
-import { Task, TaskType } from '../App';
+import { Task, TaskType } from '../../../App';
 import { SettingsData } from './Settings';
 import { TaskTypeSelector } from './TaskTypeSelector';
 import { TaskCard } from './TaskCard';

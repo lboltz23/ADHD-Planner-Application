@@ -7,7 +7,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { Repeat, CheckSquare, Link as LinkIcon, Hourglass } from "lucide-react-native";
-import { TaskType } from "../App";
+import { TaskType } from "../../../App";
 import { getTaskTypeColor } from "./taskColors";
 
 interface TaskTypeSelectorProps {
