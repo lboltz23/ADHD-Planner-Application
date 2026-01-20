@@ -52,6 +52,12 @@ export function Dashboard({
     }
   };
 
+  const handleProgressBar = () => {
+    if (todayTasks.length === 0)
+      return false;
+    return true;
+  }
+
   const todayTasks = tasks.filter((task) => {
     const today = new Date();
     const taskDate = new Date(task.date);
@@ -289,7 +295,7 @@ export function Dashboard({
         </TouchableOpacity>
 
         {/* Progress Card */}
-        <View style={styles.progressCard}>
+        {handleProgressBar() && (<View style={styles.progressCard}>
           <Text style={styles.progressLabel}>Today's Progress</Text>
           <Text style={styles.progressSub}>
             {completedTodayTasks} of {todayTasks.length} tasks completed
@@ -302,7 +308,7 @@ export function Dashboard({
               ]}
             />
           </View>
-        </View>
+        </View>)}
 
         {/* Add Task Section */}
         <View style={styles.addTaskCard}>
