@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, Modal, TouchableOpacity, StyleSheet } from "react-native";
 import { Calendar } from "react-native-calendars";
 import { LinearGradient } from "expo-linear-gradient";
@@ -10,6 +10,7 @@ interface RescheduleDialogProps {
   onClose: () => void;
   onReschedule: (newDate: string) => void;
   taskTitle: string;
+  currentDate?: Date | string;
 }
 
 const encouragingMessages = [
@@ -28,11 +29,31 @@ export default function RescheduleDialog({
   onClose,
   onReschedule,
   taskTitle,
+  currentDate,
 }: RescheduleDialogProps) {
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [message] = useState(
     () => encouragingMessages[Math.floor(Math.random() * encouragingMessages.length)]
   );
+
+  // Reset selected date when dialog opens/closes
+  useEffect(() => {
+    if (!isOpen) {
+      setSelectedDate("");
+    }
+  }, [isOpen]);
+
+  // Convert current date to YYYY-MM-DD format for marking (using local timezone)
+  const getCurrentDateString = () => {
+    if (!currentDate) return null;
+    const date = new Date(currentDate);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const currentDateString = getCurrentDateString();
 
   const handleReschedule = () => {
     if (selectedDate) {
@@ -68,11 +89,27 @@ export default function RescheduleDialog({
           {/* Calendar */}
           <Calendar
             onDayPress={(day) => setSelectedDate(day.dateString)}
-            markedDates={
-              selectedDate
-                ? { [selectedDate]: { selected: true, selectedColor: "#b8a4d9" } }
-                : {}
-            }
+            markedDates={{
+              ...(currentDateString && !selectedDate
+                ? {
+                    [currentDateString]: {
+                      marked: true,
+                      dotColor: "#b8a4d9",
+                    }
+                  }
+                : {}),
+              ...(selectedDate
+                ? {
+                    [selectedDate]: {
+                      selected: true,
+                      selectedColor: "#b8a4d9",
+                      marked: true,
+                      dotColor: "white"
+                    }
+                  }
+                : {})
+            }}
+            minDate={new Date().toISOString().split('T')[0]}
             theme={{
               todayTextColor: "#a8d8ea",
               arrowColor: "#a8d8ea",
