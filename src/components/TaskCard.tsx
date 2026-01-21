@@ -200,7 +200,7 @@ export function TaskCard({
           <View style={styles.iconContainer}>
             <IconComponent
               size={colorBlindMode ? 18 : 16}
-              color={style.iconColor}
+              color={colorBlindMode ? style.iconColor : "#ffffff"}
               opacity={task.completed ? 0.5 : 1}
               strokeWidth={colorBlindMode ? 2.5 : 2}
             />
