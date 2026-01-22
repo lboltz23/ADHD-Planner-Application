@@ -17,6 +17,8 @@ import {
   Eye,
 } from 'lucide-react-native';
 import Slider  from '@react-native-community/slider';
+import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export interface SettingsData {
   defaultTimerMinutes: number;
@@ -140,6 +142,11 @@ export function Settings({
       fontWeight: '700',
       color: '#6b5b7f',
     },
+    headerRight: {
+      flex:1,
+      alignItems:'flex-end',
+      alignContent:'flex-end',
+    },
     settingRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',
@@ -204,6 +211,20 @@ export function Settings({
       color: '#999',
       textAlign: 'center',
     },
+    mainButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#b8a4d9',
+      paddingVertical: 10,
+      paddingHorizontal: 14,
+      borderRadius: 8,
+      gap: 6,
+    },
+    mainButtonText: {
+      color: '#ffffff',
+      fontWeight: '600',
+      fontSize: 14,
+    },
   });
 
   const themeOptions: SettingsData['theme'][] = ['auto', 'light', 'dark'];
@@ -214,16 +235,25 @@ export function Settings({
     'related',
     'long_interval',
   ];
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
+    <View style={[styles.container,{paddingTop:insets.top,backgroundColor: '#b8a4d9',}]}>
+      <ScrollView style={[styles.scrollContent,{backgroundColor:"white"}]} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={onNavigateBack}>
             <ArrowLeft size={20} color="#6b5b7f" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Settings</Text>
+          <View style={styles.headerRight}>
+            <TouchableOpacity
+              style={styles.mainButton}
+              onPress={() => router.push('/login')}>
+              <Text style={styles.mainButtonText}>Login In</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Timer Settings */}
@@ -432,6 +462,6 @@ export function Settings({
           </Text>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }

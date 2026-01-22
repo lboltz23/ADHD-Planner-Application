@@ -1,0 +1,193 @@
+* commit f222ea401efbeeb78c4d92080fb6b466c9ea2b97 (HEAD -> prototype, origin/prototype)
+| Author: lboltz23 <lacey.boltz@gmail.com>
+| Date:   Mon Jan 12 20:45:40 2026 -0600
+| 
+|     Fixed a couple bugs
+| 
+|  src/components/CalendarView.tsx     | 2 +-
+|  src/components/Dashboard.tsx        | 2 +-
+|  src/components/OneThingMode.tsx     | 2 +-
+|  src/components/TaskCard.tsx         | 2 +-
+|  src/components/TaskTypeSelector.tsx | 2 +-
+|  src/components/taskColors.ts        | 2 +-
+|  6 files changed, 6 insertions(+), 6 deletions(-)
+| 
+* commit 34ff14614a242619cef603711e581bc3a4ca7a73
+| Author: lboltz23 <lacey.boltz@gmail.com>
+| Date:   Mon Jan 12 20:17:56 2026 -0600
+| 
+|     reorganized file structure for scalability
+| 
+|  App.tsx                                           |  133 --
+|  app/index.tsx                                     |    3 -
+|  package-lock.json                                 | 1688 +++++++++----------
+|  package.json                                      |   28 +-
+|  src/app/CalendarView.tsx                          |   31 +
+|  src/app/OneThingMode.tsx                          |   29 +
+|  src/app/Settings.tsx                              |   28 +
+|  src/app/_layout.tsx                               |   23 +
+|  src/app/index.tsx                                 |   33 +
+|  .../assets}/images/android-icon-background.png    |  Bin
+|  .../assets}/images/android-icon-foreground.png    |  Bin
+|  .../assets}/images/android-icon-monochrome.png    |  Bin
+|  {assets => src/assets}/images/favicon.png         |  Bin
+|  {assets => src/assets}/images/icon.png            |  Bin
+|  .../assets}/images/partial-react-logo.png         |  Bin
+|  {assets => src/assets}/images/react-logo.png      |  Bin
+|  {assets => src/assets}/images/react-logo@2x.png   |  Bin
+|  {assets => src/assets}/images/react-logo@3x.png   |  Bin
+|  {assets => src/assets}/images/splash-icon.png     |  Bin
+|  {components => src/components}/CalendarView.tsx   |    2 +-
+|  {components => src/components}/Dashboard.tsx      |    2 +-
+|  {components => src/components}/OneThingMode.tsx   |    2 +-
+|  {components => src/components}/ProgressCircle.tsx |    0
+|  .../components}/RescheduleDialog.tsx              |    0
+|  {components => src/components}/Settings.tsx       |    0
+|  {components => src/components}/TaskCard.tsx       |    4 +-
+|  .../components}/TaskTypeSelector.tsx              |    2 +-
+|  {components => src/components}/taskColors.ts      |    2 +-
+|  {constants => src/constants}/theme.ts             |    0
+|  src/contexts/AppContext.tsx                       |  114 ++
+|  {hooks => src/hooks}/use-color-scheme.ts          |    0
+|  {hooks => src/hooks}/use-color-scheme.web.ts      |    0
+|  {hooks => src/hooks}/use-theme-color.ts           |    4 +-
+|  src/types/index.ts                                |   12 +
+|  tsconfig.json                                     |    2 +-
+|  35 files changed, 1100 insertions(+), 1042 deletions(-)
+| 
+* commit d58ddc8950544edaf0a0d2d0cda3c1e27b6eb3ae
+| Author: lboltz23 <lacey.boltz@gmail.com>
+| Date:   Mon Jan 12 12:48:51 2026 -0600
+| 
+|     Fixed package vulnerabilities
+| 
+|  package-lock.json | 24 ++++++++++++------------
+|  1 file changed, 12 insertions(+), 12 deletions(-)
+| 
+* commit 204c03825705bad21e80b360909d762a7f7b8264
+| Author: lboltz23 <lacey.boltz@gmail.com>
+| Date:   Sat Nov 22 18:56:32 2025 -0600
+| 
+|     Fixed Key Error
+| 
+|  components/Dashboard.tsx | 3 +--
+|  1 file changed, 1 insertion(+), 2 deletions(-)
+| 
+* commit 9e993c535e098a058ea29e275faaa479fbe9623b
+| Author: lboltz23 <lacey.boltz@gmail.com>
+| Date:   Fri Nov 21 12:37:32 2025 -0600
+| 
+|     Small change for Colors and filter buttons
+| 
+|  components/Dashboard.tsx        | 4 ++--
+|  components/TaskTypeSelector.tsx | 1 +
+|  2 files changed, 3 insertions(+), 2 deletions(-)
+| 
+* commit 6cd0d36f507ce8b94c189d54037f88aae62eb3d8
+| Author: lboltz23 <lacey.boltz@gmail.com>
+| Date:   Thu Nov 20 21:09:48 2025 -0600
+| 
+|     Added filter buttons for task day
+| 
+|  components/Dashboard.tsx        | 102 ++++++++++++++++++++++++++------------
+|  components/TaskTypeSelector.tsx |   2 +-
+|  2 files changed, 71 insertions(+), 33 deletions(-)
+| 
+* commit ef76fc4ab967604aecc4c51439cd6102e6332c14
+| Author: lboltz23 <lacey.boltz@gmail.com>
+| Date:   Thu Nov 20 20:11:11 2025 -0600
+| 
+|     Added Long-Interval Task Type
+| 
+|  App.tsx                         |  9 ++++++++-
+|  components/Dashboard.tsx        |  2 +-
+|  components/Settings.tsx         |  3 ++-
+|  components/TaskCard.tsx         | 11 +++++++++++
+|  components/TaskTypeSelector.tsx | 16 +++++++++++++++-
+|  components/taskColors.ts        |  7 +++++--
+|  6 files changed, 42 insertions(+), 6 deletions(-)
+| 
+* commit da693cd14df24c131118c1d7518265beba438eba
+| Author: lboltz23 <lacey.boltz@gmail.com>
+| Date:   Wed Nov 12 16:59:48 2025 -0600
+| 
+|     Changes for rescheduling
+| 
+|  .expo-shared/README.md              |  11 +
+|  .expo-shared/assets.json            |   1 +
+|  App.tsx                             | 126 +++++++++
+|  app/(tabs)/_layout.tsx              |  35 ---
+|  app/(tabs)/explore.tsx              | 112 --------
+|  app/(tabs)/index.tsx                |  98 -------
+|  app/_layout.tsx                     |  24 --
+|  app/index.tsx                       |   3 +
+|  app/modal.tsx                       |  29 ---
+|  components/CalendarView.tsx         | 467 ++++++++++++++++++++++++++++++++++
+|  components/Dashboard.tsx            | 379 +++++++++++++++++++++++++++
+|  components/OneThingMode.tsx         | 437 +++++++++++++++++++++++++++++++
+|  components/ProgressCircle.tsx       | 108 ++++++++
+|  components/RescheduleDialog.tsx     | 195 ++++++++++++++
+|  components/Settings.tsx             | 436 +++++++++++++++++++++++++++++++
+|  components/TaskCard.tsx             | 228 +++++++++++++++++
+|  components/TaskTypeSelector.tsx     | 150 +++++++++++
+|  components/external-link.tsx        |  25 --
+|  components/haptic-tab.tsx           |  18 --
+|  components/hello-wave.tsx           |  19 --
+|  components/parallax-scroll-view.tsx |  79 ------
+|  components/taskColors.ts            |  26 ++
+|  components/themed-text.tsx          |  60 -----
+|  components/themed-view.tsx          |  14 -
+|  components/ui/collapsible.tsx       |  45 ----
+|  components/ui/icon-symbol.ios.tsx   |  32 ---
+|  components/ui/icon-symbol.tsx       |  41 ---
+|  package-lock.json                   | 330 +++++++++++++++++++++++-
+|  package.json                        |  16 +-
+|  29 files changed, 2905 insertions(+), 639 deletions(-)
+| 
+* commit 83bd28a8a45144dd4d703740646641f7ebeb3f0b
+  Author: lboltz23 <lacey.boltz@gmail.com>
+  Date:   Sun Nov 9 21:20:03 2025 -0600
+  
+      Initial commit
+      
+      Generated by create-expo-app 3.5.3.
+  
+   .gitignore                                |    43 +
+   .vscode/extensions.json                   |     1 +
+   .vscode/settings.json                     |     7 +
+   README.md                                 |    50 +
+   app.json                                  |    48 +
+   app/(tabs)/_layout.tsx                    |    35 +
+   app/(tabs)/explore.tsx                    |   112 +
+   app/(tabs)/index.tsx                      |    98 +
+   app/_layout.tsx                           |    24 +
+   app/modal.tsx                             |    29 +
+   assets/images/android-icon-background.png |   Bin 0 -> 17549 bytes
+   assets/images/android-icon-foreground.png |   Bin 0 -> 78796 bytes
+   assets/images/android-icon-monochrome.png |   Bin 0 -> 4140 bytes
+   assets/images/favicon.png                 |   Bin 0 -> 1129 bytes
+   assets/images/icon.png                    |   Bin 0 -> 393493 bytes
+   assets/images/partial-react-logo.png      |   Bin 0 -> 5075 bytes
+   assets/images/react-logo.png              |   Bin 0 -> 6341 bytes
+   assets/images/react-logo@2x.png           |   Bin 0 -> 14225 bytes
+   assets/images/react-logo@3x.png           |   Bin 0 -> 21252 bytes
+   assets/images/splash-icon.png             |   Bin 0 -> 17547 bytes
+   components/external-link.tsx              |    25 +
+   components/haptic-tab.tsx                 |    18 +
+   components/hello-wave.tsx                 |    19 +
+   components/parallax-scroll-view.tsx       |    79 +
+   components/themed-text.tsx                |    60 +
+   components/themed-view.tsx                |    14 +
+   components/ui/collapsible.tsx             |    45 +
+   components/ui/icon-symbol.ios.tsx         |    32 +
+   components/ui/icon-symbol.tsx             |    41 +
+   constants/theme.ts                        |    53 +
+   eslint.config.js                          |    10 +
+   hooks/use-color-scheme.ts                 |     1 +
+   hooks/use-color-scheme.web.ts             |    21 +
+   hooks/use-theme-color.ts                  |    21 +
+   package-lock.json                         | 13387 ++++++++++++++++++++++++++
+   package.json                              |    47 +
+   scripts/reset-project.js                  |   112 +
+   tsconfig.json                             |    17 +
+   38 files changed, 14449 insertions(+)

@@ -5,7 +5,7 @@ import { AppProvider } from '../contexts/AppContext';
 
 export default function Layout() {
   return (
-    <SafeAreaProvider>
+    <SafeAreaProvider >
       <AppProvider>
         <Stack
           screenOptions={{
@@ -16,6 +16,8 @@ export default function Layout() {
           <Stack.Screen name="CalendarView" />
           <Stack.Screen name="OneThingMode" />
           <Stack.Screen name="Settings" />
+          <Stack.Screen name="login" />
+          <Stack.Screen name="signup" />
         </Stack>
       </AppProvider>
     </SafeAreaProvider>
