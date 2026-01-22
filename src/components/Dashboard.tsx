@@ -204,19 +204,19 @@ export function Dashboard({
       borderColor: '#e5d9f2',
       borderRadius: 8,
       paddingHorizontal: 12,
-      paddingVertical: 10,
+      paddingVertical: 8,
       fontSize: 14,
       color: '#333',
     },
     addButton: {
       backgroundColor: '#a8d8ea',
-      borderRadius: 8,
-      padding: 10,
+      borderRadius: 6,
+      padding: 8,
       justifyContent: 'center',
       alignItems: 'center',
     },
     typeSelector: {
-      marginBottom: 8,
+      marginBottom: 16,
     },
     section: {
       marginBottom: 20,
@@ -235,6 +235,16 @@ export function Dashboard({
     },
     tasksList: {
       gap: 8,
+    },
+    addTaskBorder: {
+      backgroundColor: '#ffffff',
+      height: 125,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: '#e5d9f2',
+      padding: 10,
+      marginBottom: 15,
+      paddingVertical: 10,
     },
   });
 
@@ -305,7 +315,7 @@ export function Dashboard({
         </View>
 
         {/* Add Task Section */}
-        <View style={styles.addTaskCard}>
+        <View style={styles.addTaskBorder}>
           <View style={styles.typeSelector}>
             <TaskTypeSelector
               selectedType={selectedType}
@@ -332,7 +342,7 @@ export function Dashboard({
             </TouchableOpacity>
           </View>
         </View>
-
+            
         {/* Task View Filter Buttons */}
         <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 8, marginBottom: 20 }}>
           <TouchableOpacity
