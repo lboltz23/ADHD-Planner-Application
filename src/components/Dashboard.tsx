@@ -73,6 +73,38 @@ export function Dashboard({
       ? (completedTodayTasks / todayTasks.length) * 100
       : 0;
 
+  // Calculate streak count
+  const [streakCount, setStreakCount] = useState(0);
+
+  useEffect(() => {
+    const calculateStreak = () => {
+      let streak = 100000000;
+      let currentDate = new Date();
+      currentDate.setHours(0, 0, 0, 0);
+
+      while (streak < 30) {
+        const dateString = currentDate.toDateString();
+        const tasksForDate = tasks.filter((task) => {
+          const taskDate = new Date(task.date);
+          taskDate.setHours(0, 0, 0, 0);
+          return taskDate.toDateString() === dateString && task.completed;
+        });
+
+        if (tasksForDate.length > 0) {
+          streak++;
+        } else {
+          break;
+        }
+
+        currentDate.setDate(currentDate.getDate() - 1);
+      }
+
+      setStreakCount(streak);
+    };
+
+    calculateStreak();
+  }, [tasks]);
+
   useEffect(() => {
     if (
       todayProgress === 100 &&
@@ -236,6 +268,39 @@ export function Dashboard({
     tasksList: {
       gap: 8,
     },
+    streakContainer: {
+      backgroundColor: '#ffffff',
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 20,
+      borderWidth: 1,
+      borderColor: '#e5d9f2',
+      alignItems: 'center',
+    },
+    streakText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: '#6b5b7f',
+    },
+    streakBadge: {
+      backgroundColor: '#ffe5cc',
+      paddingVertical: 8,
+      paddingHorizontal: 10,
+      borderRadius: 8,
+      alignItems: 'center',
+      justifyContent: 'center',
+      minWidth: 50,
+    },
+    streakBadgeText: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: '#ff9500',
+    },
+    streakBadgeLabel: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: '#ff9500',
+    },
   });
 
   return (
@@ -255,6 +320,10 @@ export function Dashboard({
             </Text>
           </View>
           <View style={styles.headerRight}>
+            <View style={styles.streakBadge}>
+              <Text style={styles.streakBadgeText}>{streakCount}</Text>
+              <Text style={styles.streakBadgeLabel}>day</Text>
+            </View>
             <TouchableOpacity
               style={styles.iconButton}
               onPress={onNavigateToSettings}
@@ -303,6 +372,8 @@ export function Dashboard({
             />
           </View>
         </View>
+
+        {/* Streak Counter */}
 
         {/* Add Task Section */}
         <View style={styles.addTaskCard}>
