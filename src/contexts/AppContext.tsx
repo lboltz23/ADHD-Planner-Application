@@ -10,6 +10,8 @@ interface AppContextType {
   toggleTask: (id: string) => void;
   rescheduleTask: (id: string, newDate: Date, newTime?: string) => void;
   updateSettings: (newSettings: SettingsData) => void;
+  streakCount: number;
+  login: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -62,6 +64,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     colorBlindMode: false,
   });
 
+  const [streakCount, setStreakCount] = useState<number>(0);
+  const [lastLoginDate, setLastLoginDate] = useState<Date | null>(null);
+
   const addTask = (title: string, date: Date, type: TaskType) => {
     const newTask: Task = {
       id: Date.now().toString(),
@@ -89,6 +94,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSettings(newSettings);
   };
 
+  const updateStreak = () => {
+    const today = new Date();
+    if (lastLoginDate) {
+      const diffTime = Math.abs(today.getTime() - lastLoginDate.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      if (diffDays === 1) {
+        setStreakCount(prev => prev + 1);
+      } else if (diffDays > 1) {
+        setStreakCount(1);
+      }
+    } else {
+      setStreakCount(1);
+    }
+    setLastLoginDate(today);
+  };
+
+  const login = () => {
+    updateStreak();
+  };
+
+  // Call login() whenever the user logs in
+
   return (
     <AppContext.Provider
       value={{
@@ -98,6 +125,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         toggleTask,
         rescheduleTask,
         updateSettings,
+        streakCount,
+        login,
       }}
     >
       {children}
