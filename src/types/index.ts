@@ -8,5 +8,9 @@ export interface Task {
   completed: boolean;
   type: TaskType;
   time?: string;
+  notes?: string;
+  repeatFrequency?: "daily" | "weekly" | "monthly";
+  intervalDays?: number;
+  parentTaskId?: string;
 }
 
