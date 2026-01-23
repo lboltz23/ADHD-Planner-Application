@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Settings, Calendar, Zap } from 'lucide-react-native';
-import { Task, TaskType } from '../types';
+import { Task, TaskType, CreateTaskParams } from '../types';
 import { SettingsData } from './Settings';
 import { TaskTypeSelector } from './TaskTypeSelector';
 import { TaskCard } from './TaskCard';
@@ -22,7 +22,7 @@ interface DashboardProps {
   onNavigateToOneThingMode: () => void;
   onNavigateToSettings: () => void;
   tasks: Task[];
-  onAddTask: (title: string, date: Date, type: TaskType) => void;
+  onAddTask: (params: CreateTaskParams) => void;
   onToggleTask: (id: string) => void;
   onRescheduleTask: (id: string, newDate: Date) => void;
   settings: SettingsData;
@@ -48,13 +48,13 @@ export function Dashboard({
   const previousProgressRef = useRef(0);
 
   const handleAddTask = () => {
-    if (newTaskTitle.trim()) {
+    if (newTaskTitle.trim() && !showAddTaskDialog) {
       setShowAddTaskDialog(true);
     }
   };
 
-  const handleCreateTask = (title: string, date: Date, type: TaskType) => {
-    onAddTask(title, date, type);
+  const handleCreateTask = (params: CreateTaskParams) => {
+    onAddTask(params);
     setNewTaskTitle('');  // Clear the input field
     setShowAddTaskDialog(false);
   };
