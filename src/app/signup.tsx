@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useApp } from '../contexts/AppContext';
 
 export default function CalendarViewScreen() {
-  const router = useRouter();
+   const router = useRouter();
   const { tasks, settings, addTask, toggleTask, rescheduleTask } = useApp();
   const insets = useSafeAreaInsets();
   const [username, setUsername] = useState("");
@@ -40,63 +40,63 @@ export default function CalendarViewScreen() {
 
 
   return (
-    <View style={[,styles.container,{paddingTop:insets.top,backgroundColor:'#b8a4d9'}]}>
+    <View style={[,styles.container,{paddingTop:insets.top,backgroundColor:'#b8a4d9',width:"100%",justifyContent:'center'}]}>
       <View style={[styles.container,{padding:16}]}>
         <View style={styles.headerRight}>
-            <TouchableOpacity style={styles.backButton} onPress={() => router.push('/login')}>
+            <TouchableOpacity style={styles.backButton} onPress={() => router.push('/Settings')}>
               <ArrowLeft size={20} color="#6b5b7f" />
             </TouchableOpacity>
         </View>
-        <View style={[{alignItems:"center",justifyContent:'center'},styles.container]}>
-          <View style={styles.section}>
+         <View style={[{justifyContent:'center',width:"100%"},styles.container]}>
+          <View style={[styles.section]}>
             <View style={styles.header}>
               <Text style={styles.headerTitle}>Sign Up</Text>
             </View>
             <View style={styles.settingRow}>
               <Text style={[styles.settingLabelText,{paddingRight:2}]}>Username:</Text>
               <TextInput 
-              style={{borderColor: '#e5d9f2',borderWidth:1,width:"80%",borderRadius:5,paddingHorizontal:2}}
+              style={{borderColor: '#e5d9f2',borderWidth:1,borderRadius:5,paddingHorizontal:2, flex:1}}
               value={username}
               onChangeText={setUsername}
               />
             </View>
             <View style = {{alignItems:'flex-start'}}>
-              {username.length < 3 && <Text style = {{color:"red"}}>Username Must At Least Be 3 Characters</Text>}
+              {username.length < 3 && username!="" && <Text style = {{color:"red"}}>Username Must At Least Be 3 Characters</Text>}
 
             </View>
             <View style={styles.settingRow}>
               <Text style={[styles.settingLabelText,{paddingRight:2}]}>Email:</Text>
               <TextInput 
-              style={{borderColor: '#e5d9f2',borderWidth:1,width:"80%",borderRadius:5,paddingHorizontal:2}}
+              style={{borderColor: '#e5d9f2',borderWidth:1,borderRadius:5,paddingHorizontal:2, flex:1}}
               value={email}
               onChangeText={setEmail}
               />
             </View>
             <View style = {{alignItems:'flex-start'}}>
-              {!validEmail(email) && <Text style = {{color:"red"}}>Invalid Email</Text>}
+              {!validEmail(email) && email !="" && <Text style = {{color:"red"}}>Invalid Email</Text>}
 
             </View>
             <View style={styles.settingRow}>
               <Text style={[styles.settingLabelText,{paddingRight:2}]}>Password:</Text>
-              <TextInput style={{borderColor: '#e5d9f2',borderWidth:1,width:"80%",borderRadius:5,paddingHorizontal:2}}
+              <TextInput style={{borderColor: '#e5d9f2',borderWidth:1,maxWidth:"80%",borderRadius:5,paddingHorizontal:2, flex:1}}
               value={password}
               onChangeText={setPassword}/>
             </View>
             <View style = {{alignItems:'flex-start'}}>
-              {!hasNumber(password) && <Text style = {{color:"red"}}>Needs At Least 1 Number</Text>}
-              {!hasLetter(password) && <Text style = {{color:"red"}}>Needs At Least 1 Letter</Text>}
-              {!hasSpecialChars(password) && <Text style = {{color:"red"}}>Needs At Least 1 Special Character</Text>}
-              { password.length < 8 && <Text style = {{color:"red"}}>Password Needs To Be At Least 8 Characters</Text>}
+              {!hasNumber(password) && password !="" &&<Text style = {{color:"red"}}>Needs At Least 1 Number</Text>}
+              {!hasLetter(password) && password !="" &&<Text style = {{color:"red"}}>Needs At Least 1 Letter</Text>}
+              {!hasSpecialChars(password) && password !="" &&<Text style = {{color:"red"}}>Needs At Least 1 Special Character</Text>}
+              { password.length < 8 && password !="" &&<Text style = {{color:"red"}}>Password Needs To Be At Least 8 Characters</Text>}
 
             </View>
             <View style={styles.settingRow}>
               <Text style={[styles.settingLabelText,{paddingRight:2}]}>Confirm Password:</Text>
-              <TextInput style={{borderColor: '#e5d9f2',borderWidth:1,width:"80%",borderRadius:5,paddingHorizontal:2}}
+              <TextInput style={{borderColor: '#e5d9f2',borderWidth:1,maxWidth:"80%",borderRadius:5,paddingHorizontal:2, flex:1}}
               value={confirmPassword}
               onChangeText={setConfirmPassword}/>
             </View>
             <View style = {{alignItems:'flex-start'}}>
-              {password !== confirmPassword && <Text style = {{color:"red"}}>Passwords Are Not The Same</Text>}
+              {password !== confirmPassword && confirmPassword !="" &&<Text style = {{color:"red"}}>Passwords Are Not The Same</Text>}
 
             </View>
             <View style={[{alignItems:"center",justifyContent:'center'}]}>
