@@ -1,13 +1,13 @@
 // src/app/OneThingMode.tsx
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
 import { OneThingMode as OneThingComponent } from '../components/OneThingMode';
 import { useApp } from '../contexts/AppContext';
 
 export default function OneThingModeScreen() {
   const router = useRouter();
-  const { tasks, settings, toggleTask } = useApp();
+  const { tasks, settings, toggleTask, triggerConfetti } = useApp();
 
   return (
     <View style={styles.container}>
@@ -16,6 +16,7 @@ export default function OneThingModeScreen() {
         tasks={tasks}
         onToggleTask={toggleTask}
         settings={settings}
+        onTriggerConfetti={triggerConfetti}
       />
     </View>
   );

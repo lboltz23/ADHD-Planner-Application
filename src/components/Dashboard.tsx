@@ -1,19 +1,18 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { Calendar, Settings, Zap } from 'lucide-react-native';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
   ScrollView,
+  StyleSheet,
+  Text,
   TextInput,
-  FlatList,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Settings, Calendar, Zap } from 'lucide-react-native';
 import { Task, TaskType } from '../types';
 import { SettingsData } from './Settings';
-import { TaskTypeSelector } from './TaskTypeSelector';
 import { TaskCard } from './TaskCard';
+import { TaskTypeSelector } from './TaskTypeSelector';
 
 // Dashboard Props
 interface DashboardProps {
@@ -80,6 +79,7 @@ export function Dashboard({
       : 0;
 
   useEffect(() => {
+    // Only trigger confetti if: all tasks are complete AND there's at least 1 task today
     if (
       todayProgress === 100 &&
       previousProgressRef.current < 100 &&

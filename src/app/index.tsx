@@ -1,13 +1,13 @@
 // src/app/index.tsx
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
 import { Dashboard } from '../components/Dashboard';
 import { useApp } from '../contexts/AppContext';
 
 export default function DashboardScreen() {
   const router = useRouter();
-  const { tasks, settings, addTask, toggleTask, rescheduleTask } = useApp();
+  const { tasks, settings, addTask, toggleTask, rescheduleTask, triggerConfetti } = useApp();
 
   return (
     <View style={styles.container}>
@@ -20,6 +20,7 @@ export default function DashboardScreen() {
         onToggleTask={toggleTask}
         onRescheduleTask={rescheduleTask}
         settings={settings}
+        onTriggerConfetti={triggerConfetti}
       />
     </View>
   );
