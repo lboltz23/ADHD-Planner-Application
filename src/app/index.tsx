@@ -6,6 +6,7 @@ import { Dashboard } from '../components/Dashboard';
 import { useApp } from '../contexts/AppContext';
 import { supabase } from '@/lib/supabaseClient';
 
+
 export default function DashboardScreen() {
   const router = useRouter();
   const { tasks, settings, addTask, toggleTask, rescheduleTask } = useApp();
@@ -38,6 +39,7 @@ export default function DashboardScreen() {
         onToggleTask={toggleTask}
         onRescheduleTask={rescheduleTask}
         settings={settings}
+        
       />
     </View>
   );
