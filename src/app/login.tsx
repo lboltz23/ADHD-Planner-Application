@@ -1,17 +1,39 @@
 // src/app/CalendarView.tsx
 import { useRouter } from 'expo-router';
 import { ArrowLeft } from 'lucide-react-native';
-import React, { useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View, Alert,Keyboard} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useApp } from '../contexts/AppContext';
+import { supabase,getCurrentUser } from '../components/supabase';
+import { User } from '@supabase/supabase-js'
 
 export default function CalendarViewScreen() {
   const router = useRouter();
   const { tasks, settings, addTask, toggleTask, rescheduleTask } = useApp();
   const insets = useSafeAreaInsets();
   const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("")
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState<User | null>(null)
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user)
+    })
+    supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+  }, [])
+
+   async function signInWithEmail() {
+    setLoading(true)
+    const { error } = await supabase.auth.signInWithPassword({
+      email: username,
+      password: password,
+    })
+    if (error) Alert.alert(error.message)
+    setLoading(false)
+  }
 
 
   return (
@@ -27,55 +49,73 @@ export default function CalendarViewScreen() {
             <View style={styles.header}>
               <Text style={styles.headerTitle}>Login</Text>
             </View>
-            <View style={styles.settingRow}>
-              <Text style={[styles.settingLabelText,{paddingRight:2}]}>Username:</Text>
-              <TextInput 
-              style={{borderColor: '#e5d9f2',borderWidth:1,width:"80%",borderRadius:5,paddingHorizontal:2}}
-              value={username}
-              onChangeText={setUsername}
-              />
-            </View>
-            <View style={styles.settingRow}>
-              <Text style={[styles.settingLabelText,{paddingRight:2}]}>Password:</Text>
-              <TextInput style={{borderColor: '#e5d9f2',borderWidth:1,width:"80%",borderRadius:5,paddingHorizontal:2}}
-              value={password}
-              onChangeText={setPassword}/>
-            </View>
-            <View style={[styles.settingRow,{paddingTop:0}]}>
-              <TouchableOpacity
-                onPress={() => router.push('/login')}>
-                <Text style={{color:'#b8a4d9'}}>Forgot Password?</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={[{alignItems:"center",justifyContent:'center'}]}>
-              <TouchableOpacity
-                style={styles.mainButton}
-                onPress={() => router.push('/login')}>
-                <Text style={styles.mainButtonText}>Login In</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={[{alignItems:"center",justifyContent:'center',borderTopWidth:1, borderColor:'#b8a4d9'}]}>
-              <TouchableOpacity
-                style={styles.mainButton}
-                onPress={() => router.push('/login')}>
-                <Text style={styles.mainButtonText}>Use Apple</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.mainButton}
-                onPress={() => router.push('/login')}>
-                <Text style={styles.mainButtonText}>Use Android</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={[{alignItems:"center",justifyContent:'center',borderTopWidth:1, borderColor:'#b8a4d9'}]}>
+            {!loading ?
+            <View>
               <View style={styles.settingRow}>
-                <Text style={[styles.settingLabelText,{paddingRight:2}]}>New User?</Text>
+                <Text style={[styles.settingLabelText,{paddingRight:2}]}>Username:</Text>
+                <TextInput 
+                style={{borderColor: '#e5d9f2',borderWidth:1,width:"80%",borderRadius:5,paddingHorizontal:2}}
+                value={username}
+                onChangeText={setUsername}
+                onSubmitEditing={() => {
+                  Keyboard.dismiss();
+                }}
+                />
+              </View>
+              <View style={styles.settingRow}>
+                <Text style={[styles.settingLabelText,{paddingRight:2}]}>Password:</Text>
+                <TextInput style={{borderColor: '#e5d9f2',borderWidth:1,width:"80%",borderRadius:5,paddingHorizontal:2}}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={true}
+                onSubmitEditing={() => {
+                  Keyboard.dismiss();
+                }}/>
+              </View>
+              <View style={[styles.settingRow,{paddingTop:0}]}>
                 <TouchableOpacity
-                  style={styles.mainButton}
-                  onPress={() => router.push('/signup')}>
-                  <Text style={styles.mainButtonText}>Sign Up</Text>
+                  onPress={() => router.push('/login')}>
+                  <Text style={{color:'#b8a4d9'}}>Forgot Password?</Text>
                 </TouchableOpacity>
               </View>
+              <View style={[{alignItems:"center",justifyContent:'center'}]}>
+                <TouchableOpacity
+                  style={styles.mainButton}
+                  onPress={() => signInWithEmail()}>
+                  <Text style={styles.mainButtonText}>Login In</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={[{alignItems:"center",justifyContent:'center',borderTopWidth:1, borderColor:'#b8a4d9'}]}>
+                <TouchableOpacity
+                  style={styles.mainButton}
+                  onPress={() => router.push('/login')}>
+                  <Text style={styles.mainButtonText}>Use Apple</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.mainButton}
+                  onPress={() => router.push('/login')}>
+                  <Text style={styles.mainButtonText}>Use Android</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={[{alignItems:"center",justifyContent:'center',borderTopWidth:1, borderColor:'#b8a4d9'}]}>
+                <View style={styles.settingRow}>
+                  <Text style={[styles.settingLabelText,{paddingRight:2}]}>New User?</Text>
+                  <TouchableOpacity
+                    style={styles.mainButton}
+                    onPress={() => router.push('/signup')}>
+                    <Text style={styles.mainButtonText}>Sign Up</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+              {user &&
+              <View style={[{alignItems:"center",justifyContent:'center',borderTopWidth:1, borderColor:'#b8a4d9'}]}>
+                <View style={styles.settingRow}>
+                  <Text style={[styles.settingLabelText,{paddingRight:2}]}>{user.id}</Text>
+                </View>
+              </View>}
             </View>
+            :
+           <Text style={[styles.settingLabelText,{paddingRight:2}]}>Loading.....</Text>}
           </View>
         </View>
       </View>
