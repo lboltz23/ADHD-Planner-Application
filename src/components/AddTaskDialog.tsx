@@ -1,9 +1,24 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, Modal, TouchableOpacity, StyleSheet, TextInput, ScrollView } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { Plus, X, Pencil  } from "lucide-react-native";
-import { TaskType, CreateTaskParams } from "../types";
+import { Plus, X } from "lucide-react-native";
+import { Task, TaskType, CreateTaskParams, Weekday } from "../types";
 import { Calendar } from "react-native-calendars";
+import { getTaskTypeColor } from "./taskColors";
+import TitleInput from "./TitleInput";
+import DateRangePicker from "./DateRangePicker";
+import RelatedTaskInput from "./RelatedTask";
+
+const ALL_WEEKDAYS: Weekday[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const WEEKDAY_ABBREVIATIONS: Record<Weekday, string> = {
+  Monday: "Mon",
+  Tuesday: "Tue",
+  Wednesday: "Wed",
+  Thursday: "Thu",
+  Friday: "Fri",
+  Saturday: "Sat",
+  Sunday: "Sun",
+};
 
 interface AddTaskDialogProps {
   isOpen: boolean;
@@ -11,6 +26,8 @@ interface AddTaskDialogProps {
   onAddTask: (params: CreateTaskParams) => void;
   initialTaskType: TaskType;
   initialTitle?: string;
+  colorBlindMode?: boolean;
+  tasks?: Task[];
 }
 
 export default function AddTaskDialog({
@@ -19,14 +36,24 @@ export default function AddTaskDialog({
   onAddTask,
   initialTaskType,
   initialTitle = "",
+  colorBlindMode = false,
+  tasks = [],
 }: AddTaskDialogProps) {
   const [taskTitle, setTaskTitle] = useState(initialTitle);
   const [selectedDate, setSelectedDate] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [repeatFrequency, setRepeatFrequency] = useState<"daily" | "weekly" | "monthly">("daily");
-  const [intervalDays, setIntervalDays] = useState("");
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [selectedDays, setSelectedDays] = useState<Weekday[]>([]);
+  const [intervalMonths, setIntervalMonths] = useState("");
+  const [parentTaskId, setParentTaskId] = useState("");
   const [notes, setNotes] = useState("");
+
+  // Toggle a weekday selection
+  const toggleDay = (day: Weekday) => {
+    setSelectedDays((prev) =>
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
+    );
+  };
   useEffect(() => {
     setTaskTitle(initialTitle);
   }, [initialTitle]);
@@ -41,42 +68,35 @@ export default function AddTaskDialog({
     // Different validation based on task type
     if (initialTaskType === "routine" || initialTaskType === "long_interval") {
       if (!startDate || !endDate) {
-        alert("Please enter both start and end dates");
+        alert("Please select both start and end dates");
         return;
       }
-      // Validate date format (basic check)
-      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-      if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
-        alert("Please use YYYY-MM-DD format for dates");
-        return;
-      }
-
-      // Parse start and end dates
-      const [startYear, startMonth, startDay] = startDate.split('-').map(Number);
-      const parsedStartDate = new Date(startYear, startMonth - 1, startDay);
-
-      const [endYear, endMonth, endDay] = endDate.split('-').map(Number);
-      const parsedEndDate = new Date(endYear, endMonth - 1, endDay);
 
       // Validate end date is after start date
-      if (parsedEndDate < parsedStartDate) {
+      if (endDate < startDate) {
         alert("End date must be after start date");
         return;
       }
 
       // Parse interval for long_interval type
-      const interval = intervalDays ? parseInt(intervalDays) : undefined;
+      const interval = intervalMonths ? parseInt(intervalMonths) : undefined;
+
+      // Validate at least one day is selected for routine tasks
+      if (initialTaskType === "routine" && selectedDays.length === 0) {
+        alert("Please select at least one day to repeat on");
+        return;
+      }
 
       // Use startDate as the primary task date
       onAddTask({
         title: taskTitle,
-        date: parsedStartDate,
+        date: startDate,
         type: initialTaskType,
-        repeatFrequency: initialTaskType === "routine" ? repeatFrequency : undefined,
-        intervalDays: interval,
+        repeatDays: initialTaskType === "routine" ? selectedDays : undefined,
+        intervalMonths: interval,
         notes,
-        startDate: parsedStartDate,
-        endDate: parsedEndDate,
+        startDate: startDate,
+        endDate: endDate,
       });
     } else {
       // For basic and related types
@@ -91,6 +111,7 @@ export default function AddTaskDialog({
         title: taskTitle,
         date,
         type: initialTaskType,
+        parentTaskId: initialTaskType === "related" && parentTaskId ? parentTaskId : undefined,
       });
     }
 
@@ -106,10 +127,11 @@ export default function AddTaskDialog({
       setTaskTitle("");
     }
     setSelectedDate("");
-    setStartDate("");
-    setEndDate("");
-    setRepeatFrequency("daily");
-    setIntervalDays("");
+    setStartDate(null);
+    setEndDate(null);
+    setSelectedDays([]);
+    setIntervalMonths("");
+    setParentTaskId("");
     setNotes("");
   };
 
@@ -122,20 +144,8 @@ export default function AddTaskDialog({
     setTaskTitle(text);
   }
 
-  // Get color based on task type
   const getTypeColor = () => {
-    switch (initialTaskType) {
-      case "routine":
-        return "#b8a4d9";
-      case "basic":
-        return "#a8d8ea";
-      case "related":
-        return "#ffc9d4";
-      case "long_interval":
-        return "#f5a4e0";
-      default:
-        return "#a8d8ea";
-    }
+    return getTaskTypeColor(initialTaskType, colorBlindMode);
   };
 
   return (
@@ -156,29 +166,9 @@ export default function AddTaskDialog({
                 <X size={24} color="#6b5b7f" />
               </TouchableOpacity>
             </View>
-            {/* TODO: Add conditional fields based on task type */}
-            {/*
-              - BASIC: Date picker + Notes
-              - ROUTINE: Frequency selector (daily/weekly/monthly) + Notes
-              - RELATED: Date picker + Parent task selector + Notes
-              - LONG_INTERVAL: Date picker + Interval input + Notes
-            */}
             {initialTaskType === "basic" && (
-              <View style = {styles.section}>
-                <View style={styles.inputRow}>
-                  <Text style={styles.tasklabel}>Title: *</Text>
-                  <TextInput
-                    style={styles.input}
-                    onChangeText={handleInputChange}
-                    value={taskTitle}
-                    placeholder = "Enter task title"
-                  />
-                  <Pencil
-                    size={16}
-                    color="#6b5b7f"
-                    style={{ marginLeft: 8 }}
-                  /> 
-                </View>
+              <View style={styles.section}>
+                <TitleInput value={taskTitle} onChange={handleInputChange} />
 
                 <Text style={styles.label}>Select Date *</Text>
                 {/* Calendar */}
@@ -199,91 +189,48 @@ export default function AddTaskDialog({
               </View>
             )}
             {initialTaskType === "routine" && (
-              <View style = {styles.section}>
-                <View style={styles.inputRow}>
-                  <Text style={styles.tasklabel}>Title: *</Text>
-                  <TextInput
-                    style={styles.input}
-                    onChangeText={handleInputChange}
-                    value={taskTitle}
-                    placeholder = "Enter task title"
-                  />
-                  <Pencil
-                    size={16}
-                    color="#6b5b7f"
-                    style={{ marginLeft: 8 }}
-                  />
-                </View>
+              <View style={styles.section}>
+                <TitleInput value={taskTitle} onChange={handleInputChange} />
 
-                <View style={styles.dateInputRow}>
-                  <View style={styles.dateInputContainer}>
-                    <Text style={styles.label}>Start Date *</Text>
-                    <TextInput
-                      style={styles.dateInput}
-                      value={startDate}
-                      onChangeText={setStartDate}
-                      placeholder="YYYY-MM-DD"
-                      placeholderTextColor="#999"
-                    />
-                  </View>
-                  <View style={styles.dateInputContainer}>
-                    <Text style={styles.label}>End Date *</Text>
-                    <TextInput
-                      style={styles.dateInput}
-                      value={endDate}
-                      onChangeText={setEndDate}
-                      placeholder="YYYY-MM-DD"
-                      placeholderTextColor="#999"
-                    />
-                  </View>
-                </View>
+                <DateRangePicker
+                  startDate={startDate}
+                  endDate={endDate}
+                  onStartDateChange={setStartDate}
+                  onEndDateChange={setEndDate}
+                />
 
-                <Text style={styles.label}>Repeat Frequency *</Text>
+                <Text style={styles.label}>Repeat On (select days) *</Text>
                 <View style={styles.frequencyRow}>
-                  <TouchableOpacity
-                    style={[styles.frequencyButton, repeatFrequency === "daily" && styles.frequencyButtonActive]}
-                    onPress={() => setRepeatFrequency("daily")}
-                  >
-                    <Text style={[styles.frequencyText, repeatFrequency === "daily" && styles.frequencyTextActive]}>
-                      Daily
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.frequencyButton, repeatFrequency === "weekly" && styles.frequencyButtonActive]}
-                    onPress={() => setRepeatFrequency("weekly")}
-                  >
-                    <Text style={[styles.frequencyText, repeatFrequency === "weekly" && styles.frequencyTextActive]}>
-                      Weekly
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.frequencyButton, repeatFrequency === "monthly" && styles.frequencyButtonActive]}
-                    onPress={() => setRepeatFrequency("monthly")}
-                  >
-                    <Text style={[styles.frequencyText, repeatFrequency === "monthly" && styles.frequencyTextActive]}>
-                      Monthly
-                    </Text>
-                  </TouchableOpacity>
+                  {ALL_WEEKDAYS.map((day) => (
+                    <TouchableOpacity
+                      key={day}
+                      style={[
+                        styles.frequencyButton,
+                        selectedDays.includes(day) && styles.frequencyButtonActive,
+                      ]}
+                      onPress={() => toggleDay(day)}
+                    >
+                      <Text
+                        style={[
+                          styles.frequencyText,
+                          selectedDays.includes(day) && styles.frequencyTextActive,
+                        ]}
+                      >
+                        {WEEKDAY_ABBREVIATIONS[day]}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
                 </View>
               </View>
             )}
             {initialTaskType === "related" && (
-              <View style = {styles.section}>
-                <View style={styles.inputRow}>
-                  <Text style={styles.tasklabel}>Title: *</Text>
-                  <TextInput
-                    style={styles.input}
-                    onChangeText={handleInputChange}
-                    value={taskTitle}
-                    placeholder = "Enter task title"
-                  />
-                  <Pencil
-                    size={16}
-                    color="#6b5b7f"
-                    style={{ marginLeft: 8 }}
-                  />
-                </View>
-
+              <View style={styles.section}>
+                <TitleInput value={taskTitle} onChange={handleInputChange} />
+                <RelatedTaskInput
+                  tasks={tasks}
+                  selectedTaskId={parentTaskId}
+                  onSelect={setParentTaskId}
+                />
                 <Text style={styles.label}>Select Date *</Text>
                 <Calendar
                   onDayPress={(day) => setSelectedDate(day.dateString)}
@@ -302,51 +249,22 @@ export default function AddTaskDialog({
               </View>
             )}
             {initialTaskType === "long_interval" && (
-              <View style = {styles.section}>
-                <View style={styles.inputRow}>
-                  <Text style={styles.tasklabel}>Title: *</Text>
-                  <TextInput
-                    style={styles.input}
-                    onChangeText={handleInputChange}
-                    value={taskTitle}
-                    placeholder = "Enter task title"
-                  />
-                  <Pencil
-                    size={16}
-                    color="#6b5b7f"
-                    style={{ marginLeft: 8 }}
-                  />
-                </View>
+              <View style={styles.section}>
+                <TitleInput value={taskTitle} onChange={handleInputChange} />
 
-                <View style={styles.dateInputRow}>
-                  <View style={styles.dateInputContainer}>
-                    <Text style={styles.label}>Start Date *</Text>
-                    <TextInput
-                      style={styles.dateInput}
-                      value={startDate}
-                      onChangeText={setStartDate}
-                      placeholder="YYYY-MM-DD"
-                      placeholderTextColor="#999"
-                    />
-                  </View>
-                  <View style={styles.dateInputContainer}>
-                    <Text style={styles.label}>End Date *</Text>
-                    <TextInput
-                      style={styles.dateInput}
-                      value={endDate}
-                      onChangeText={setEndDate}
-                      placeholder="YYYY-MM-DD"
-                      placeholderTextColor="#999"
-                    />
-                  </View>
-                </View>
+                <DateRangePicker
+                  startDate={startDate}
+                  endDate={endDate}
+                  onStartDateChange={setStartDate}
+                  onEndDateChange={setEndDate}
+                />
 
                 <View style={styles.inputRow}>
-                  <Text style={styles.label}>Interval (days):</Text>
+                  <Text style={styles.label}>Interval (months):</Text>
                   <TextInput
                     style={styles.dateInput}
-                    value={intervalDays}
-                    onChangeText={setIntervalDays}
+                    value={intervalMonths}
+                    onChangeText={setIntervalMonths}
                     placeholder="e.g., 3"
                     placeholderTextColor="#999"
                     keyboardType="numeric"
@@ -382,22 +300,22 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
   },
   scrollContainer: {
     flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 40,
     width: "100%",
   },
   dialog: {
     backgroundColor: "white",
     borderRadius: 16,
     padding: 20,
-    width: "95%",
-    maxWidth: 800,
+    width: "100%",
+    maxWidth: 400,
+    minHeight: 350,
   },
   calendar: {
     borderRadius: 8,
@@ -432,7 +350,7 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderRadius: 8,
     borderColor: "#e5d9f2",
-    padding: 8,
+    padding: 12,
   },
   label: {
     fontSize: 14,
@@ -440,37 +358,10 @@ const styles = StyleSheet.create({
     color: "#6b5b7f",
     marginBottom: 8,
   },
-  tasklabel: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#6b5b7f",
-    marginBottom: 4,
-    textAlign: "left",
-    marginRight: 8,
-  },
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 12,
-  },
-  input: {
-    flex: 1,
-    backgroundColor: "#f8f6fb",
-    borderWidth: 1,
-    borderColor: "#e5d9f2",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    color: "#6b5b7f",
-  },
-  dateInputRow: {
-    flexDirection: "row",
-    gap: 12,
-    marginBottom: 12,
-  },
-  dateInputContainer: {
-    flex: 1,
   },
   dateInput: {
     backgroundColor: "#f8f6fb",
@@ -484,13 +375,16 @@ const styles = StyleSheet.create({
   },
   frequencyRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: 8,
     marginBottom: 12,
   },
   frequencyButton: {
-    flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+    flexGrow: 1,
+    flexBasis: "28%",
+    minWidth: 80,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: "#e5d9f2",

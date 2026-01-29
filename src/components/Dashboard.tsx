@@ -442,6 +442,8 @@ export function Dashboard({
           onAddTask={handleCreateTask}
           initialTaskType={selectedType}
           initialTitle={newTaskTitle}
+          colorBlindMode={settings.colorBlindMode}
+          tasks={tasks}
         />
 
 

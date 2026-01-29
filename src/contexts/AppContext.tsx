@@ -1,7 +1,18 @@
 // src/contexts/AppContext.tsx
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { Task, CreateTaskParams } from '../types';
+import { Task, CreateTaskParams, Weekday } from '../types';
 import { SettingsData } from '../components/Settings';
+
+// Map JavaScript day numbers (0=Sunday) to Weekday names
+const DAY_NUMBER_TO_WEEKDAY: Record<number, Weekday> = {
+  0: "Sunday",
+  1: "Monday",
+  2: "Tuesday",
+  3: "Wednesday",
+  4: "Thursday",
+  5: "Friday",
+  6: "Saturday",
+};
 
 interface AppContextType {
   tasks: Task[];
@@ -66,8 +77,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const generateScheduledDays = (
     startDate: Date,
     endDate: Date,
-    frequency?: "daily" | "weekly" | "monthly",
-    intervalDays?: number
+    repeatDays?: Weekday[],
+    intervalMonths?: number
   ): Date[] => {
     const scheduledDays: Date[] = [];
     const current = new Date(startDate);
@@ -77,20 +88,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
     current.setHours(0, 0, 0, 0);
     end.setHours(0, 0, 0, 0);
 
-    while (current <= end) {
-      scheduledDays.push(new Date(current));
-
-      // Increment based on frequency or interval
-      if (frequency === "daily") {
+    // If repeatDays is provided (routine tasks), filter by selected weekdays
+    if (repeatDays && repeatDays.length > 0) {
+      while (current <= end) {
+        const dayOfWeek = DAY_NUMBER_TO_WEEKDAY[current.getDay()];
+        if (repeatDays.includes(dayOfWeek)) {
+          scheduledDays.push(new Date(current));
+        }
         current.setDate(current.getDate() + 1);
-      } else if (frequency === "weekly") {
-        current.setDate(current.getDate() + 7);
-      } else if (frequency === "monthly") {
-        current.setMonth(current.getMonth() + 1);
-      } else if (intervalDays) {
-        current.setDate(current.getDate() + intervalDays);
-      } else {
-        // Default to daily if no frequency specified
+      }
+    } else if (intervalMonths) {
+      // For long_interval tasks, use intervalMonths
+      while (current <= end) {
+        scheduledDays.push(new Date(current));
+        current.setMonth(current.getMonth() + intervalMonths);
+      }
+    } else {
+      // Default to daily if nothing specified
+      while (current <= end) {
+        scheduledDays.push(new Date(current));
         current.setDate(current.getDate() + 1);
       }
     }
@@ -99,7 +115,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const addTask = (params: CreateTaskParams) => {
-    const { title, date, type, repeatFrequency, intervalDays, notes, startDate, endDate } = params;
+    const { title, date, type, repeatDays, intervalMonths, parentTaskId, notes, startDate, endDate } = params;
     const baseId = Date.now().toString();
 
     // Check if this is a recurring task
@@ -108,8 +124,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const scheduledDays = generateScheduledDays(
         startDate,
         endDate,
-        repeatFrequency,
-        intervalDays
+        repeatDays,
+        intervalMonths
       );
 
       // Create individual task instances for each scheduled day
@@ -120,8 +136,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         completed: false,
         type,
         notes,
-        repeatFrequency,
-        intervalDays,
+        repeatDays,
+        intervalMonths,
         startDate,
         endDate,
         scheduledDays,
@@ -140,6 +156,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         completed: false,
         type,
         notes,
+        parentTaskId,
       };
       setTasks([...tasks, newTask]);
     }

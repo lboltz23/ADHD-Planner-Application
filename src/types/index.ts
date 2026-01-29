@@ -1,6 +1,8 @@
 // src/types.ts
 export type TaskType = "routine" | "basic" | "related" | "long_interval";
 
+export type Weekday = "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday";
+
 export interface Task {
   id: string;
   title: string;
@@ -9,8 +11,8 @@ export interface Task {
   type: TaskType;
   time?: string;
   notes?: string;
-  repeatFrequency?: "daily" | "weekly" | "monthly";
-  intervalDays?: number;
+  repeatDays?: Weekday[]; // Days of week to repeat on (for routine tasks)
+  intervalMonths?: number;
   parentTaskId?: string;
   // For recurring tasks (routine and long_interval)
   startDate?: Date;
@@ -25,8 +27,9 @@ export interface CreateTaskParams {
   title: string;
   date: Date;
   type: TaskType;
-  repeatFrequency?: "daily" | "weekly" | "monthly";
-  intervalDays?: number;
+  repeatDays?: Weekday[]; // Days of week to repeat on (for routine tasks)
+  intervalMonths?: number;
+  parentTaskId?: string;
   notes?: string;
   startDate?: Date;
   endDate?: Date;
