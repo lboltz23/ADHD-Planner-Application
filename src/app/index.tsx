@@ -2,6 +2,8 @@
 import React, {useEffect} from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
 import { Dashboard } from '../components/Dashboard';
 import { useApp } from '../contexts/AppContext';
 import { supabase } from '@/lib/supabaseClient';
@@ -9,7 +11,7 @@ import { supabase } from '@/lib/supabaseClient';
 
 export default function DashboardScreen() {
   const router = useRouter();
-  const { tasks, settings, addTask, toggleTask, rescheduleTask } = useApp();
+  const { tasks, settings, addTask, toggleTask, rescheduleTask, triggerConfetti } = useApp();
 
  useEffect(() => {
     const loadTasks = async () => {
@@ -39,7 +41,7 @@ export default function DashboardScreen() {
         onToggleTask={toggleTask}
         onRescheduleTask={rescheduleTask}
         settings={settings}
-        
+        onTriggerConfetti={triggerConfetti}
       />
     </View>
   );

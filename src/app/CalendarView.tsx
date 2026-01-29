@@ -1,13 +1,13 @@
 // src/app/CalendarView.tsx
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
 import { CalendarView as CalendarComponent } from '../components/CalendarView';
 import { useApp } from '../contexts/AppContext';
 
 export default function CalendarViewScreen() {
   const router = useRouter();
-  const { tasks, settings, addTask, toggleTask, rescheduleTask } = useApp();
+  const { tasks, settings, addTask, toggleTask, rescheduleTask, triggerConfetti } = useApp();
 
   return (
     <View style={styles.container}>
@@ -18,6 +18,7 @@ export default function CalendarViewScreen() {
         onToggleTask={toggleTask}
         onRescheduleTask={rescheduleTask}
         settings={settings}
+        onTriggerConfetti={triggerConfetti}
       />
     </View>
   );

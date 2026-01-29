@@ -1,7 +1,7 @@
 // src/contexts/AppContext.tsx
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, ReactNode, useContext, useState } from 'react';
+import { SettingsData } from '../components/Settings';
 import { Task, TaskType } from '../types';
-import { SettingsData } from '../components/Settings'; 
 
 interface AppContextType {
   tasks: Task[];
@@ -10,6 +10,8 @@ interface AppContextType {
   toggleTask: (id: string) => void;
   rescheduleTask: (id: string, newDate: Date, newTime?: string) => void;
   updateSettings: (newSettings: SettingsData) => void;
+  confettiTrigger: number;
+  triggerConfetti: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -62,6 +64,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     colorBlindMode: false,
   });
 
+  const [confettiTrigger, setConfettiTrigger] = useState(0);
+
   const addTask = (title: string, date: Date, type: TaskType) => {
     const newTask: Task = {
       id: Date.now().toString(),
@@ -89,6 +93,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSettings(newSettings);
   };
 
+  const triggerConfetti = () => {
+    setConfettiTrigger(prev => prev + 1);
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -98,6 +106,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         toggleTask,
         rescheduleTask,
         updateSettings,
+        confettiTrigger,
+        triggerConfetti,
       }}
     >
       {children}
