@@ -243,7 +243,7 @@ export function Settings({
           <View style={styles.sliderContainer}>
             <Slider
               style={{ height: 40 }}
-              minimumValue={5}
+              minimumValue={0.5}
               maximumValue={60}
               step={5}
               value={settings.defaultTimerMinutes}
