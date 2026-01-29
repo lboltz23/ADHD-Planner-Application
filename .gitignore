@@ -1,43 +1,67 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
-
-# dependencies
-node_modules/
-
-# Expo
+# Expo / React Native defaults (most important!)
 .expo/
-dist/
-web-build/
 expo-env.d.ts
+.expo-shared/
+*.expo.js
+*.expo.ts
 
-# Native
-.kotlin/
-*.orig.*
-*.jks
-*.p8
-*.p12
-*.key
-*.mobileprovision
+# Node / dependencies
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+.pnp/
+.pnp.js
 
-# Metro
-.metro-health-check*
+# Builds & bundles
+dist/
+build/
+web-build/
+*.apk
+*.ipa
+*.aab
 
-# debug
-npm-debug.*
-yarn-debug.*
-yarn-error.*
+# Native folders (Expo managed workflow – regenerate with prebuild --clean)
+android/
+ios/
 
-# macOS
+# Environment & secrets (NEVER commit these!)
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+*.env.*
+supabase/.env*          # if you ever add local Supabase env
+google-services.json    # if using Firebase push later
+GoogleService-Info.plist
+
+# Logs & temp files
+*.log
+*.log.*
 .DS_Store
-*.pem
+Thumbs.db
+*.swp
+*.swo
+*.tmp
+*.bak
+~*
 
-# local env files
-.env*.local
+# Editor / IDE files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
 
-# typescript
-*.tsbuildinfo
+# Testing / coverage
+coverage/
+.nyc_output/
 
-app-example
+# Supabase local dev (if you run supabase start)
+supabase/.temp/
+supabase/docker/
+.supabase/
 
-# generated native folders
-/ios
-/android
+# Misc
+*.orig
+*.rej
