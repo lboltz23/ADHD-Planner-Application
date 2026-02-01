@@ -109,9 +109,9 @@ export function TaskCard({
 
   // Called by RescheduleDialog which returns a dateString (YYYY-MM-DD).
   const handleRescheduleFromDialog = (newDateString: string) => {
-    // convert to Date in local timezone (not UTC) to avoid timezone issues
+    // convert to Date in local timezone at noon to avoid timezone edge cases
     const [year, month, day] = newDateString.split('-').map(Number);
-    const newDate = new Date(year, month - 1, day);
+    const newDate = new Date(year, month - 1, day, 12, 0, 0, 0);
     if (onReschedule) {
       onReschedule(task.id, newDate);
     }

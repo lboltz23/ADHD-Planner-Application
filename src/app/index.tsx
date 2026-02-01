@@ -1,34 +1,16 @@
 // src/app/index.tsx
-import React, {useEffect} from 'react';
+import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
 import { Dashboard } from '../components/Dashboard';
 import { useApp } from '../contexts/AppContext';
-import { supabase } from '@/lib/supabaseClient';
+// TODO: uncomment when @supabase/supabase-js is installed
+// import { supabase } from '@/lib/supabaseClient';
 
 
 export default function DashboardScreen() {
   const router = useRouter();
   const { tasks, settings, addTask, toggleTask, rescheduleTask, triggerConfetti } = useApp();
-
- useEffect(() => {
-    const loadTasks = async () => {
-      const { data, error } = await supabase
-        .from('tasks')
-        .select('*');
-
-      if (error) {
-        console.error('Supabase error:', error);
-      } else {
-        console.log('Supabase tasks:', data);
-        // later: sync these into AppContext
-      }
-    };
-
-    loadTasks();
-  }, []);
 
   return (
     <View style={styles.container}>

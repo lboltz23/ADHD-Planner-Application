@@ -1,5 +1,5 @@
 // src/contexts/AppContext.tsx
-import React, { createContext, ReactNode, useContext, useState } from 'react';
+import React, { createContext, ReactNode, useCallback, useContext, useMemo, useState } from 'react';
 import { SettingsData } from '../components/Settings';
 import { Task, TaskType } from '../types';
 
@@ -66,7 +66,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const [confettiTrigger, setConfettiTrigger] = useState(0);
 
-  const addTask = (title: string, date: Date, type: TaskType) => {
+  const addTask = useCallback((title: string, date: Date, type: TaskType) => {
     const newTask: Task = {
       id: Date.now().toString(),
       title,
@@ -74,42 +74,42 @@ export function AppProvider({ children }: { children: ReactNode }) {
       completed: false,
       type,
     };
-    setTasks([...tasks, newTask]);
-  };
+    setTasks(prev => [...prev, newTask]);
+  }, []);
 
-  const toggleTask = (id: string) => {
-    setTasks(tasks.map(task => 
+  const toggleTask = useCallback((id: string) => {
+    setTasks(prev => prev.map(task =>
       task.id === id ? { ...task, completed: !task.completed } : task
     ));
-  };
+  }, []);
 
-  const rescheduleTask = (id: string, newDate: Date, newTime?: string) => {
-    setTasks(tasks.map(task => 
+  const rescheduleTask = useCallback((id: string, newDate: Date, newTime?: string) => {
+    setTasks(prev => prev.map(task =>
       task.id === id ? { ...task, date: newDate, time: newTime } : task
     ));
-  };
+  }, []);
 
-  const updateSettings = (newSettings: SettingsData) => {
+  const updateSettings = useCallback((newSettings: SettingsData) => {
     setSettings(newSettings);
-  };
+  }, []);
 
-  const triggerConfetti = () => {
+  const triggerConfetti = useCallback(() => {
     setConfettiTrigger(prev => prev + 1);
-  };
+  }, []);
+
+  const value = useMemo(() => ({
+    tasks,
+    settings,
+    addTask,
+    toggleTask,
+    rescheduleTask,
+    updateSettings,
+    confettiTrigger,
+    triggerConfetti,
+  }), [tasks, settings, confettiTrigger, addTask, toggleTask, rescheduleTask, updateSettings, triggerConfetti]);
 
   return (
-    <AppContext.Provider
-      value={{
-        tasks,
-        settings,
-        addTask,
-        toggleTask,
-        rescheduleTask,
-        updateSettings,
-        confettiTrigger,
-        triggerConfetti,
-      }}
-    >
+    <AppContext.Provider value={value}>
       {children}
     </AppContext.Provider>
   );
