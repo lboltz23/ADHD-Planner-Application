@@ -118,70 +118,7 @@ export function TaskCard({
     setShowRescheduleDialog(false);
   };
 
-  const styles = StyleSheet.create({
-    card: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: showDate ? "space-between" : "flex-start",
-      padding: 16,
-      borderRadius: 12,
-      backgroundColor: style.backgroundColor,
-      borderWidth: colorBlindMode ? 2 : 1,
-      borderColor: style.borderColor,
-      marginVertical: 6,
-    },
-    contentContainer: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 12,
-      flex: 1,
-    },
-    iconContainer: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      justifyContent: "center",
-      alignItems: "center",
-      backgroundColor: colorBlindMode ? `${style.iconColor}20` : style.borderColor,
-      borderWidth: colorBlindMode ? 2 : 0,
-      borderColor: style.iconColor,
-    },
-    checkCircle: {
-      width: 20,
-      height: 20,
-    },
-    taskTitle: {
-      flex: 1,
-      fontSize: 16,
-      color: task.completed ? "#999" : "#333",
-      textDecorationLine: task.completed ? "line-through" : "none",
-    },
-    dateText: {
-      fontSize: 14,
-      color: "#999",
-    },
-    rescheduleButton: {
-      marginLeft: 10,
-      padding: 6,
-      borderRadius: 8,
-      backgroundColor: "#f8f6fb",
-      borderWidth: 1,
-      borderColor: "#101011ff",
-      justifyContent: "center",
-      alignItems: "center",
-    },
-    rescheduleIcon: {
-      // placeholder for possible extra styling
-      padding: 6,
-      borderRadius: 8,
-      backgroundColor: "#f8f6fb",
-      borderWidth: 1,
-      borderColor: "#e5d9f2",
-      justifyContent: "center",
-      alignItems: "center",
-    },
-  });
-
+  
   const formatDate = (date: string | Date) => {
     const dateObj = new Date(date);
     return dateObj.toLocaleDateString("en-US", {
@@ -193,12 +130,27 @@ export function TaskCard({
   return (
     <>
       <TouchableOpacity
-        style={styles.card}
+        style={[
+          styles.card,
+          {
+            justifyContent: showDate ? "space-between" : "flex-start",
+            backgroundColor: style.backgroundColor,
+            borderWidth: colorBlindMode ? 2 : 1,
+            borderColor: style.borderColor,
+          },
+        ]}
         onPress={() => onToggle(task.id)}
         activeOpacity={0.7}
       >
         <View style={styles.contentContainer}>
-          <View style={styles.iconContainer}>
+          <View style={[
+            styles.iconContainer,
+            {
+              backgroundColor: colorBlindMode ? `${style.iconColor}20` : style.borderColor,
+              borderWidth: colorBlindMode ? 2 : 0,
+              borderColor: style.iconColor,
+            },
+          ]}>
             <IconComponent
               size={colorBlindMode ? 18 : 16}
               color={colorBlindMode ? style.iconColor : "#ffffff"}
@@ -212,7 +164,13 @@ export function TaskCard({
             color={task.completed ? "#b4e7ce" : "#e5d9f2"}
           />
 
-          <Text style={styles.taskTitle}>{task.title}</Text>
+          <Text style={[
+            styles.taskTitle,
+            {
+              color: task.completed ? "#999" : "#333",
+              textDecorationLine: task.completed ? "line-through" : "none",
+            },
+          ]}>{task.title}</Text>
         </View>
 
         {showDate && <Text style={styles.dateText}>{formatDate(task.date)}</Text>}
@@ -239,3 +197,58 @@ export function TaskCard({
     </>
   );
 }
+
+const styles = StyleSheet.create({
+    card: {
+      flexDirection: "row",
+      alignItems: "center",
+      padding: 16,
+      borderRadius: 12,
+      marginVertical: 6,
+    },
+    contentContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      flex: 1,
+    },
+    iconContainer: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    checkCircle: {
+      width: 20,
+      height: 20,
+    },
+    taskTitle: {
+      flex: 1,
+      fontSize: 16,
+    },
+    dateText: {
+      fontSize: 14,
+      color: "#999",
+    },
+    rescheduleButton: {
+      marginLeft: 10,
+      padding: 6,
+      borderRadius: 8,
+      backgroundColor: "#f8f6fb",
+      borderWidth: 1,
+      borderColor: "#101011ff",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    rescheduleIcon: {
+      // placeholder for possible extra styling
+      padding: 6,
+      borderRadius: 8,
+      backgroundColor: "#f8f6fb",
+      borderWidth: 1,
+      borderColor: "#e5d9f2",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+  });

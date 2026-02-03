@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Plus } from 'lucide-react-native';
-import { Task, TaskType } from '../types';
+import { Task, TaskType, CreateTaskParams } from '../types';
 import { SettingsData } from './Settings';
 import { ProgressCircle } from './ProgressCircle';
 import { TaskTypeSelector } from './TaskTypeSelector';
@@ -20,7 +20,7 @@ import { TaskCard } from './TaskCard';
 interface CalendarViewProps {
   onNavigateBack: () => void;
   tasks: Task[];
-  onAddTask: (title: string, date: Date, type: TaskType) => void;
+  onAddTask: (params: CreateTaskParams) => void;
   onToggleTask: (id: string) => void;
   onRescheduleTask: (id: string, newDate: Date) => void;
   settings: SettingsData;
@@ -46,7 +46,11 @@ export function CalendarView({
 // Function to handle adding a new task
   const handleAddTask = () => {
     if (newTaskTitle.trim()) {
-      onAddTask(newTaskTitle, selectedDate, selectedType);
+      onAddTask({
+        title: newTaskTitle,
+        date: selectedDate,
+        type: selectedType,
+      });
       setNewTaskTitle('');
     }
   };
