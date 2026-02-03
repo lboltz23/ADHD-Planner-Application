@@ -1,23 +1,12 @@
 // src/contexts/AppContext.tsx
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { Task, CreateTaskParams, Weekday } from '../types';
+import React, { createContext, ReactNode, useContext, useState } from 'react';
 import { SettingsData } from '../components/Settings';
-
-// Map JavaScript day numbers (0=Sunday) to Weekday names
-const DAY_NUMBER_TO_WEEKDAY: Record<number, Weekday> = {
-  0: "Sunday",
-  1: "Monday",
-  2: "Tuesday",
-  3: "Wednesday",
-  4: "Thursday",
-  5: "Friday",
-  6: "Saturday",
-};
+import { Task, TaskType } from '../types';
 
 interface AppContextType {
   tasks: Task[];
   settings: SettingsData;
-  addTask: (params: CreateTaskParams) => void;
+  addTask: (title: string, date: Date, type: TaskType) => void;
   toggleTask: (id: string) => void;
   rescheduleTask: (id: string, newDate: Date, newTime?: string) => void;
   updateSettings: (newSettings: SettingsData) => void;
@@ -118,52 +107,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return scheduledDays;
   };
 
-  const addTask = (params: CreateTaskParams) => {
-    const { title, date, type, repeatDays, intervalMonths, parentTaskId, notes, startDate, endDate } = params;
-    const baseId = Date.now().toString();
-
-    // Check if this is a recurring task
-    if ((type === "routine" || type === "long_interval") && startDate && endDate) {
-      // Generate scheduled days
-      const scheduledDays = generateScheduledDays(
-        startDate,
-        endDate,
-        repeatDays,
-        intervalMonths
-      );
-
-      // Create individual task instances for each scheduled day
-      const recurringTasks: Task[] = scheduledDays.map((scheduledDate, index) => ({
-        id: `${baseId}-instance-${index}`,
-        title,
-        date: scheduledDate,
-        completed: false,
-        type,
-        notes,
-        repeatDays,
-        intervalMonths,
-        startDate,
-        endDate,
-        scheduledDays,
-        isRecurring: true,
-        recurringTaskId: baseId,
-        instanceDate: scheduledDate,
-      }));
-
-      setTasks([...tasks, ...recurringTasks]);
-    } else {
-      // Regular non-recurring task
-      const newTask: Task = {
-        id: baseId,
-        title,
-        date,
-        completed: false,
-        type,
-        notes,
-        parentTaskId,
-      };
-      setTasks([...tasks, newTask]);
-    }
+  const addTask = (title: string, date: Date, type: TaskType) => {
+    const newTask: Task = {
+      id: Date.now().toString(),
+      title,
+      date,
+      completed: false,
+      type,
+    };
+    setTasks([...tasks, newTask]);
   };
 
   const toggleTask = (id: string) => {
