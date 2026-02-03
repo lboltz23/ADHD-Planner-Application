@@ -1,19 +1,19 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { Calendar, Settings, Zap } from 'lucide-react-native';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
   ScrollView,
+  StyleSheet,
+  Text,
   TextInput,
-  FlatList,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Settings, Calendar, Zap } from 'lucide-react-native';
-import { Task, TaskType } from '../types';
+import { Task, TaskType, CreateTaskParams } from '../types';
 import { SettingsData } from './Settings';
-import { TaskTypeSelector } from './TaskTypeSelector';
 import { TaskCard } from './TaskCard';
+import AddTaskDialog from './AddTaskDialog';
+import { TaskTypeSelector } from './TaskTypeSelector';
 
 // Dashboard Props
 interface DashboardProps {
@@ -52,6 +52,12 @@ export function Dashboard({
     }
   };
 
+  const handleProgressBar = () => {
+    if (todayTasks.length === 0)
+      return false;
+    return true;
+  }
+
   const todayTasks = tasks.filter((task) => {
     const today = new Date();
     const taskDate = new Date(task.date);
@@ -74,6 +80,7 @@ export function Dashboard({
       : 0;
 
   useEffect(() => {
+    // Only trigger confetti if: all tasks are complete AND there's at least 1 task today
     if (
       todayProgress === 100 &&
       previousProgressRef.current < 100 &&
@@ -204,19 +211,19 @@ export function Dashboard({
       borderColor: '#e5d9f2',
       borderRadius: 8,
       paddingHorizontal: 12,
-      paddingVertical: 10,
+      paddingVertical: 8,
       fontSize: 14,
       color: '#333',
     },
     addButton: {
       backgroundColor: '#a8d8ea',
-      borderRadius: 8,
-      padding: 10,
+      borderRadius: 6,
+      padding: 8,
       justifyContent: 'center',
       alignItems: 'center',
     },
     typeSelector: {
-      marginBottom: 8,
+      marginBottom: 16,
     },
     section: {
       marginBottom: 20,
@@ -235,6 +242,16 @@ export function Dashboard({
     },
     tasksList: {
       gap: 8,
+    },
+    addTaskBorder: {
+      backgroundColor: '#ffffff',
+      height: 125,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: '#e5d9f2',
+      padding: 10,
+      marginBottom: 15,
+      paddingVertical: 10,
     },
   });
 
@@ -289,7 +306,7 @@ export function Dashboard({
         </TouchableOpacity>
 
         {/* Progress Card */}
-        <View style={styles.progressCard}>
+        {handleProgressBar() && (<View style={styles.progressCard}>
           <Text style={styles.progressLabel}>Today's Progress</Text>
           <Text style={styles.progressSub}>
             {completedTodayTasks} of {todayTasks.length} tasks completed
@@ -302,10 +319,10 @@ export function Dashboard({
               ]}
             />
           </View>
-        </View>
+        </View>)}
 
         {/* Add Task Section */}
-        <View style={styles.addTaskCard}>
+        <View style={styles.addTaskBorder}>
           <View style={styles.typeSelector}>
             <TaskTypeSelector
               selectedType={selectedType}
@@ -332,7 +349,7 @@ export function Dashboard({
             </TouchableOpacity>
           </View>
         </View>
-
+            
         {/* Task View Filter Buttons */}
         <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 8, marginBottom: 20 }}>
           <TouchableOpacity

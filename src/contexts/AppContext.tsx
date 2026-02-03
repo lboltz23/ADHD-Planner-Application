@@ -1,7 +1,7 @@
 // src/contexts/AppContext.tsx
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, ReactNode, useContext, useState } from 'react';
+import { SettingsData } from '../components/Settings';
 import { Task, TaskType } from '../types';
-import { SettingsData } from '../components/Settings'; 
 
 interface AppContextType {
   tasks: Task[];
@@ -10,6 +10,8 @@ interface AppContextType {
   toggleTask: (id: string) => void;
   rescheduleTask: (id: string, newDate: Date, newTime?: string) => void;
   updateSettings: (newSettings: SettingsData) => void;
+  confettiTrigger: number;
+  triggerConfetti: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -62,6 +64,49 @@ export function AppProvider({ children }: { children: ReactNode }) {
     colorBlindMode: false,
   });
 
+  const [confettiTrigger, setConfettiTrigger] = useState<number>(0);
+
+  // Helper function to generate scheduled days for recurring tasks
+  const generateScheduledDays = (
+    startDate: Date,
+    endDate: Date,
+    repeatDays?: Weekday[],
+    intervalMonths?: number
+  ): Date[] => {
+    const scheduledDays: Date[] = [];
+    const current = new Date(startDate);
+    const end = new Date(endDate);
+
+    // Set times to midnight for consistent comparison
+    current.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+
+    // If repeatDays is provided (routine tasks), filter by selected weekdays
+    if (repeatDays && repeatDays.length > 0) {
+      while (current <= end) {
+        const dayOfWeek = DAY_NUMBER_TO_WEEKDAY[current.getDay()];
+        if (repeatDays.includes(dayOfWeek)) {
+          scheduledDays.push(new Date(current));
+        }
+        current.setDate(current.getDate() + 1);
+      }
+    } else if (intervalMonths) {
+      // For long_interval tasks, use intervalMonths
+      while (current <= end) {
+        scheduledDays.push(new Date(current));
+        current.setMonth(current.getMonth() + intervalMonths);
+      }
+    } else {
+      // Default to daily if nothing specified
+      while (current <= end) {
+        scheduledDays.push(new Date(current));
+        current.setDate(current.getDate() + 1);
+      }
+    }
+
+    return scheduledDays;
+  };
+
   const addTask = (title: string, date: Date, type: TaskType) => {
     const newTask: Task = {
       id: Date.now().toString(),
@@ -89,6 +134,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSettings(newSettings);
   };
 
+  const triggerConfetti = () => {
+    setConfettiTrigger(prev => prev + 1);
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -98,6 +147,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         toggleTask,
         rescheduleTask,
         updateSettings,
+        confettiTrigger,
+        triggerConfetti,
       }}
     >
       {children}
