@@ -21,6 +21,8 @@ interface AppContextType {
   toggleTask: (id: string) => void;
   rescheduleTask: (id: string, newDate: Date, newTime?: string) => void;
   updateSettings: (newSettings: SettingsData) => void;
+  confettiTrigger: number;
+  triggerConfetti: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -178,6 +180,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSettings(newSettings);
   };
 
+  const triggerConfetti = () => {
+    setConfettiTrigger(prev => prev + 1);
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -187,6 +193,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         toggleTask,
         rescheduleTask,
         updateSettings,
+        confettiTrigger,
+        triggerConfetti,
       }}
     >
       {children}
