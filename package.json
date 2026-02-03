@@ -17,6 +17,7 @@
     "@react-navigation/elements": "^2.6.3",
     "@react-navigation/native": "^7.1.27",
     "@supabase/supabase-js": "^2.93.1",
+    "datetimepicker": "^0.1.39",
     "expo": "~54.0.32",
     "expo-constants": "~18.0.10",
     "expo-font": "~14.0.11",
