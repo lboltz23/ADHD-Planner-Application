@@ -2,8 +2,6 @@
 import React, {useEffect} from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
 import { Dashboard } from '../components/Dashboard';
 import { useApp } from '../contexts/AppContext';
 import { supabase } from '@/lib/supabaseClient';
