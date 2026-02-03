@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View, Alert,Keyboard} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useApp } from '../contexts/AppContext';
-import { supabase,getCurrentUser } from '../components/supabase';
+import { supabase,getCurrentUser } from '@/lib/supabaseClient';
 import { User } from '@supabase/supabase-js'
 
 export default function CalendarViewScreen() {
