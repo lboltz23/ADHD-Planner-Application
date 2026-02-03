@@ -27,13 +27,6 @@ export const Colors = {
   },
 };
 
-export const AppColors = {
-  primary: "#6b5b7f",
-  border: "#e5d9f2",
-  inputBackground: "#f8f6fb",
-  placeholder: "#999",
-} as const;
-
 export const Fonts = Platform.select({
   ios: {
     /** iOS `UIFontDescriptorSystemDesignDefault` */
