@@ -5,10 +5,14 @@ import { ArrowLeft, Settings } from 'lucide-react-native';
 import { Task } from '../types';
 import { TaskCard } from './TaskCard';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { ArrowLeft, Plus } from 'lucide-react-native';
+import { Task, TaskType, CreateTaskParams } from '../types';
+import { SettingsData } from './Settings';
 import { ProgressCircle } from './ProgressCircle';
 
 interface WeeklyViewProps {
   tasks: Task[];
+  onAddTask: (params: CreateTaskParams) => void;
   onToggleTask: (id: string) => void;
   onRescheduleTask: (id: string, newDate: Date) => void;
   colorBlindMode?: boolean;

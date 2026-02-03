@@ -1,12 +1,22 @@
 // src/contexts/AppContext.tsx
 import React, { createContext, ReactNode, useCallback, useContext, useMemo, useState } from 'react';
 import { SettingsData } from '../components/Settings';
-import { Task, TaskType } from '../types';
+
+// Map JavaScript day numbers (0=Sunday) to Weekday names
+const DAY_NUMBER_TO_WEEKDAY: Record<number, Weekday> = {
+  0: "Sunday",
+  1: "Monday",
+  2: "Tuesday",
+  3: "Wednesday",
+  4: "Thursday",
+  5: "Friday",
+  6: "Saturday",
+};
 
 interface AppContextType {
   tasks: Task[];
   settings: SettingsData;
-  addTask: (title: string, date: Date, type: TaskType) => void;
+  addTask: (params: CreateTaskParams) => void;
   toggleTask: (id: string) => void;
   rescheduleTask: (id: string, newDate: Date, newTime?: string) => void;
   updateSettings: (newSettings: SettingsData) => void;
@@ -64,7 +74,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     colorBlindMode: false,
   });
 
-  const [confettiTrigger, setConfettiTrigger] = useState(0);
+  // Helper function to generate scheduled days for recurring tasks
+  const generateScheduledDays = (
+    startDate: Date,
+    endDate: Date,
+    repeatDays?: Weekday[],
+    intervalMonths?: number
+  ): Date[] => {
+    const scheduledDays: Date[] = [];
+    const current = new Date(startDate);
+    const end = new Date(endDate);
 
   const addTask = useCallback((title: string, date: Date, type: TaskType) => {
     const newTask: Task = {
