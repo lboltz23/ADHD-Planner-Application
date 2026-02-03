@@ -1,12 +1,15 @@
-// src/app/CalendarView.tsx
+// Test Username : user@example.com
+// Test Password : 123456
+
 import { useRouter } from 'expo-router';
 import { ArrowLeft } from 'lucide-react-native';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View, Alert,Keyboard} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useApp } from '../contexts/AppContext';
 import { supabase,getCurrentUser } from '@/lib/supabaseClient';
 import { User } from '@supabase/supabase-js'
+import { useFocusEffect } from 'expo-router';
 
 export default function CalendarViewScreen() {
   const router = useRouter();
@@ -16,14 +19,18 @@ export default function CalendarViewScreen() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<User | null>(null)
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user)
-    })
-    supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-    })
-  }, [])
+    useFocusEffect(
+      useCallback(() => {
+        supabase.auth.getUser().then(({ data: { user } }) => {
+          setUser(user)
+        })
+
+        supabase.auth.onAuthStateChange((_event, session) => {
+          setUser(session?.user ?? null)
+        })
+      }, [])
+    )
+
 
    async function signInWithEmail() {
     setLoading(true)

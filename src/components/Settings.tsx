@@ -19,6 +19,7 @@ import {
 import Slider  from '@react-native-community/slider';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { User } from '@supabase/supabase-js';
 import { AppThemeColors, resolveThemePreference, ThemeColors } from '../constants/theme';
 import { useColorScheme } from '../hooks/use-color-scheme';
 
@@ -35,6 +36,7 @@ interface SettingsProps {
   onNavigateBack: () => void;
   settings: SettingsData;
   onUpdateSettings: (settings: SettingsData) => void;
+  user : User | null;
 }
 
 interface SettingsSectionProps {
@@ -245,6 +247,8 @@ export function Settings({
   ];
   const router = useRouter();
   const insets = useSafeAreaInsets();
+
+  //Add sign in and out stuff
 
   return (
     <View style={[styles.container,{paddingTop:insets.top,backgroundColor: '#b8a4d9',}]}>
