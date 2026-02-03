@@ -1,8 +1,7 @@
 {
-  "name": "planable",
+  "name": "planner-prototype",
   "main": "expo-router/entry",
   "version": "1.0.0",
-  "scheme": "planable",
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
@@ -13,7 +12,6 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
-    "@react-native-community/datetimepicker": "^8.6.0",
     "@react-native-community/slider": "5.0.1",
     "@react-navigation/bottom-tabs": "^7.4.0",
     "@react-navigation/elements": "^2.6.3",
@@ -38,7 +36,6 @@
     "react-native": "0.81.5",
     "react-native-calendars": "^1.1313.0",
     "react-native-confetti-cannon": "^1.5.2",
-    "react-native-element-dropdown": "^2.12.4",
     "react-native-gesture-handler": "~2.28.0",
     "react-native-reanimated": "~4.1.1",
     "react-native-safe-area-context": "~5.6.0",

@@ -118,92 +118,16 @@ export function TaskCard({
     setShowRescheduleDialog(false);
   };
 
-  
-  const formatDate = (date: string | Date) => {
-    const dateObj = new Date(date);
-    return dateObj.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    });
-  };
-
-  return (
-    <>
-      <TouchableOpacity
-        style={[
-          styles.card,
-          {
-            justifyContent: showDate ? "space-between" : "flex-start",
-            backgroundColor: style.backgroundColor,
-            borderWidth: colorBlindMode ? 2 : 1,
-            borderColor: style.borderColor,
-          },
-        ]}
-        onPress={() => onToggle(task.id)}
-        activeOpacity={0.7}
-      >
-        <View style={styles.contentContainer}>
-          <View style={[
-            styles.iconContainer,
-            {
-              backgroundColor: colorBlindMode ? `${style.iconColor}20` : style.borderColor,
-              borderWidth: colorBlindMode ? 2 : 0,
-              borderColor: style.iconColor,
-            },
-          ]}>
-            <IconComponent
-              size={colorBlindMode ? 18 : 16}
-              color={colorBlindMode ? style.iconColor : "#ffffff"}
-              opacity={task.completed ? 0.5 : 1}
-              strokeWidth={colorBlindMode ? 2.5 : 2}
-            />
-          </View>
-
-          <CheckCircle2
-            size={20}
-            color={task.completed ? "#b4e7ce" : "#e5d9f2"}
-          />
-
-          <Text style={[
-            styles.taskTitle,
-            {
-              color: task.completed ? "#999" : "#333",
-              textDecorationLine: task.completed ? "line-through" : "none",
-            },
-          ]}>{task.title}</Text>
-        </View>
-
-        {showDate && <Text style={styles.dateText}>{formatDate(task.date)}</Text>}
-        {/* Show reschedule button only if onReschedule prop is provided */}
-        {onReschedule && !task.completed && (
-          <TouchableOpacity
-            onPress={() => setShowRescheduleDialog(true)}
-            style={styles.rescheduleIcon}
-            activeOpacity={0.7}
-          >
-            {/*Calendar Clock Icon */}
-            <CalendarClock size={18} color="#6b5b7f" />
-          </TouchableOpacity>
-        )}
-      </TouchableOpacity>
-      {/* Reschedule Dialog */}
-      <RescheduleDialog
-        isOpen={showRescheduleDialog}
-        onClose={() => setShowRescheduleDialog(false)}
-        onReschedule={handleRescheduleFromDialog}
-        taskTitle={task.title}
-        currentDate={task.date}
-      />
-    </>
-  );
-}
-
-const styles = StyleSheet.create({
+  const styles = StyleSheet.create({
     card: {
       flexDirection: "row",
       alignItems: "center",
+      justifyContent: showDate ? "space-between" : "flex-start",
       padding: 16,
       borderRadius: 12,
+      backgroundColor: style.backgroundColor,
+      borderWidth: colorBlindMode ? 2 : 1,
+      borderColor: style.borderColor,
       marginVertical: 6,
     },
     contentContainer: {
@@ -218,6 +142,9 @@ const styles = StyleSheet.create({
       borderRadius: 16,
       justifyContent: "center",
       alignItems: "center",
+      backgroundColor: colorBlindMode ? `${style.iconColor}20` : style.borderColor,
+      borderWidth: colorBlindMode ? 2 : 0,
+      borderColor: style.iconColor,
     },
     checkCircle: {
       width: 20,
@@ -226,6 +153,8 @@ const styles = StyleSheet.create({
     taskTitle: {
       flex: 1,
       fontSize: 16,
+      color: task.completed ? "#999" : "#333",
+      textDecorationLine: task.completed ? "line-through" : "none",
     },
     dateText: {
       fontSize: 14,
@@ -252,3 +181,61 @@ const styles = StyleSheet.create({
       alignItems: "center",
     },
   });
+
+  const formatDate = (date: string | Date) => {
+    const dateObj = new Date(date);
+    return dateObj.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  return (
+    <>
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() => onToggle(task.id)}
+        activeOpacity={0.7}
+      >
+        <View style={styles.contentContainer}>
+          <View style={styles.iconContainer}>
+            <IconComponent
+              size={colorBlindMode ? 18 : 16}
+              color={colorBlindMode ? style.iconColor : "#ffffff"}
+              opacity={task.completed ? 0.5 : 1}
+              strokeWidth={colorBlindMode ? 2.5 : 2}
+            />
+          </View>
+
+          <CheckCircle2
+            size={20}
+            color={task.completed ? "#b4e7ce" : "#e5d9f2"}
+          />
+
+          <Text style={styles.taskTitle}>{task.title}</Text>
+        </View>
+
+        {showDate && <Text style={styles.dateText}>{formatDate(task.date)}</Text>}
+        {/* Show reschedule button only if onReschedule prop is provided */}
+        {onReschedule && !task.completed && (
+          <TouchableOpacity
+            onPress={() => setShowRescheduleDialog(true)}
+            style={styles.rescheduleIcon}
+            activeOpacity={0.7}
+          >
+            {/*Calendar Clock Icon */}
+            <CalendarClock size={18} color="#6b5b7f" />
+          </TouchableOpacity>
+        )}
+      </TouchableOpacity>
+      {/* Reschedule Dialog */}
+      <RescheduleDialog
+        isOpen={showRescheduleDialog}
+        onClose={() => setShowRescheduleDialog(false)}
+        onReschedule={handleRescheduleFromDialog}
+        taskTitle={task.title}
+        currentDate={task.date}
+      />
+    </>
+  );
+}
