@@ -6,7 +6,6 @@ import {
   StyleSheet,
   ScrollView,
   TextInput,
-  FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Plus } from 'lucide-react-native';
@@ -22,7 +21,6 @@ interface CalendarViewProps {
   tasks: Task[];
   onAddTask: (params: CreateTaskParams) => void;
   onToggleTask: (id: string) => void;
-  onRescheduleTask: (id: string, newDate: Date) => void;
   onEditTask: (id: string, newTitle: string, newDate: Date) => void;
   onDeleteTask: (id: string) => void;
   settings: SettingsData;
@@ -34,7 +32,6 @@ export function CalendarView({
   tasks,
   onAddTask,
   onToggleTask,
-  onRescheduleTask,
   onEditTask,
   onDeleteTask,
   settings,

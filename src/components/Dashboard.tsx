@@ -23,7 +23,6 @@ interface DashboardProps {
   tasks: Task[];
   onAddTask: (params: CreateTaskParams) => void;
   onToggleTask: (id: string) => void;
-  onRescheduleTask: (id: string, newDate: Date) => void;
   onEditTask: (id: string, updatedTitle: string, updatedDate: Date) => void;
   onDeleteTask: (id: string) => void;
   settings: SettingsData;
@@ -37,7 +36,6 @@ export function Dashboard({
   tasks,
   onAddTask,
   onToggleTask,
-  onRescheduleTask,
   onEditTask,
   onDeleteTask,
   settings,

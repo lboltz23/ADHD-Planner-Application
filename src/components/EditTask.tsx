@@ -259,16 +259,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: 14,
   },
-  cancelButton: {
-    borderWidth: 1,
-    borderColor: "#e5d9f2",
-    backgroundColor: "#f8f6fb",
-  },
-  cancelText: {
-    color: "#6b5b7f",
-    fontWeight: "600",
-    fontSize: 14,
-  },
   saveButton: {
     // backgroundColor set dynamically
   },
