@@ -9,11 +9,11 @@ import {
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Settings, Calendar, Zap } from 'lucide-react-native';
 import { Task, TaskType, CreateTaskParams } from '../types';
 import { SettingsData } from './Settings';
 import { TaskCard } from './TaskCard';
 import AddTaskDialog from './AddTaskDialog';
-import { TaskTypeSelector } from './TaskTypeSelector';
 
 // Dashboard Props
 interface DashboardProps {
@@ -21,7 +21,7 @@ interface DashboardProps {
   onNavigateToOneThingMode: () => void;
   onNavigateToSettings: () => void;
   tasks: Task[];
-  onAddTask: (title: string, date: Date, type: TaskType) => void;
+  onAddTask: (params: CreateTaskParams) => void;
   onToggleTask: (id: string) => void;
   onRescheduleTask: (id: string, newDate: Date) => void;
   settings: SettingsData;
@@ -42,14 +42,25 @@ export function Dashboard({
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [selectedType, setSelectedType] = useState<TaskType>('basic');
   const [taskView, setTaskView] = useState<'today' | 'upcoming'>('today');
+  const [showAddTaskDialog, setShowAddTaskDialog] = useState(false); 
   // Ref to track previous progress for confetti trigger
   const previousProgressRef = useRef(0);
 
   const handleAddTask = () => {
-    if (newTaskTitle.trim()) {
-      onAddTask(newTaskTitle, new Date(), selectedType);
-      setNewTaskTitle('');
+    if (newTaskTitle.trim() && !showAddTaskDialog) {
+      setShowAddTaskDialog(true);
     }
+  };
+
+  const handleCreateTask = (params: CreateTaskParams) => {
+    onAddTask(params);
+    setNewTaskTitle('');  // Clear the input field
+    setShowAddTaskDialog(false);
+  };
+
+  const handleCloseDialog = () => {
+    setShowAddTaskDialog(false);
+    // Don't clear newTaskTitle - let user keep it if they cancel
   };
 
   const handleProgressBar = () => {
@@ -213,7 +224,7 @@ export function Dashboard({
       paddingHorizontal: 12,
       paddingVertical: 8,
       fontSize: 14,
-      color: '#333',
+      color: '#473a44',
     },
     addButton: {
       backgroundColor: '#a8d8ea',
@@ -425,6 +436,15 @@ export function Dashboard({
             )}
           </View>
         )}
+        <AddTaskDialog
+          isOpen={showAddTaskDialog}
+          onClose={handleCloseDialog}
+          onAddTask={handleCreateTask}
+          initialTaskType={selectedType}
+          initialTitle={newTaskTitle}
+          colorBlindMode={settings.colorBlindMode}
+          tasks={tasks}
+        />
 
 
       </ScrollView>
