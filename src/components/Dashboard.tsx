@@ -1,4 +1,3 @@
-import { Calendar, Settings, Zap } from 'lucide-react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   ScrollView,
@@ -14,6 +13,7 @@ import { SettingsData } from './Settings';
 import { TaskCard } from './TaskCard';
 import { TaskTypeSelector } from './TaskTypeSelector';
 import AddTaskDialog from './AddTaskDialog';
+import { TaskTypeSelector } from './TaskTypeSelector';
 
 // Dashboard Props
 interface DashboardProps {
@@ -227,7 +227,7 @@ export function Dashboard({
       color: '#473a44',
     },
     addButton: {
-      backgroundColor: '#a8d8ea',
+      backgroundColor: '#96d7efff',
       borderRadius: 6,
       padding: 8,
       justifyContent: 'center',
