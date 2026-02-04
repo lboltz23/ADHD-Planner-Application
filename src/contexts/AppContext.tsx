@@ -3,6 +3,8 @@ import React, { createContext, useContext, useState, useCallback, useMemo, useEf
 import { Task, CreateTaskParams, Weekday } from '../types';
 import { SettingsData } from '../components/Settings';
 import { supabase } from '@/lib/supabaseClient';
+import 'react-native-get-random-values';
+import { v4 as uuidv4 } from 'uuid';
 
 // Map JavaScript day numbers (0=Sunday) to Weekday names
 const DAY_NUMBER_TO_WEEKDAY: Record<number, Weekday> = {
@@ -41,6 +43,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   });
 
   const [confettiTrigger, setConfettiTrigger] = useState(0);
+
+  // Default user ID - replace with actual user ID when auth is implemented
+  const DEFAULT_USER_ID = '9dfa5616-322a-4287-a980-d33754320861';
 
   // Load tasks from Supabase on mount
   useEffect(() => {
@@ -118,7 +123,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const addTask = useCallback(async (params: CreateTaskParams) => {
     const { title, date, type, repeatDays, intervalMonths, parentTaskId, notes, startDate, endDate } = params;
-    const baseId = Date.now().toString();
+    const baseId = uuidv4();
 
     // Check if this is a recurring task
     if ((type === "routine" || type === "long_interval") && startDate && endDate) {
@@ -131,8 +136,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       );
 
       // Create individual task instances for each scheduled day
-      const recurringTasks: Task[] = scheduledDays.map((scheduledDate, index) => ({
-        id: `${baseId}-instance-${index}`,
+      const recurringTasks: Task[] = scheduledDays.map((scheduledDate) => ({
+        id: uuidv4(),
         title,
         date: scheduledDate,
         completed: false,
@@ -156,7 +161,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         completed: task.completed,
         type: task.type,
         description: task.notes,
-        user_id: 'default-user', // TODO: Replace with actual user ID when auth is implemented
+        user_id: DEFAULT_USER_ID,
       }));
 
       const { error } = await supabase.from('tasks').insert(supabaseTasks);
@@ -185,7 +190,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         completed: newTask.completed,
         type: newTask.type,
         description: newTask.notes,
-        user_id: 'default-user', // TODO: Replace with actual user ID when auth is implemented
+        user_id: DEFAULT_USER_ID,
       });
 
       if (error) {
