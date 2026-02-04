@@ -53,7 +53,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       try {
         const { data, error } = await supabase
           .from('tasks')
-          .select('*');
+          .select('*')
+          .eq('user_id', DEFAULT_USER_ID);
 
         if (error) {
           console.error('Error loading tasks from Supabase:', error);
