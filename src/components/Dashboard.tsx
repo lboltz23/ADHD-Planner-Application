@@ -227,7 +227,7 @@ export function Dashboard({
       color: '#473a44',
     },
     addButton: {
-      backgroundColor: '#e588c0',
+      backgroundColor: '#96d7efff',
       borderRadius: 6,
       padding: 8,
       justifyContent: 'center',
