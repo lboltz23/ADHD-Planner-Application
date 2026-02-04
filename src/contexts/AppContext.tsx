@@ -75,6 +75,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     colorBlindMode: false,
   });
 
+  const [confettiTrigger, setConfettiTrigger] = useState(0);
+  
   // Helper function to generate scheduled days for recurring tasks
   const generateScheduledDays = (
     startDate: Date,
