@@ -9,7 +9,7 @@ import { supabase } from '@/lib/supabaseClient';
 
 export default function DashboardScreen() {
   const router = useRouter();
-  const { tasks, settings, addTask, toggleTask, rescheduleTask, triggerConfetti } = useApp();
+  const { tasks, settings, addTask, toggleTask, rescheduleTask, updateTask, deleteTask, triggerConfetti } = useApp();
 
  useEffect(() => {
     const loadTasks = async () => {
@@ -38,6 +38,8 @@ export default function DashboardScreen() {
         onAddTask={addTask}
         onToggleTask={toggleTask}
         onRescheduleTask={rescheduleTask}
+        onEditTask={updateTask}
+        onDeleteTask={deleteTask}
         settings={settings}
         onTriggerConfetti={triggerConfetti}
       />

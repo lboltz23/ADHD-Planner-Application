@@ -20,6 +20,8 @@ interface AppContextType {
   addTask: (params: CreateTaskParams) => void;
   toggleTask: (id: string) => void;
   rescheduleTask: (id: string, newDate: Date, newTime?: string) => void;
+  updateTask: (id: string, newTitle: string, newDate: Date) => void;
+  deleteTask: (id: string) => void;
   updateSettings: (newSettings: SettingsData) => void;
   confettiTrigger: number;
   triggerConfetti: () => void;
@@ -186,6 +188,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setConfettiTrigger(prev => prev + 1);
   };
 
+  const updateTask = (id: string, newTitle: string, newDate: Date) => {
+    setTasks(tasks.map(task =>
+      task.id === id ? { ...task, title: newTitle, date: newDate } : task
+    ));
+  };
+
+  const deleteTask = (id: string) => {
+    setTasks(tasks.filter(task => task.id !== id));
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -194,6 +206,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         addTask,
         toggleTask,
         rescheduleTask,
+        updateTask,
+        deleteTask,
         updateSettings,
         confettiTrigger,
         triggerConfetti,

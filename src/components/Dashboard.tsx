@@ -24,6 +24,8 @@ interface DashboardProps {
   onAddTask: (params: CreateTaskParams) => void;
   onToggleTask: (id: string) => void;
   onRescheduleTask: (id: string, newDate: Date) => void;
+  onEditTask: (id: string, updatedTitle: string, updatedDate: Date) => void;
+  onDeleteTask: (id: string) => void;
   settings: SettingsData;
   onTriggerConfetti?: () => void;
 }
@@ -36,6 +38,8 @@ export function Dashboard({
   onAddTask,
   onToggleTask,
   onRescheduleTask,
+  onEditTask,
+  onDeleteTask,
   settings,
   onTriggerConfetti,
 }: DashboardProps) {
@@ -408,7 +412,8 @@ export function Dashboard({
                     key={task.id}
                     task={task}
                     onToggle={onToggleTask}
-                    onReschedule={onRescheduleTask}
+                    onUpdate={onEditTask}
+                    onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
                   />
                 ))}
@@ -427,7 +432,8 @@ export function Dashboard({
                     key={task.id}
                     task={task}
                     onToggle={onToggleTask}
-                    onReschedule={onRescheduleTask}
+                    onUpdate={onEditTask}
+                    onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
                     showDate={true}
                   />
