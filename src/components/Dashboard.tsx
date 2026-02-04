@@ -9,10 +9,10 @@ import {
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Settings, Calendar, Zap } from 'lucide-react-native';
 import { Task, TaskType, CreateTaskParams } from '../types';
 import { SettingsData } from './Settings';
 import { TaskCard } from './TaskCard';
+import { TaskTypeSelector } from './TaskTypeSelector';
 import AddTaskDialog from './AddTaskDialog';
 
 // Dashboard Props
