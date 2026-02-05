@@ -15,7 +15,7 @@ export default function CalendarViewScreen() {
   const router = useRouter();
   const { tasks, settings, addTask, toggleTask, rescheduleTask } = useApp();
   const insets = useSafeAreaInsets();
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<User | null>(null)
@@ -35,19 +35,19 @@ export default function CalendarViewScreen() {
    async function signInWithEmail() {
     setLoading(true)
     const { error } = await supabase.auth.signInWithPassword({
-      email: username,
+      email: email,
       password: password,
     })
     if (error) Alert.alert(error.message)
     setLoading(false)
   }
 
-
+  // Fix the same sizing problem we had on the sign up page
   return (
     <View style={[,styles.container,{paddingTop:insets.top,backgroundColor:'#b8a4d9'}]}>
       <View style={[styles.container,{padding:16}]}>
         <View style={styles.headerRight}>
-            <TouchableOpacity style={styles.backButton} onPress={() => router.push('/Settings')}>
+            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
               <ArrowLeft size={20} color="#6b5b7f" />
             </TouchableOpacity>
         </View>
@@ -59,11 +59,11 @@ export default function CalendarViewScreen() {
             {!loading ?
             <View>
               <View style={styles.settingRow}>
-                <Text style={[styles.settingLabelText,{paddingRight:2}]}>Username:</Text>
+                <Text style={[styles.settingLabelText,{paddingRight:2}]}>Email:</Text>
                 <TextInput 
-                style={{borderColor: '#e5d9f2',borderWidth:1,width:"80%",borderRadius:5,paddingHorizontal:2}}
-                value={username}
-                onChangeText={setUsername}
+                style={{borderColor: '#e5d9f2',borderWidth:1,maxWidth:"90%",borderRadius:5,paddingHorizontal:2, flex:1}}
+                value={email}
+                onChangeText={setEmail}
                 onSubmitEditing={() => {
                   Keyboard.dismiss();
                 }}
@@ -71,7 +71,7 @@ export default function CalendarViewScreen() {
               </View>
               <View style={styles.settingRow}>
                 <Text style={[styles.settingLabelText,{paddingRight:2}]}>Password:</Text>
-                <TextInput style={{borderColor: '#e5d9f2',borderWidth:1,width:"80%",borderRadius:5,paddingHorizontal:2}}
+                <TextInput style={{borderColor: '#e5d9f2',borderWidth:1,maxWidth:"80%",borderRadius:5,paddingHorizontal:2, flex:1}}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={true}

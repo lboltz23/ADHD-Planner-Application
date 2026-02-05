@@ -20,6 +20,7 @@ import Slider  from '@react-native-community/slider';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { User } from '@supabase/supabase-js';
+import { signOut } from '@/lib/supabaseClient';
 
 export interface SettingsData {
   defaultTimerMinutes: number;
@@ -110,6 +111,7 @@ export function Settings({
   onNavigateBack,
   settings,
   onUpdateSettings,
+  user
 }: SettingsProps) {
   const updateSetting = <K extends keyof SettingsData>(
     key: K,
@@ -252,11 +254,19 @@ export function Settings({
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Settings</Text>
           <View style={styles.headerRight}>
+            {!user ?
             <TouchableOpacity
               style={styles.mainButton}
               onPress={() => router.push('/login')}>
               <Text style={styles.mainButtonText}>Login In</Text>
             </TouchableOpacity>
+            :
+             <TouchableOpacity
+              style={styles.mainButton}
+              onPress={() => signOut()}>
+              <Text style={styles.mainButtonText}>Sign Out</Text>
+            </TouchableOpacity>
+             }
           </View>
         </View>
 
