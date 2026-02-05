@@ -47,41 +47,41 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [confettiTrigger, setConfettiTrigger] = useState(0);
 
   // Default user ID - replace with actual user ID when auth is implemented
-  const DEFAULT_USER_ID = '9dfa5616-322a-4287-a980-d33754320861';
+  // const DEFAULT_USER_ID = '9dfa5616-322a-4287-a980-d33754320861';
 
   // Load tasks from Supabase on mount
-  useEffect(() => {
-    const loadTasks = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('tasks')
-          .select('*')
-          .eq('user_id', DEFAULT_USER_ID);
+  // useEffect(() => {
+  //   const loadTasks = async () => {
+  //     try {
+  //       const { data, error } = await supabase
+  //         .from('tasks')
+  //         .select('*')
+  //         .eq('user_id', DEFAULT_USER_ID);
 
-        if (error) {
-          console.error('Error loading tasks from Supabase:', error);
-          return;
-        }
+  //       if (error) {
+  //         console.error('Error loading tasks from Supabase:', error);
+  //         return;
+  //       }
 
-        if (data) {
-          // Convert Supabase tasks to our Task type
-          const loadedTasks: Task[] = data.map((row: any) => ({
-            id: row.id,
-            title: row.title,
-            date: new Date(row.due_date),
-            completed: row.completed || false,
-            type: row.type as Task['type'],
-            notes: row.description,
-          }));
-          setTasks(loadedTasks);
-        }
-      } catch (error) {
-        console.error('Failed to load tasks:', error);
-      }
-    };
+  //       if (data) {
+  //         // Convert Supabase tasks to our Task type
+  //         const loadedTasks: Task[] = data.map((row: any) => ({
+  //           id: row.id,
+  //           title: row.title,
+  //           date: new Date(row.due_date),
+  //           completed: row.completed || false,
+  //           type: row.type as Task['type'],
+  //           notes: row.description,
+  //         }));
+  //         setTasks(loadedTasks);
+  //       }
+  //     } catch (error) {
+  //       console.error('Failed to load tasks:', error);
+  //     }
+  //   };
 
-    loadTasks();
-  }, []);
+  //   loadTasks();
+  // }, []);
 
   // Helper function to generate scheduled days for recurring tasks
   const generateScheduledDays = (
@@ -157,22 +157,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }));
 
       // Insert all recurring tasks into Supabase
-      const supabaseTasks = recurringTasks.map(task => ({
-        id: task.id,
-        title: task.title,
-        due_date: task.date.toISOString(),
-        completed: task.completed,
-        type: task.type,
-        description: task.notes,
-        user_id: DEFAULT_USER_ID,
-      }));
+      // const supabaseTasks = recurringTasks.map(task => ({
+      //   id: task.id,
+      //   title: task.title,
+      //   due_date: task.date.toISOString(),
+      //   completed: task.completed,
+      //   type: task.type,
+      //   description: task.notes,
+      //   user_id: DEFAULT_USER_ID,
+      // }));
 
-      const { error } = await supabase.from('tasks').insert(supabaseTasks);
-      if (error) {
-        console.error('Error inserting recurring tasks:', error);
-      } else {
-        setTasks(prev => [...prev, ...recurringTasks]);
-      }
+      // const { error } = await supabase.from('tasks').insert(supabaseTasks);
+      // if (error) {
+      //   console.error('Error inserting recurring tasks:', error);
+      // } else {
+      //   setTasks(prev => [...prev, ...recurringTasks]);
+      // }
+      setTasks(prev => [...prev, ...recurringTasks]);
     } else {
       // Regular non-recurring task
       const newTask: Task = {
@@ -186,71 +187,68 @@ export function AppProvider({ children }: { children: ReactNode }) {
       };
 
       // Insert into Supabase
-      const { error } = await supabase.from('tasks').insert({
-        id: newTask.id,
-        title: newTask.title,
-        due_date: newTask.date.toISOString(),
-        completed: newTask.completed,
-        type: newTask.type,
-        description: newTask.notes,
-        user_id: DEFAULT_USER_ID,
-      });
+      // const { error } = await supabase.from('tasks').insert({
+      //   id: newTask.id,
+      //   title: newTask.title,
+      //   due_date: newTask.date.toISOString(),
+      //   completed: newTask.completed,
+      //   type: newTask.type,
+      //   description: newTask.notes,
+      //   user_id: DEFAULT_USER_ID,
+      // });
 
-      if (error) {
-        console.error('Error inserting task:', error);
-      } else {
-        setTasks(prev => [...prev, newTask]);
-      }
+      // if (error) {
+      //   console.error('Error inserting task:', error);
+      // } else {
+      //   setTasks(prev => [...prev, newTask]);
+      // }
+      setTasks(prev => [...prev, newTask]);
     }
   }, []);
 
-  const toggleTask = useCallback(async (id: string) => {
-    // Optimistically update UI first
+  const toggleTask = useCallback((id: string) => {
     setTasks(prev => prev.map(task =>
       task.id === id ? { ...task, completed: !task.completed } : task
     ));
 
-    // Find the task to get the new completed state
-    const task = tasks.find(t => t.id === id);
-    if (task) {
-      const { error } = await supabase
-        .from('tasks')
-        .update({ completed: !task.completed })
-        .eq('id', id);
+    // Supabase sync commented out
+    // const task = tasks.find(t => t.id === id);
+    // if (task) {
+    //   const { error } = await supabase
+    //     .from('tasks')
+    //     .update({ completed: !task.completed })
+    //     .eq('id', id);
 
-      if (error) {
-        console.error('Error toggling task:', error);
-        // Revert on error
-        setTasks(prev => prev.map(task =>
-          task.id === id ? { ...task, completed: !task.completed } : task
-        ));
-      }
-    }
-  }, [tasks]);
+    //   if (error) {
+    //     console.error('Error toggling task:', error);
+    //     setTasks(prev => prev.map(task =>
+    //       task.id === id ? { ...task, completed: !task.completed } : task
+    //     ));
+    //   }
+    // }
+  }, []);
 
-  const rescheduleTask = useCallback(async (id: string, newDate: Date, newTime?: string) => {
-    // Optimistically update UI first
+  const rescheduleTask = useCallback((id: string, newDate: Date, newTime?: string) => {
     setTasks(prev => prev.map(task =>
       task.id === id ? { ...task, date: newDate, time: newTime } : task
     ));
 
-    // Update in Supabase
-    const { error } = await supabase
-      .from('tasks')
-      .update({ due_date: newDate.toISOString() })
-      .eq('id', id);
+    // Supabase sync commented out
+    // const { error } = await supabase
+    //   .from('tasks')
+    //   .update({ due_date: newDate.toISOString() })
+    //   .eq('id', id);
 
-    if (error) {
-      console.error('Error rescheduling task:', error);
-      // Revert on error - find original date
-      const originalTask = tasks.find(t => t.id === id);
-      if (originalTask) {
-        setTasks(prev => prev.map(task =>
-          task.id === id ? { ...task, date: originalTask.date, time: originalTask.time } : task
-        ));
-      }
-    }
-  }, [tasks]);
+    // if (error) {
+    //   console.error('Error rescheduling task:', error);
+    //   const originalTask = tasks.find(t => t.id === id);
+    //   if (originalTask) {
+    //     setTasks(prev => prev.map(task =>
+    //       task.id === id ? { ...task, date: originalTask.date, time: originalTask.time } : task
+    //     ));
+    //   }
+    // }
+  }, []);
 
   const updateSettings = useCallback((newSettings: SettingsData) => {
     setSettings(newSettings);
@@ -258,7 +256,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const triggerConfetti = useCallback(() => {
     setConfettiTrigger(prev => prev + 1);
-  };
+  }, []);
 
   const updateTask = (id: string, newTitle: string, newDate: Date) => {
     setTasks(tasks.map(task =>

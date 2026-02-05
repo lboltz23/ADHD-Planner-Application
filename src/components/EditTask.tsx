@@ -3,7 +3,7 @@ import { View, Text, Modal, TouchableOpacity, StyleSheet, ScrollView } from "rea
 import { X, Trash2, CheckCircle2 } from "lucide-react-native";
 import { Calendar } from "react-native-calendars";
 import { Task } from "../types";
-import { getTaskTypeColor } from "./taskColors";
+import { getTaskTypeColor, getEnhancedTaskTypeColor } from "./taskColors";
 import TitleInput from "./TitleInput";
 
 export interface EditTaskProps {
@@ -130,7 +130,7 @@ export default function EditTask({
                 <View style={styles.rightButtons}>
                   <TouchableOpacity
                     onPress={handleSave}
-                    style={[styles.button, styles.saveButton, { backgroundColor: typeColor }]}
+                    style={[styles.button, styles.saveButton, { backgroundColor: getEnhancedTaskTypeColor(task.type, colorBlindMode) }]}
                   >
                     <Text style={styles.saveText}>Save</Text>
                   </TouchableOpacity>
