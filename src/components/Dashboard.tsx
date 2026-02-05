@@ -11,9 +11,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Task, TaskType, CreateTaskParams } from '../types';
 import { SettingsData } from './Settings';
 import { TaskCard } from './TaskCard';
-import { TaskTypeSelector } from './TaskTypeSelector';
 import AddTaskDialog from './AddTaskDialog';
 import { TaskTypeSelector } from './TaskTypeSelector';
+import { Calendar, Settings, Zap } from 'lucide-react-native';
 
 // Dashboard Props
 interface DashboardProps {
