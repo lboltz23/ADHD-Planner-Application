@@ -20,6 +20,7 @@ import Slider  from '@react-native-community/slider';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { User } from '@supabase/supabase-js';
+import { signOut } from '@/lib/supabaseClient';
 import { AppThemeColors, resolveThemePreference, ThemeColors } from '../constants/theme';
 import { useColorScheme } from '../hooks/use-color-scheme';
 
@@ -114,6 +115,7 @@ export function Settings({
   onNavigateBack,
   settings,
   onUpdateSettings,
+  user
 }: SettingsProps) {
   const systemScheme = useColorScheme();
   const resolvedTheme = resolveThemePreference(settings.theme, systemScheme);
@@ -260,11 +262,19 @@ export function Settings({
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Settings</Text>
           <View style={styles.headerRight}>
+            {!user ?
             <TouchableOpacity
               style={styles.mainButton}
               onPress={() => router.push('/login')}>
               <Text style={styles.mainButtonText}>Login In</Text>
             </TouchableOpacity>
+            :
+             <TouchableOpacity
+              style={styles.mainButton}
+              onPress={() => signOut()}>
+              <Text style={styles.mainButtonText}>Sign Out</Text>
+            </TouchableOpacity>
+             }
           </View>
         </View>
 

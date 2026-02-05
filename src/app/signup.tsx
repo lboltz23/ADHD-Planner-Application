@@ -5,6 +5,8 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useApp } from '../contexts/AppContext';
+import { Alert } from 'react-native';
+import { supabase } from '@/lib/supabaseClient';
 
 export default function CalendarViewScreen() {
    const router = useRouter();
@@ -13,7 +15,8 @@ export default function CalendarViewScreen() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("")
+  const [loading, setLoading] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState("");
 
 
   function validEmail(str: string): boolean {
@@ -38,7 +41,60 @@ export default function CalendarViewScreen() {
   return specialCharsRegex.test(str);
 }
 
+const ValidSignUp = () => {
+  if (
+    username.length < 3 ||
+    username.length > 20 ||
+    !username ||
+    !validEmail(email) ||
+    !email ||
+    !hasNumber(password) ||
+    !hasLetter(password) ||
+    !hasSpecialChars(password) ||
+    password.length < 8 ||
+    password !== confirmPassword
+  ) {
+    return false;
+  }
 
+  return true;
+};
+
+ async function signUpWithEmail() {
+    setLoading(true)
+    console.log(username)
+    console.log(password)
+    console.log(email)
+    if (!ValidSignUp()){ 
+      Alert.alert("Invalid Sign Up Credentials")
+    } else {
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.signUp({
+        email: email,
+        password: password,
+        options: {
+          data: {
+            username:username
+          }
+        }
+      })
+      if (error) {
+        Alert.alert(error.message);
+        setLoading(false);
+        return;
+      }
+
+      if (!session) {
+        Alert.alert('Please check your inbox for email verification!');
+      }
+    }
+    setLoading(false)
+    router.push("/Settings")
+  }
+  
+// Supabase having issues signing up new user
   return (
     <View style={[,styles.container,{paddingTop:insets.top,backgroundColor:'#b8a4d9',width:"100%",justifyContent:'center'}]}>
       <View style={[styles.container,{padding:16}]}>
@@ -61,7 +117,8 @@ export default function CalendarViewScreen() {
               />
             </View>
             <View style = {{alignItems:'flex-start'}}>
-              {username.length < 3 && username!="" && <Text style = {{color:"red"}}>Username Must At Least Be 3 Characters</Text>}
+              {username.length < 3 && username!="" && username.length > 20 && <Text style = {{color:"red"}}>
+                 Must Be At Least 3 Characters And No Greater Than 20 Characters</Text>}
 
             </View>
             <View style={styles.settingRow}>
@@ -102,7 +159,7 @@ export default function CalendarViewScreen() {
             <View style={[{alignItems:"center",justifyContent:'center'}]}>
               <TouchableOpacity
                 style={styles.mainButton}
-                onPress={() => router.push('/login')}>
+                onPress={() => signUpWithEmail()}>
                 <Text style={styles.mainButtonText}>Sign Up</Text>
               </TouchableOpacity>
             </View>
