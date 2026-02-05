@@ -113,7 +113,12 @@ export default function EditTask({
                     style={[styles.button, styles.deleteButton]}
                   >
                     <Trash2 size={16} color="#ffffff" />
-                    <Text style={styles.deleteText}>Delete</Text>
+                    <Text style={styles.deleteText}
+                      adjustsFontSizeToFit
+                      numberOfLines={1}
+                      >
+                      Delete
+                    </Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -210,12 +215,14 @@ const styles = StyleSheet.create({
   },
   buttonRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     justifyContent: "space-between",
     gap: 12,
     marginTop: 8,
   },
   leftButtons: {
     flexDirection: "row",
+    flex: 1,
     gap: 12,
   },
   rightButtons: {
