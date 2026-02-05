@@ -202,8 +202,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const toggleTask = useCallback((id: string) => {
-    setTasks(prev => prev.map(task =>
   const toggleTask = useCallback(async (id: string) => {
     // Optimistically update UI first
     setTasks(prev => prev.map(task =>

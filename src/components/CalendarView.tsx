@@ -1,13 +1,10 @@
 import React, { useMemo } from 'react';
 import { View, Text, ScrollView, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { ArrowLeft, Settings } from 'lucide-react-native';
-import { Task } from '../types';
 import { TaskCard } from './TaskCard';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, Plus } from 'lucide-react-native';
-import { Task, TaskType, CreateTaskParams } from '../types';
-import { SettingsData } from './Settings';
+import { ArrowLeft, Settings } from 'lucide-react-native';
+import { Task,} from '../types';
 import { ProgressCircle } from './ProgressCircle';
 
 interface WeeklyViewProps {
