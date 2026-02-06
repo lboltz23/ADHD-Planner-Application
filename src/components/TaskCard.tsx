@@ -173,7 +173,7 @@ export function TaskCard({
           ]}>{task.title}</Text>
         </View>
 
-        {showDate && <Text style={styles.dateText}>{formatDate(task.date)}</Text>}
+        {showDate && <Text style={styles.dateText}>{formatDate(task.due_date)}</Text>}
         {/* Show reschedule button only if onReschedule prop is provided */}
         {onReschedule && !task.completed && (
           <TouchableOpacity
@@ -192,7 +192,7 @@ export function TaskCard({
         onClose={() => setShowRescheduleDialog(false)}
         onReschedule={handleRescheduleFromDialog}
         taskTitle={task.title}
-        currentDate={task.date}
+        currentDate={task.due_date}
       />
     </>
   );

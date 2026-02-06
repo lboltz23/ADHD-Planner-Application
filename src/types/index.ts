@@ -5,33 +5,47 @@ export type Weekday = "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday"
 
 export interface Task {
   id: string;
+  user_id: string;
   title: string;
-  date: Date;
-  completed: boolean;
   type: TaskType;
-  time?: string;
+  due_date: Date;
+  completed: boolean;
+  created_at: Date;
+  updated_at: Date;
+
+  start_date?: Date; // For routine tasks
+  end_date?: Date;   // For routine tasks
   notes?: string;
-  repeatDays?: Weekday[]; // Days of week to repeat on (for routine tasks)
-  intervalMonths?: number;
-  parentTaskId?: string;
-  // For recurring tasks (routine and long_interval)
-  startDate?: Date;
-  endDate?: Date;
-  scheduledDays?: Date[]; // Array of all scheduled occurrences
-  isRecurring?: boolean;
-  recurringTaskId?: string; // Links instances of the same recurring task
-  instanceDate?: Date; // The specific date this instance represents
+  days_selected?: Weekday[]; // For routine tasks
+  recurrence_interval?: number; // For long interval tasks
+  parent_task_id?: string; // For templates, refers to the template task ID
+  is_template?: boolean; // Whether this is a recurring template
+  completed_dates?: string[]; // For recurring templates, tracks which dates have been completed
 }
 
 export interface CreateTaskParams {
   title: string;
-  date: Date;
   type: TaskType;
-  repeatDays?: Weekday[]; // Days of week to repeat on (for routine tasks)
-  intervalMonths?: number;
-  parentTaskId?: string;
   notes?: string;
-  startDate?: Date;
-  endDate?: Date;
+
+  due_date: Date;
+  days_selected?: Weekday[]; // For routine tasks
+  start_date?: Date; // For routine tasks
+  end_date?: Date;   // For routine tasks
+
+  recurrence_interval?: number; // For long interval tasks
+
+}
+
+export interface UpdateTaskParams {
+  title?: string;
+  type?: TaskType;
+  due_date?: Date;
+  completed?: boolean;
+  notes?: string;
+  start_date?: Date;
+  end_date?: Date;
+  days_selected?: Weekday[];
+  recurrence_interval?: number;
 }
 
