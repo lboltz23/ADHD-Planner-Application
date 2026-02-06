@@ -84,7 +84,6 @@ export type Database = {
           is_template: boolean | null
           notes: string | null
           parent_task_id: string | null
-          priority: number | null
           recurrence_interval: number | null
           start_date: string | null
           title: string
@@ -103,7 +102,6 @@ export type Database = {
           is_template?: boolean | null
           notes?: string | null
           parent_task_id?: string | null
-          priority?: number | null
           recurrence_interval?: number | null
           start_date?: string | null
           title: string
@@ -122,7 +120,6 @@ export type Database = {
           is_template?: boolean | null
           notes?: string | null
           parent_task_id?: string | null
-          priority?: number | null
           recurrence_interval?: number | null
           start_date?: string | null
           title?: string
