@@ -8,6 +8,7 @@ import { getTaskTypeColor, getEnhancedTaskTypeColor } from "./taskColors";
 import TitleInput from "./TitleInput";
 import DateRangePicker from "./DateRangePicker";
 import RelatedTaskInput from "./RelatedTask";
+import NoteInput from "./NoteInput";
 
 const ALL_WEEKDAYS: Weekday[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const WEEKDAY_ABBREVIATIONS: Record<Weekday, string> = {
@@ -119,6 +120,7 @@ export default function AddTaskDialog({
         due_date: dueDate,
         type: initialTaskType,
         parent_task_id: initialTaskType === "related" ? parentTaskId : undefined,
+        notes: notes,
       });
     }
 
@@ -177,7 +179,7 @@ export default function AddTaskDialog({
             {initialTaskType === "basic" && (
               <View style={styles.section}>
                 <TitleInput value={taskTitle} onChange={handleInputChange} />
-
+                <NoteInput value={notes} onChange={setNotes} />
                 <Text style={styles.label}>Select Date *</Text>
                 {/* Calendar */}
                 <Calendar
@@ -199,6 +201,7 @@ export default function AddTaskDialog({
             {initialTaskType === "routine" && (
               <View style={styles.section}>
                 <TitleInput value={taskTitle} onChange={handleInputChange} />
+                <NoteInput value={notes} onChange={setNotes} />
 
                 <DateRangePicker
                   startDate={startDate}
@@ -234,6 +237,8 @@ export default function AddTaskDialog({
             {initialTaskType === "related" && (
               <View style={styles.section}>
                 <TitleInput value={taskTitle} onChange={handleInputChange} />
+                <NoteInput value={notes} onChange={setNotes} />
+
                 <RelatedTaskInput
                   tasks={tasks}
                   selectedTaskId={parentTaskId}
@@ -259,6 +264,7 @@ export default function AddTaskDialog({
             {initialTaskType === "long_interval" && (
               <View style={styles.section}>
                 <TitleInput value={taskTitle} onChange={handleInputChange} />
+                <NoteInput value={notes} onChange={setNotes} />
 
                 <DateRangePicker
                   startDate={startDate}
