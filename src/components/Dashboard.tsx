@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -8,13 +8,13 @@ import {
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Task, TaskType, CreateTaskParams, Weekday } from '../types';
+import { Task, TaskType, CreateTaskParams } from '../types';
 import { SettingsData } from './Settings';
 import { TaskCard } from './TaskCard';
 import { TaskTypeSelector } from './TaskTypeSelector';
 import AddTaskDialog from './AddTaskDialog';
 import { Settings, Zap, Calendar } from 'lucide-react-native';
-import { supabase } from '@/lib/supabaseClient';
+
 // Dashboard Props
 interface DashboardProps {
   onNavigateToCalendar: () => void;
@@ -27,57 +27,6 @@ interface DashboardProps {
   settings: SettingsData;
   onTriggerConfetti?: () => void;
 }
-
-// Default user ID - replace with actual user ID when auth is implemented
-const DEFAULT_USER_ID = '9dfa5616-322a-4287-a980-d33754320861';
-
-// Map JavaScript day numbers (0=Sunday) to Weekday names
-const DAY_NUMBER_TO_WEEKDAY: Record<number, Weekday> = {
-  0: "Sunday",
-  1: "Monday",
-  2: "Tuesday",
-  3: "Wednesday",
-  4: "Thursday",
-  5: "Friday",
-  6: "Saturday",
-};
-
-// Helper function to generate scheduled days for recurring tasks
-const generateScheduledDays = (
-  startDate: Date,
-  endDate: Date,
-  repeatDays?: Weekday[],
-  intervalMonths?: number
-): Date[] => {
-  const scheduledDays: Date[] = [];
-  const current = new Date(startDate);
-  const end = new Date(endDate);
-
-  current.setHours(0, 0, 0, 0);
-  end.setHours(0, 0, 0, 0);
-
-  if (repeatDays && repeatDays.length > 0) {
-    while (current <= end) {
-      const dayOfWeek = DAY_NUMBER_TO_WEEKDAY[current.getDay()];
-      if (repeatDays.includes(dayOfWeek)) {
-        scheduledDays.push(new Date(current));
-      }
-      current.setDate(current.getDate() + 1);
-    }
-  } else if (intervalMonths) {
-    while (current <= end) {
-      scheduledDays.push(new Date(current));
-      current.setMonth(current.getMonth() + intervalMonths);
-    }
-  } else {
-    while (current <= end) {
-      scheduledDays.push(new Date(current));
-      current.setDate(current.getDate() + 1);
-    }
-  }
-
-  return scheduledDays;
-};
 
 export function Dashboard({
   onNavigateToCalendar,
@@ -94,110 +43,32 @@ export function Dashboard({
   const [selectedType, setSelectedType] = useState<TaskType>('basic');
   const [taskView, setTaskView] = useState<'today' | 'upcoming'>('today');
   const [showAddTaskDialog, setShowAddTaskDialog] = useState(false);
-  const [todayTasks, setTodayTasks] = useState<Task[]>([]);
-  const [upcomingTasks, setUpcomingTasks] = useState<Task[]>([]);
   // Ref to track previous progress for confetti trigger
   const previousProgressRef = useRef(0);
 
-  // Fetch tasks from Supabase
-  const fetchTasks = useCallback(async () => {
-    try {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+  // Filter tasks from props for today
+  const todayTasks = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return tasks.filter((task) => {
+      const taskDate = new Date(task.due_date);
+      return taskDate.toDateString() === today.toDateString();
+    });
+  }, [tasks]);
 
-      // Fetch all tasks for the user
-      const { data, error } = await supabase
-        .from('tasks')
-        .select('*')
-        .eq('user_id', DEFAULT_USER_ID);
-
-      if (error) {
-        console.error('Error fetching tasks:', error);
-        return;
-      }
-
-      if (data) {
-        const allTasks: Task[] = [];
-
-        // Process each row - handle recurring templates
-        data.forEach((row: any) => {
-          if (row.is_template && row.start_date && row.end_date) {
-            // Generate instances from recurring template
-            const startDate = new Date(row.start_date);
-            const endDate = new Date(row.end_date);
-            const daysSelected = row.days_selected as Weekday[] | undefined;
-            const intervalMonths = row.recurrence_interval as number | undefined;
-            const completedDates: string[] = row.completed_dates || [];
-
-            const scheduledDays = generateScheduledDays(startDate, endDate, daysSelected, intervalMonths);
-
-            scheduledDays.forEach((scheduledDate) => {
-              const dateStr = scheduledDate.toISOString().split('T')[0];
-              const isCompleted = completedDates.includes(dateStr);
-
-              allTasks.push({
-                id: `${row.id}_${dateStr}`,
-                user_id: row.user_id,
-                title: row.title,
-                due_date: scheduledDate,
-                completed: isCompleted,
-                type: row.type as Task['type'],
-                notes: row.notes,
-                created_at: new Date(row.created_at),
-                updated_at: new Date(row.updated_at),
-                is_template: false,
-                parent_task_id: row.id,
-                days_selected: daysSelected,
-                recurrence_interval: intervalMonths,
-                start_date: startDate,
-                end_date: endDate,
-              });
-            });
-          } else {
-            // Regular non-recurring task
-            allTasks.push({
-              id: row.id,
-              title: row.title,
-              user_id: row.user_id,
-              created_at: new Date(row.created_at),
-              updated_at: new Date(row.updated_at),
-              due_date: new Date(row.due_date),
-              completed: row.completed || false,
-              type: row.type as Task['type'],
-              notes: row.notes,
-              is_template: false,
-            });
-          }
-        });
-
-        // Filter for today's tasks
-        const todayFiltered = allTasks.filter((task) => {
-          const taskDate = new Date(task.due_date);
-          return taskDate.toDateString() === today.toDateString();
-        });
-
-        // Filter for upcoming tasks (after today)
-        const upcomingFiltered = allTasks
-          .filter((task) => {
-            const taskDate = new Date(task.due_date);
-            taskDate.setHours(0, 0, 0, 0);
-            return taskDate > today;
-          })
-          .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
-          .slice(0, 5);
-
-        setTodayTasks(todayFiltered);
-        setUpcomingTasks(upcomingFiltered);
-      }
-    } catch (error) {
-      console.error('Failed to fetch tasks:', error);
-    }
-  }, []);
-
-  // Fetch tasks on mount and when tasks prop changes (after add/toggle/reschedule)
-  useEffect(() => {
-    fetchTasks();
-  }, [fetchTasks, tasks]);
+  // Filter tasks from props for upcoming (next 5 tasks after today)
+  const upcomingTasks = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return tasks
+      .filter((task) => {
+        const taskDate = new Date(task.due_date);
+        taskDate.setHours(0, 0, 0, 0);
+        return taskDate > today;
+      })
+      .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
+      .slice(0, 5);
+  }, [tasks]);
 
   const handleAddTask = () => {
     if (newTaskTitle.trim() && !showAddTaskDialog) {

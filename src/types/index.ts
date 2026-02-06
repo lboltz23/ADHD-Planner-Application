@@ -34,7 +34,7 @@ export interface CreateTaskParams {
   end_date?: Date;   // For routine tasks
 
   recurrence_interval?: number; // For long interval tasks
-
+  parent_task_id?: string; // For related tasks
 }
 
 export interface UpdateTaskParams {

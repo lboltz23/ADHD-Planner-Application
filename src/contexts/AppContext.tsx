@@ -175,7 +175,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const addTask = useCallback(async (params: CreateTaskParams) => {
-    const { title, due_date, type, days_selected, recurrence_interval, notes, start_date, end_date } = params;
+    const { title, due_date, type, days_selected, recurrence_interval, notes, start_date, end_date, parent_task_id } = params;
     const baseId = uuidv4();
     const now = new Date();
 
@@ -186,7 +186,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         id: baseId,
         title,
         type,
-        description: notes,
+        notes: notes,
         user_id: DEFAULT_USER_ID,
         is_template: true,
         start_date: start_date.toISOString(),
@@ -210,7 +210,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setTasks(prev => [...prev, ...instances]);
       }
     } else {
-      // Regular non-recurring task
+      // Regular non-recurring task (basic or related)
       const newTask: Task = {
         id: baseId,
         user_id: DEFAULT_USER_ID,
@@ -222,6 +222,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         created_at: now,
         updated_at: now,
         is_template: false,
+        parent_task_id: type === "related" ? parent_task_id : undefined,
       };
 
       // Insert into Supabase
@@ -231,9 +232,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         due_date: newTask.due_date.toISOString(),
         completed: newTask.completed,
         type: newTask.type,
-        description: newTask.notes,
+        notes: newTask.notes,
         user_id: DEFAULT_USER_ID,
         is_template: false,
+        parent_task_id: newTask.parent_task_id,
       });
 
       if (error) {

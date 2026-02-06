@@ -104,6 +104,13 @@ export default function AddTaskDialog({
         alert("Please select a date");
         return;
       }
+
+      // Validate parent task is selected for related tasks
+      if (initialTaskType === "related" && !parentTaskId) {
+        alert("Please select a parent task to link to");
+        return;
+      }
+
       // Convert selected date string to Date object in local timezone (not UTC) to avoid timezone issues
       const [year, month, day] = selectedDate.split('-').map(Number);
       const dueDate = new Date(year, month - 1, day);
@@ -111,6 +118,7 @@ export default function AddTaskDialog({
         title: taskTitle,
         due_date: dueDate,
         type: initialTaskType,
+        parent_task_id: initialTaskType === "related" ? parentTaskId : undefined,
       });
     }
 
