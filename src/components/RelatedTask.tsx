@@ -16,8 +16,8 @@ export default function RelatedTaskInput({
   onSelect,
 }: RelatedTaskInputProps) {
   const uniqueTasks = tasks.filter((task, index, self) => {
-    if (task.recurringTaskId) {
-      return self.findIndex((t) => t.recurringTaskId === task.recurringTaskId) === index;
+    if (task.type === "routine" || task.type === "long_interval") {
+      return self.findIndex((t) => t.parent_task_id === task.parent_task_id) === index;
     }
     return true;
   });
