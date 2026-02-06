@@ -7,7 +7,7 @@ import { useApp } from '../contexts/AppContext';
 
 export default function CalendarViewScreen() {
   const router = useRouter();
-  const { tasks, settings, addTask, toggleTask, rescheduleTask, triggerConfetti } = useApp();
+  const { tasks, settings, addTask, toggleTask, updateTask, deleteTask, triggerConfetti } = useApp();
 
   return (
     <View style={styles.container}>
@@ -16,7 +16,8 @@ export default function CalendarViewScreen() {
         tasks={tasks}
         onAddTask={addTask}
         onToggleTask={toggleTask}
-        onRescheduleTask={rescheduleTask}
+        onEditTask={updateTask}
+        onDeleteTask={deleteTask}
         settings={settings}
         onTriggerConfetti={triggerConfetti}
       />
