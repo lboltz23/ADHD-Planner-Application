@@ -1,7 +1,10 @@
 // src/contexts/AppContext.tsx
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo, useEffect, ReactNode } from 'react';
 import { Task, CreateTaskParams, Weekday } from '../types';
 import { SettingsData } from '../components/Settings';
+import { supabase } from '@/lib/supabaseClient';
+import 'react-native-get-random-values';
+import { v4 as uuidv4 } from 'uuid';
 
 // Map JavaScript day numbers (0=Sunday) to Weekday names
 const DAY_NUMBER_TO_WEEKDAY: Record<number, Weekday> = {
@@ -28,43 +31,7 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [tasks, setTasks] = useState<Task[]>([
-    {
-      id: "1",
-      title: "Complete project proposal",
-      date: new Date(),
-      completed: false,
-      type: "basic",
-    },
-    {
-      id: "2",
-      title: "Team meeting at 2 PM",
-      date: new Date(),
-      completed: false,
-      type: "routine",
-    },
-    {
-      id: "3",
-      title: "Review code changes",
-      date: new Date(Date.now() + 86400000), // Tomorrow
-      completed: false,
-      type: "related",
-    },
-    {
-      id: "4",
-      title: "Prepare presentation",
-      date: new Date(Date.now() + 172800000), // Day after tomorrow
-      completed: false,
-      type: "basic",
-    },
-    {
-      id: "5",
-      title: "Organize workspace",
-      date: new Date(Date.now() + 259200000), // In three days
-      completed: false,
-      type: "long_interval",
-    },
-  ]);
+  const [tasks, setTasks] = useState<Task[]>([]);
 
   const [settings, setSettings] = useState<SettingsData>({
     defaultTimerMinutes: 25,
@@ -76,7 +43,44 @@ export function AppProvider({ children }: { children: ReactNode }) {
   });
 
   const [confettiTrigger, setConfettiTrigger] = useState(0);
-  
+
+  // Default user ID - replace with actual user ID when auth is implemented
+  const DEFAULT_USER_ID = '9dfa5616-322a-4287-a980-d33754320861';
+
+  // Load tasks from Supabase on mount
+  useEffect(() => {
+    const loadTasks = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('tasks')
+          .select('*')
+          .eq('user_id', DEFAULT_USER_ID);
+
+        if (error) {
+          console.error('Error loading tasks from Supabase:', error);
+          return;
+        }
+
+        if (data) {
+          // Convert Supabase tasks to our Task type
+          const loadedTasks: Task[] = data.map((row: any) => ({
+            id: row.id,
+            title: row.title,
+            date: new Date(row.due_date),
+            completed: row.completed || false,
+            type: row.type as Task['type'],
+            notes: row.description,
+          }));
+          setTasks(loadedTasks);
+        }
+      } catch (error) {
+        console.error('Failed to load tasks:', error);
+      }
+    };
+
+    loadTasks();
+  }, []);
+
   // Helper function to generate scheduled days for recurring tasks
   const generateScheduledDays = (
     startDate: Date,
@@ -118,9 +122,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return scheduledDays;
   };
 
-  const addTask = (params: CreateTaskParams) => {
+  const addTask = useCallback(async (params: CreateTaskParams) => {
     const { title, date, type, repeatDays, intervalMonths, parentTaskId, notes, startDate, endDate } = params;
-    const baseId = Date.now().toString();
+    const baseId = uuidv4();
 
     // Check if this is a recurring task
     if ((type === "routine" || type === "long_interval") && startDate && endDate) {
@@ -133,8 +137,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       );
 
       // Create individual task instances for each scheduled day
-      const recurringTasks: Task[] = scheduledDays.map((scheduledDate, index) => ({
-        id: `${baseId}-instance-${index}`,
+      const recurringTasks: Task[] = scheduledDays.map((scheduledDate) => ({
+        id: uuidv4(),
         title,
         date: scheduledDate,
         completed: false,
@@ -150,7 +154,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
         instanceDate: scheduledDate,
       }));
 
-      setTasks([...tasks, ...recurringTasks]);
+      // Insert all recurring tasks into Supabase
+      const supabaseTasks = recurringTasks.map(task => ({
+        id: task.id,
+        title: task.title,
+        due_date: task.date.toISOString(),
+        completed: task.completed,
+        type: task.type,
+        description: task.notes,
+        user_id: DEFAULT_USER_ID,
+      }));
+
+      const { error } = await supabase.from('tasks').insert(supabaseTasks);
+      if (error) {
+        console.error('Error inserting recurring tasks:', error);
+      } else {
+        setTasks(prev => [...prev, ...recurringTasks]);
+      }
     } else {
       // Regular non-recurring task
       const newTask: Task = {
@@ -162,43 +182,95 @@ export function AppProvider({ children }: { children: ReactNode }) {
         notes,
         parentTaskId,
       };
-      setTasks([...tasks, newTask]);
-    }
-  };
 
-  const toggleTask = (id: string) => {
-    setTasks(tasks.map(task => 
+      // Insert into Supabase
+      const { error } = await supabase.from('tasks').insert({
+        id: newTask.id,
+        title: newTask.title,
+        due_date: newTask.date.toISOString(),
+        completed: newTask.completed,
+        type: newTask.type,
+        description: newTask.notes,
+        user_id: DEFAULT_USER_ID,
+      });
+
+      if (error) {
+        console.error('Error inserting task:', error);
+      } else {
+        setTasks(prev => [...prev, newTask]);
+      }
+    }
+  }, []);
+
+  const toggleTask = useCallback(async (id: string) => {
+    // Optimistically update UI first
+    setTasks(prev => prev.map(task =>
       task.id === id ? { ...task, completed: !task.completed } : task
     ));
-  };
 
-  const rescheduleTask = (id: string, newDate: Date, newTime?: string) => {
-    setTasks(tasks.map(task => 
+    // Find the task to get the new completed state
+    const task = tasks.find(t => t.id === id);
+    if (task) {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ completed: !task.completed })
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error toggling task:', error);
+        // Revert on error
+        setTasks(prev => prev.map(task =>
+          task.id === id ? { ...task, completed: !task.completed } : task
+        ));
+      }
+    }
+  }, [tasks]);
+
+  const rescheduleTask = useCallback(async (id: string, newDate: Date, newTime?: string) => {
+    // Optimistically update UI first
+    setTasks(prev => prev.map(task =>
       task.id === id ? { ...task, date: newDate, time: newTime } : task
     ));
-  };
 
-  const updateSettings = (newSettings: SettingsData) => {
+    // Update in Supabase
+    const { error } = await supabase
+      .from('tasks')
+      .update({ due_date: newDate.toISOString() })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error rescheduling task:', error);
+      // Revert on error - find original date
+      const originalTask = tasks.find(t => t.id === id);
+      if (originalTask) {
+        setTasks(prev => prev.map(task =>
+          task.id === id ? { ...task, date: originalTask.date, time: originalTask.time } : task
+        ));
+      }
+    }
+  }, [tasks]);
+
+  const updateSettings = useCallback((newSettings: SettingsData) => {
     setSettings(newSettings);
-  };
+  }, []);
 
-  const triggerConfetti = () => {
+  const triggerConfetti = useCallback(() => {
     setConfettiTrigger(prev => prev + 1);
-  };
+  }, []);
+
+  const value = useMemo(() => ({
+    tasks,
+    settings,
+    addTask,
+    toggleTask,
+    rescheduleTask,
+    updateSettings,
+    confettiTrigger,
+    triggerConfetti,
+  }), [tasks, settings, confettiTrigger, addTask, toggleTask, rescheduleTask, updateSettings, triggerConfetti]);
 
   return (
-    <AppContext.Provider
-      value={{
-        tasks,
-        settings,
-        addTask,
-        toggleTask,
-        rescheduleTask,
-        updateSettings,
-        confettiTrigger,
-        triggerConfetti,
-      }}
-    >
+    <AppContext.Provider value={value}>
       {children}
     </AppContext.Provider>
   );

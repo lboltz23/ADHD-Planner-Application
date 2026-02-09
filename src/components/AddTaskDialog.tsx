@@ -4,7 +4,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Plus, X } from "lucide-react-native";
 import { Task, TaskType, CreateTaskParams, Weekday } from "../types";
 import { Calendar } from "react-native-calendars";
-import { getTaskTypeColor } from "./taskColors";
+import { getTaskTypeColor, getEnhancedTaskTypeColor } from "./taskColors";
 import TitleInput from "./TitleInput";
 import DateRangePicker from "./DateRangePicker";
 import RelatedTaskInput from "./RelatedTask";
@@ -147,6 +147,7 @@ export default function AddTaskDialog({
   const getTypeColor = () => {
     return getTaskTypeColor(initialTaskType, colorBlindMode);
   };
+  
 
   return (
     <Modal visible={isOpen} transparent animationType="fade">
@@ -283,7 +284,7 @@ export default function AddTaskDialog({
                 style={[
                   styles.button,
                   styles.createButton,
-                  { backgroundColor: getTypeColor() },
+                  { backgroundColor: getEnhancedTaskTypeColor(initialTaskType, colorBlindMode) },
                 ]}
               >
                 <Text style={styles.createText}>Create Task</Text>
