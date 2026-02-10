@@ -23,6 +23,8 @@ interface AppContextType {
   addTask: (params: CreateTaskParams) => void;
   toggleTask: (id: string) => void;
   rescheduleTask: (id: string, newDate: Date) => void;
+  updateTask: (id: string, newTitle: string, newDate: Date) => void;
+  deleteTask: (id: string) => void;
   updateSettings: (newSettings: SettingsData) => void;
   confettiTrigger: number;
   triggerConfetti: () => void;
@@ -45,7 +47,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [confettiTrigger, setConfettiTrigger] = useState(0);
 
   // Default user ID - replace with actual user ID when auth is implemented
-  // const DEFAULT_USER_ID = '9dfa5616-322a-4287-a980-d33754320861';
+  const DEFAULT_USER_ID = '9dfa5616-322a-4287-a980-d33754320861';
 
   // Helper function to generate task instances from a recurring template
   const generateTaskInstancesFromTemplate = (template: any): Task[] => {
@@ -358,7 +360,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const updateTask = (id: string, newTitle: string, newDate: Date) => {
     setTasks(tasks.map(task =>
-      task.id === id ? { ...task, title: newTitle, date: newDate } : task
+      task.id === id ? { ...task, title: newTitle, due_date: newDate } : task
     ));
   };
 

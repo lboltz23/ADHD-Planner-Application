@@ -170,25 +170,17 @@ export function TaskCard({
         </View>
 
         {showDate && <Text style={styles.dateText}>{formatDate(task.due_date)}</Text>}
-        {/* Show reschedule button only if onReschedule prop is provided */}
-        {onReschedule && !task.completed && (
-          <TouchableOpacity
-            onPress={() => setShowRescheduleDialog(true)}
-            style={styles.rescheduleIcon}
-            activeOpacity={0.7}
-          >
-            {/*Calendar Clock Icon */}
-            <CalendarClock size={18} color="#6b5b7f" />
-          </TouchableOpacity>
-        )}
       </TouchableOpacity>
-      {/* Reschedule Dialog */}
-      <RescheduleDialog
-        isOpen={showRescheduleDialog}
-        onClose={() => setShowRescheduleDialog(false)}
-        onReschedule={handleRescheduleFromDialog}
-        taskTitle={task.title}
-        currentDate={task.due_date}
+
+      {/* Edit Task Dialog */}
+      <EditTask
+        isOpen={showEditDialog}
+        onClose={() => setShowEditDialog(false)}
+        task={task}
+        onSave={onUpdate}
+        onDelete={onDelete}
+        onToggle={onToggle}
+        colorBlindMode={colorBlindMode}
       />
     </>
   );
@@ -226,25 +218,5 @@ const styles = StyleSheet.create({
     dateText: {
       fontSize: 14,
       color: "#999",
-    },
-    rescheduleButton: {
-      marginLeft: 10,
-      padding: 6,
-      borderRadius: 8,
-      backgroundColor: "#f8f6fb",
-      borderWidth: 1,
-      borderColor: "#101011ff",
-      justifyContent: "center",
-      alignItems: "center",
-    },
-    rescheduleIcon: {
-      // placeholder for possible extra styling
-      padding: 6,
-      borderRadius: 8,
-      backgroundColor: "#f8f6fb",
-      borderWidth: 1,
-      borderColor: "#e5d9f2",
-      justifyContent: "center",
-      alignItems: "center",
     },
   });
