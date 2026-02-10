@@ -169,7 +169,7 @@ export function TaskCard({
           ]}>{task.title}</Text>
         </View>
 
-        {showDate && <Text style={styles.dateText}>{formatDate(task.date)}</Text>}
+        {showDate && <Text style={styles.dateText}>{formatDate(task.due_date)}</Text>}
       </TouchableOpacity>
 
       {/* Edit Task Dialog */}
@@ -218,25 +218,5 @@ const styles = StyleSheet.create({
     dateText: {
       fontSize: 14,
       color: "#999",
-    },
-    rescheduleButton: {
-      marginLeft: 10,
-      padding: 6,
-      borderRadius: 8,
-      backgroundColor: "#f8f6fb",
-      borderWidth: 1,
-      borderColor: "#101011ff",
-      justifyContent: "center",
-      alignItems: "center",
-    },
-    rescheduleIcon: {
-      // placeholder for possible extra styling
-      padding: 6,
-      borderRadius: 8,
-      backgroundColor: "#f8f6fb",
-      borderWidth: 1,
-      borderColor: "#e5d9f2",
-      justifyContent: "center",
-      alignItems: "center",
     },
   });

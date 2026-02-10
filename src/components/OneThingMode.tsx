@@ -60,7 +60,7 @@ export function OneThingMode({
   // Get incomplete tasks for today
   const incompleteTasks = tasks.filter((task) => {
     const today = new Date();
-    const taskDate = new Date(task.date);
+    const taskDate = new Date(task.due_date);
     return taskDate.toDateString() === today.toDateString() && !task.completed;
   });
 

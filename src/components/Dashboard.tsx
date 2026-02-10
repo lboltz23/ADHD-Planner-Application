@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -44,9 +44,33 @@ export function Dashboard({
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [selectedType, setSelectedType] = useState<TaskType>('basic');
   const [taskView, setTaskView] = useState<'today' | 'upcoming'>('today');
-  const [showAddTaskDialog, setShowAddTaskDialog] = useState(false); 
+  const [showAddTaskDialog, setShowAddTaskDialog] = useState(false);
   // Ref to track previous progress for confetti trigger
   const previousProgressRef = useRef(0);
+
+  // Filter tasks from props for today
+  const todayTasks = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return tasks.filter((task) => {
+      const taskDate = new Date(task.due_date);
+      return taskDate.toDateString() === today.toDateString();
+    });
+  }, [tasks]);
+
+  // Filter tasks from props for upcoming (next 5 tasks after today)
+  const upcomingTasks = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return tasks
+      .filter((task) => {
+        const taskDate = new Date(task.due_date);
+        taskDate.setHours(0, 0, 0, 0);
+        return taskDate > today;
+      })
+      .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
+      .slice(0, 5);
+  }, [tasks]);
 
   const handleAddTask = () => {
     if (newTaskTitle.trim() && !showAddTaskDialog) {
@@ -71,19 +95,6 @@ export function Dashboard({
     return true;
   }
 
-  const todayTasks = tasks.filter((task) => {
-    const today = new Date();
-    const taskDate = new Date(task.date);
-    return taskDate.toDateString() === today.toDateString();
-  });
-// Upcoming tasks are those scheduled after today
-  const upcomingTasks = tasks
-    .filter((task) => {
-      const today = new Date();
-      const taskDate = new Date(task.date);
-      return taskDate > today;
-    })
-    .slice(0, 5);
 // Calculate today's progress
   const completedTodayTasks = todayTasks.filter((task) => task.completed)
     .length;
