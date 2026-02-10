@@ -39,7 +39,6 @@ export function CalendarView({
 }: CalendarViewProps) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [newTaskTitle, setNewTaskTitle] = useState('');
-  const [newTaskTime, setNewTaskTime] = useState("");
   const [selectedType, setSelectedType] = useState<TaskType>('basic');
   const previousProgressRef = useRef(0);
   const previousDateRef = useRef<string>('');
@@ -49,7 +48,7 @@ export function CalendarView({
     if (newTaskTitle.trim()) {
       onAddTask({
         title: newTaskTitle,
-        date: selectedDate,
+        due_date: selectedDate,
         type: selectedType,
       });
       setNewTaskTitle('');
@@ -57,7 +56,7 @@ export function CalendarView({
   };
 // Filter tasks for the selected date
   const tasksForSelectedDate = tasks.filter((task) => {
-    const taskDate = new Date(task.date);
+    const taskDate = new Date(task.due_date);
     return taskDate.toDateString() === selectedDate.toDateString();
   });
 

@@ -26,7 +26,7 @@ export default function EditTask({
   colorBlindMode = false,
 }: EditTaskProps) {
   const [editedTitle, setEditedTitle] = useState(task.title);
-  const [editedDate, setEditedDate] = useState(task.date);
+  const [editedDate, setEditedDate] = useState(task.due_date);
 
   const handleSave = () => {
     if (editedTitle.trim()) {
