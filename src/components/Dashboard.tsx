@@ -13,7 +13,7 @@ import { SettingsData } from './Settings';
 import { TaskCard } from './TaskCard';
 import { TaskTypeSelector } from './TaskTypeSelector';
 import AddTaskDialog from './AddTaskDialog';
-import { TaskTypeSelector } from './TaskTypeSelector';
+import { Calendar, Settings, Zap } from 'lucide-react-native';
 
 // Dashboard Props
 interface DashboardProps {
@@ -256,13 +256,13 @@ export function Dashboard({
     },
     addTaskBorder: {
       backgroundColor: '#ffffff',
-      height: 125,
+      //height: 125,
       borderRadius: 8,
       borderWidth: 1,
       borderColor: '#e5d9f2',
       padding: 10,
-      marginBottom: 15,
-      paddingVertical: 10,
+      marginBottom: 20,
+      //paddingVertical: 10,
     },
   });
 
