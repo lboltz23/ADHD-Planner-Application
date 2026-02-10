@@ -258,13 +258,13 @@ export function Dashboard({
     },
     addTaskBorder: {
       backgroundColor: '#ffffff',
-      height: 125,
+      //height: 125,
       borderRadius: 8,
       borderWidth: 1,
       borderColor: '#e5d9f2',
       padding: 10,
-      marginBottom: 15,
-      paddingVertical: 10,
+      marginBottom: 20,
+      //paddingVertical: 10,
     },
   });
 
