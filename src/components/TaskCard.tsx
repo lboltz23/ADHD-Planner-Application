@@ -10,18 +10,17 @@ import {
   CheckSquare,
   Link as LinkIcon,
   CheckCircle2,
-  CalendarClock,
   Hourglass,
 } from "lucide-react-native";
 import { Task } from "../types";
 import { getTaskTypeColor } from "./taskColors";
-import RescheduleDialog from "./RescheduleDialog";
+import EditTask from "./EditTask";
 
 interface TaskCardProps {
   task: Task;
   onToggle: (id: string) => void;
-  // parent expects (id, newDate: Date)
-  onReschedule?: (id: string, newDate: Date) => void;
+  onUpdate: (id: string, newTitle: string, newDate: Date) => void;
+  onDelete: (id: string) => void;
   showDate?: boolean;
   colorBlindMode?: boolean;
 }
@@ -38,11 +37,12 @@ interface TaskStyle {
 export function TaskCard({
   task,
   onToggle,
-  onReschedule,
+  onUpdate,
+  onDelete,
   showDate,
   colorBlindMode = false,
 }: TaskCardProps) {
-  const [showRescheduleDialog, setShowRescheduleDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
 
   const getTaskStyle = (type: Task["type"]): TaskStyle => {
     const taskColor = getTaskTypeColor(type, colorBlindMode);
@@ -107,18 +107,6 @@ export function TaskCard({
   const style = getTaskStyle(task.type);
   const IconComponent = style.Icon;
 
-  // Called by RescheduleDialog which returns a dateString (YYYY-MM-DD).
-  const handleRescheduleFromDialog = (newDateString: string) => {
-    // convert to Date in local timezone (not UTC) to avoid timezone issues
-    const [year, month, day] = newDateString.split('-').map(Number);
-    const newDate = new Date(year, month - 1, day);
-    if (onReschedule) {
-      onReschedule(task.id, newDate);
-    }
-    setShowRescheduleDialog(false);
-  };
-
-  
   const formatDate = (date: string | Date) => {
     const dateObj = new Date(date);
     return dateObj.toLocaleDateString("en-US", {
@@ -139,7 +127,7 @@ export function TaskCard({
             borderColor: style.borderColor,
           },
         ]}
-        onPress={() => onToggle(task.id)}
+        onPress={() => setShowEditDialog(true)}
         activeOpacity={0.7}
       >
         <View style={styles.contentContainer}>
@@ -159,10 +147,18 @@ export function TaskCard({
             />
           </View>
 
-          <CheckCircle2
-            size={20}
-            color={task.completed ? "#b4e7ce" : "#e5d9f2"}
-          />
+          <TouchableOpacity
+            onPress={(e) => {
+              e.stopPropagation();
+              onToggle(task.id);
+            }}
+            activeOpacity={0.7}
+          >
+            <CheckCircle2
+              size={20}
+              color={task.completed ? "#b4e7ce" : "#e5d9f2"}
+            />
+          </TouchableOpacity>
 
           <Text style={[
             styles.taskTitle,

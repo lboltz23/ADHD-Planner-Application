@@ -21,7 +21,8 @@ interface CalendarViewProps {
   tasks: Task[];
   onAddTask: (params: CreateTaskParams) => void;
   onToggleTask: (id: string) => void;
-  onRescheduleTask: (id: string, newDate: Date) => void;
+  onEditTask: (id: string, newTitle: string, newDate: Date) => void;
+  onDeleteTask: (id: string) => void;
   settings: SettingsData;
   onTriggerConfetti?: () => void;
 }
@@ -31,7 +32,8 @@ export function CalendarView({
   tasks,
   onAddTask,
   onToggleTask,
-  onRescheduleTask,
+  onEditTask,
+  onDeleteTask,
   settings,
   onTriggerConfetti,
 }: CalendarViewProps) {
@@ -457,6 +459,8 @@ export function CalendarView({
                   key={task.id}
                   task={task}
                   onToggle={onToggleTask}
+                  onDelete={onDeleteTask}
+                  onUpdate={onEditTask}
                   colorBlindMode={settings.colorBlindMode}
                 />
               ))}

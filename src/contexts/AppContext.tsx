@@ -45,7 +45,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [confettiTrigger, setConfettiTrigger] = useState(0);
 
   // Default user ID - replace with actual user ID when auth is implemented
-  const DEFAULT_USER_ID = '9dfa5616-322a-4287-a980-d33754320861';
+  // const DEFAULT_USER_ID = '9dfa5616-322a-4287-a980-d33754320861';
 
   // Helper function to generate task instances from a recurring template
   const generateTaskInstancesFromTemplate = (template: any): Task[] => {
@@ -356,19 +356,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setConfettiTrigger(prev => prev + 1);
   }, []);
 
-  const value = useMemo(() => ({
-    tasks,
-    settings,
-    addTask,
-    toggleTask,
-    rescheduleTask,
-    updateSettings,
-    confettiTrigger,
-    triggerConfetti,
-  }), [tasks, settings, confettiTrigger, addTask, toggleTask, rescheduleTask, updateSettings, triggerConfetti]);
+  const updateTask = (id: string, newTitle: string, newDate: Date) => {
+    setTasks(tasks.map(task =>
+      task.id === id ? { ...task, title: newTitle, date: newDate } : task
+    ));
+  };
+
+  const deleteTask = (id: string) => {
+    setTasks(tasks.filter(task => task.id !== id));
+  };
 
   return (
-    <AppContext.Provider value={value}>
+    <AppContext.Provider
+      value={{
+        tasks,
+        settings,
+        addTask,
+        toggleTask,
+        rescheduleTask,
+        updateTask,
+        deleteTask,
+        updateSettings,
+        confettiTrigger,
+        triggerConfetti,
+      }}
+    >
       {children}
     </AppContext.Provider>
   );

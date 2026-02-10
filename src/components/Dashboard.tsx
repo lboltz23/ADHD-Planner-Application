@@ -11,9 +11,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Task, TaskType, CreateTaskParams } from '../types';
 import { SettingsData } from './Settings';
 import { TaskCard } from './TaskCard';
-import { TaskTypeSelector } from './TaskTypeSelector';
 import AddTaskDialog from './AddTaskDialog';
-import { Settings, Zap, Calendar } from 'lucide-react-native';
+import { TaskTypeSelector } from './TaskTypeSelector';
+import { Calendar, Settings, Zap } from 'lucide-react-native';
 
 // Dashboard Props
 interface DashboardProps {
@@ -23,7 +23,8 @@ interface DashboardProps {
   tasks: Task[];
   onAddTask: (params: CreateTaskParams) => void;
   onToggleTask: (id: string) => void;
-  onRescheduleTask: (id: string, newDate: Date) => void;
+  onEditTask: (id: string, updatedTitle: string, updatedDate: Date) => void;
+  onDeleteTask: (id: string) => void;
   settings: SettingsData;
   onTriggerConfetti?: () => void;
 }
@@ -35,7 +36,8 @@ export function Dashboard({
   tasks,
   onAddTask,
   onToggleTask,
-  onRescheduleTask,
+  onEditTask,
+  onDeleteTask,
   settings,
   onTriggerConfetti,
 }: DashboardProps) {
@@ -267,13 +269,13 @@ export function Dashboard({
     },
     addTaskBorder: {
       backgroundColor: '#ffffff',
-      height: 125,
+      //height: 125,
       borderRadius: 8,
       borderWidth: 1,
       borderColor: '#e5d9f2',
       padding: 10,
-      marginBottom: 15,
-      paddingVertical: 10,
+      marginBottom: 20,
+      //paddingVertical: 10,
     },
   });
 
@@ -419,7 +421,8 @@ export function Dashboard({
                     key={task.id}
                     task={task}
                     onToggle={onToggleTask}
-                    onReschedule={onRescheduleTask}
+                    onUpdate={onEditTask}
+                    onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
                   />
                 ))}
@@ -438,7 +441,8 @@ export function Dashboard({
                     key={task.id}
                     task={task}
                     onToggle={onToggleTask}
-                    onReschedule={onRescheduleTask}
+                    onUpdate={onEditTask}
+                    onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
                     showDate={true}
                   />
