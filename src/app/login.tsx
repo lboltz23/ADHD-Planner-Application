@@ -10,6 +10,7 @@ import { useApp } from '../contexts/AppContext';
 import { supabase,getCurrentUser } from '@/lib/supabaseClient';
 import { User } from '@supabase/supabase-js'
 import { useFocusEffect } from 'expo-router';
+import { DotLoader } from '../components/DotLoader';
 
 export default function CalendarViewScreen() {
   const router = useRouter();
@@ -19,17 +20,18 @@ export default function CalendarViewScreen() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<User | null>(null)
-    useFocusEffect(
-      useCallback(() => {
-        supabase.auth.getUser().then(({ data: { user } }) => {
-          setUser(user)
-        })
 
-        supabase.auth.onAuthStateChange((_event, session) => {
-          setUser(session?.user ?? null)
-        })
-      }, [])
-    )
+  useFocusEffect(
+    useCallback(() => {
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        setUser(user)
+      })
+
+      supabase.auth.onAuthStateChange((_event, session) => {
+        setUser(session?.user ?? null)
+      })
+    }, [])
+  )
 
 
    async function signInWithEmail() {
@@ -39,6 +41,7 @@ export default function CalendarViewScreen() {
       password: password,
     })
     if (error) Alert.alert(error.message)
+    router.back()
     setLoading(false)
   }
 
@@ -51,7 +54,7 @@ export default function CalendarViewScreen() {
               <ArrowLeft size={20} color="#6b5b7f" />
             </TouchableOpacity>
         </View>
-        <View style={[{alignItems:"center",justifyContent:'center'},styles.container]}>
+        <View style={[{justifyContent:'center',width:"100%"},styles.container]}>
           <View style={styles.section}>
             <View style={styles.header}>
               <Text style={styles.headerTitle}>Login</Text>
@@ -114,15 +117,11 @@ export default function CalendarViewScreen() {
                   </TouchableOpacity>
                 </View>
               </View>
-              {user &&
-              <View style={[{alignItems:"center",justifyContent:'center',borderTopWidth:1, borderColor:'#b8a4d9'}]}>
-                <View style={styles.settingRow}>
-                  <Text style={[styles.settingLabelText,{paddingRight:2}]}>{user.id}</Text>
-                </View>
-              </View>}
             </View>
             :
-           <Text style={[styles.settingLabelText,{paddingRight:2}]}>Loading.....</Text>}
+            <View style = {{flexDirection:'row',justifyContent:'center',alignContent:'center'}}>
+              <Text style={[styles.settingLabelText,{paddingRight:2}]}>Loading.</Text><DotLoader/>
+            </View>}
           </View>
         </View>
       </View>

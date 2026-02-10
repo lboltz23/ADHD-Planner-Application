@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Switch,
-  SafeAreaView,
 } from 'react-native';
 import {
   ArrowLeft,
@@ -36,6 +35,7 @@ interface SettingsProps {
   settings: SettingsData;
   onUpdateSettings: (settings: SettingsData) => void;
   user : User | null;
+  username: string | null;
 }
 
 interface SettingsSectionProps {
@@ -111,7 +111,8 @@ export function Settings({
   onNavigateBack,
   settings,
   onUpdateSettings,
-  user
+  user,
+  username
 }: SettingsProps) {
   const updateSetting = <K extends keyof SettingsData>(
     key: K,
@@ -269,6 +270,9 @@ export function Settings({
              }
           </View>
         </View>
+        {username && <View style={styles.header}>
+          <Text style={styles.headerTitle}>Hey {username}!</Text>
+        </View>}
 
         {/* Timer Settings */}
         <SettingsSection

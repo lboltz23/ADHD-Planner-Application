@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useApp } from '../contexts/AppContext';
 import { Alert } from 'react-native';
 import { supabase } from '@/lib/supabaseClient';
+import { DotLoader } from '../components/DotLoader';
 
 export default function CalendarViewScreen() {
    const router = useRouter();
@@ -62,9 +63,6 @@ const ValidSignUp = () => {
 
  async function signUpWithEmail() {
     setLoading(true)
-    console.log(username)
-    console.log(password)
-    console.log(email)
     if (!ValidSignUp()){ 
       Alert.alert("Invalid Sign Up Credentials")
     } else {
@@ -76,18 +74,20 @@ const ValidSignUp = () => {
         password: password,
         options: {
           data: {
-            username:username
+            display_name:username
           }
         }
       })
       if (error) {
         Alert.alert(error.message);
+        console.log(error)
         setLoading(false);
         return;
       }
 
       if (!session) {
-        Alert.alert('Please check your inbox for email verification!');
+        Alert.alert("Please check your inbox for email verification! Don't forget to check your spam folder.");
+        router.back();
       }
     }
     setLoading(false)
@@ -99,7 +99,7 @@ const ValidSignUp = () => {
     <View style={[,styles.container,{paddingTop:insets.top,backgroundColor:'#b8a4d9',width:"100%",justifyContent:'center'}]}>
       <View style={[styles.container,{padding:16}]}>
         <View style={styles.headerRight}>
-            <TouchableOpacity style={styles.backButton} onPress={() => router.push('/Settings')}>
+            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
               <ArrowLeft size={20} color="#6b5b7f" />
             </TouchableOpacity>
         </View>
@@ -108,73 +108,82 @@ const ValidSignUp = () => {
             <View style={styles.header}>
               <Text style={styles.headerTitle}>Sign Up</Text>
             </View>
-            <View style={styles.settingRow}>
-              <Text style={[styles.settingLabelText,{paddingRight:2}]}>Username:</Text>
-              <TextInput 
-              style={{borderColor: '#e5d9f2',borderWidth:1,borderRadius:5,paddingHorizontal:2, flex:1}}
-              value={username}
-              onChangeText={setUsername}
-              />
-            </View>
-            <View style = {{alignItems:'flex-start'}}>
-              {username.length < 3 && username!="" && username.length > 20 && <Text style = {{color:"red"}}>
-                 Must Be At Least 3 Characters And No Greater Than 20 Characters</Text>}
+            {!loading ?
+            <View>
+              <View style={styles.settingRow}>
+                <Text style={[styles.settingLabelText,{paddingRight:2}]}>Username:</Text>
+                <TextInput 
+                style={{borderColor: '#e5d9f2',borderWidth:1,borderRadius:5,paddingHorizontal:2, flex:1}}
+                value={username}
+                onChangeText={setUsername}
+                />
+              </View>
+              <View style = {{alignItems:'flex-start'}}>
+                {username.length < 3 && username!="" && username.length > 20 && <Text style = {{color:"red"}}>
+                  Must Be At Least 3 Characters And No Greater Than 20 Characters</Text>}
 
-            </View>
-            <View style={styles.settingRow}>
-              <Text style={[styles.settingLabelText,{paddingRight:2}]}>Email:</Text>
-              <TextInput 
-              style={{borderColor: '#e5d9f2',borderWidth:1,borderRadius:5,paddingHorizontal:2, flex:1}}
-              value={email}
-              onChangeText={setEmail}
-              />
-            </View>
-            <View style = {{alignItems:'flex-start'}}>
-              {!validEmail(email) && email !="" && <Text style = {{color:"red"}}>Invalid Email</Text>}
+              </View>
+              <View style={styles.settingRow}>
+                <Text style={[styles.settingLabelText,{paddingRight:2}]}>Email:</Text>
+                <TextInput 
+                style={{borderColor: '#e5d9f2',borderWidth:1,borderRadius:5,paddingHorizontal:2, flex:1}}
+                value={email}
+                onChangeText={setEmail}
+                />
+              </View>
+              <View style = {{alignItems:'flex-start'}}>
+                {!validEmail(email) && email !="" && <Text style = {{color:"red"}}>Invalid Email</Text>}
 
-            </View>
-            <View style={styles.settingRow}>
-              <Text style={[styles.settingLabelText,{paddingRight:2}]}>Password:</Text>
-              <TextInput style={{borderColor: '#e5d9f2',borderWidth:1,maxWidth:"80%",borderRadius:5,paddingHorizontal:2, flex:1}}
-              value={password}
-              onChangeText={setPassword}/>
-            </View>
-            <View style = {{alignItems:'flex-start'}}>
-              {!hasNumber(password) && password !="" &&<Text style = {{color:"red"}}>Needs At Least 1 Number</Text>}
-              {!hasLetter(password) && password !="" &&<Text style = {{color:"red"}}>Needs At Least 1 Letter</Text>}
-              {!hasSpecialChars(password) && password !="" &&<Text style = {{color:"red"}}>Needs At Least 1 Special Character</Text>}
-              { password.length < 8 && password !="" &&<Text style = {{color:"red"}}>Password Needs To Be At Least 8 Characters</Text>}
+              </View>
+              <View style={styles.settingRow}>
+                <Text style={[styles.settingLabelText,{paddingRight:2}]}>Password:</Text>
+                <TextInput style={{borderColor: '#e5d9f2',borderWidth:1,maxWidth:"80%",borderRadius:5,paddingHorizontal:2, flex:1}}
+                value={password}
+                secureTextEntry={true}
+                onChangeText={setPassword}/>
+              </View>
+              <View style = {{alignItems:'flex-start'}}>
+                {!hasNumber(password) && password !="" &&<Text style = {{color:"red"}}>Needs At Least 1 Number</Text>}
+                {!hasLetter(password) && password !="" &&<Text style = {{color:"red"}}>Needs At Least 1 Letter</Text>}
+                {!hasSpecialChars(password) && password !="" &&<Text style = {{color:"red"}}>Needs At Least 1 Special Character</Text>}
+                { password.length < 8 && password !="" &&<Text style = {{color:"red"}}>Password Needs To Be At Least 8 Characters</Text>}
 
-            </View>
-            <View style={styles.settingRow}>
-              <Text style={[styles.settingLabelText,{paddingRight:2}]}>Confirm Password:</Text>
-              <TextInput style={{borderColor: '#e5d9f2',borderWidth:1,maxWidth:"80%",borderRadius:5,paddingHorizontal:2, flex:1}}
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}/>
-            </View>
-            <View style = {{alignItems:'flex-start'}}>
-              {password !== confirmPassword && confirmPassword !="" &&<Text style = {{color:"red"}}>Passwords Are Not The Same</Text>}
+              </View>
+              <View style={styles.settingRow}>
+                <Text style={[styles.settingLabelText,{paddingRight:2}]}>Confirm Password:</Text>
+                <TextInput style={{borderColor: '#e5d9f2',borderWidth:1,maxWidth:"80%",borderRadius:5,paddingHorizontal:2, flex:1}}
+                value={confirmPassword}
+                secureTextEntry={true}
+                onChangeText={setConfirmPassword}/>
+              </View>
+              <View style = {{alignItems:'flex-start'}}>
+                {password !== confirmPassword && confirmPassword !="" &&<Text style = {{color:"red"}}>Passwords Are Not The Same</Text>}
 
+              </View>
+              <View style={[{alignItems:"center",justifyContent:'center'}]}>
+                <TouchableOpacity
+                  style={styles.mainButton}
+                  onPress={() => signUpWithEmail()}>
+                  <Text style={styles.mainButtonText}>Sign Up</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={[{alignItems:"center",justifyContent:'center',borderTopWidth:1, borderColor:'#b8a4d9'}]}>
+                <TouchableOpacity
+                  style={styles.mainButton}
+                  onPress={() => router.push('/login')}>
+                  <Text style={styles.mainButtonText}>Use Apple</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.mainButton}
+                  onPress={() => router.push('/login')}>
+                  <Text style={styles.mainButtonText}>Use Android</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-            <View style={[{alignItems:"center",justifyContent:'center'}]}>
-              <TouchableOpacity
-                style={styles.mainButton}
-                onPress={() => signUpWithEmail()}>
-                <Text style={styles.mainButtonText}>Sign Up</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={[{alignItems:"center",justifyContent:'center',borderTopWidth:1, borderColor:'#b8a4d9'}]}>
-              <TouchableOpacity
-                style={styles.mainButton}
-                onPress={() => router.push('/login')}>
-                <Text style={styles.mainButtonText}>Use Apple</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.mainButton}
-                onPress={() => router.push('/login')}>
-                <Text style={styles.mainButtonText}>Use Android</Text>
-              </TouchableOpacity>
-            </View>
+            :
+            <View style = {{flexDirection:'row',justifyContent:'center',alignContent:'center'}}>
+              <Text style={[styles.settingLabelText,{paddingRight:2}]}>Loading.</Text><DotLoader/>
+            </View>}
           </View>
         </View>
       </View>
