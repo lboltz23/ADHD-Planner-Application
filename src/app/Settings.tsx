@@ -1,10 +1,10 @@
 // src/app/Settings.tsx
-import React , {useCallback,useState} from 'react';
+import React , {useCallback,useState,useEffect} from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useRouter,useFocusEffect } from 'expo-router';
 import { Settings as SettingsComponent } from '../components/Settings';
 import { useApp } from '../contexts/AppContext';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase, getProfile } from '@/lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
 import { useSafeBack } from '../hooks/use-Safe-Back';
 import { useAppTheme } from '../hooks/use-app-theme';
@@ -14,6 +14,7 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { settings, updateSettings } = useApp();
   const [user, setUser] = useState<User | null>(null)
+  const [username, setUsername] = useState<string | null>(null)
 
     useFocusEffect(
         useCallback(() => {
@@ -29,6 +30,14 @@ export default function SettingsScreen() {
   const handleBack = useSafeBack();
   const { colors } = useAppTheme();
 
+      useEffect(() =>{
+        const GetUsername = async () =>{
+          const username = await getProfile(user)
+          setUsername(username)
+        } 
+        GetUsername();
+      },[user])
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <SettingsComponent
@@ -36,6 +45,7 @@ export default function SettingsScreen() {
         settings={settings}
         onUpdateSettings={updateSettings}
         user={user}
+        username={username}
       />
     </View>
   );

@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { createClient, processLock } from '@supabase/supabase-js'
+import { createClient, processLock, User } from '@supabase/supabase-js'
 import { AppState, Platform } from 'react-native'
 import 'react-native-url-polyfill/auto'
 
@@ -22,14 +22,30 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 // to receive `onAuthStateChange` events with the `TOKEN_REFRESHED` or
 // `SIGNED_OUT` event if the user's session is terminated. This should
 // only be registered once.
-if (Platform.OS !== 'web') {
-  AppState.addEventListener('change', (state) => {
-    if (state === 'active') {
-      supabase.auth.startAutoRefresh()
-    } else {
-      supabase.auth.stopAutoRefresh()
-    }
-  })
+// if (Platform.OS !== 'web') {
+//   AppState.addEventListener('change', (state) => {
+//     if (state === 'active') {
+//       supabase.auth.startAutoRefresh()
+//     } else {
+//       supabase.auth.stopAutoRefresh()
+//     }
+//   })
+// }
+export const getProfile = async (user : User | null) => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('display_name')
+    .eq('id', user?.id)
+    .single();
+
+  if (error) {
+    console.log("Profile error:", error);
+    return null;
+  }
+
+  if (!data.display_name){return null}
+
+  return data.display_name
 }
 
 export async function getCurrentUser() {

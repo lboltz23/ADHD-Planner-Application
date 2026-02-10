@@ -38,6 +38,7 @@ interface SettingsProps {
   settings: SettingsData;
   onUpdateSettings: (settings: SettingsData) => void;
   user : User | null;
+  username: string | null;
 }
 
 interface SettingsSectionProps {
@@ -115,7 +116,8 @@ export function Settings({
   onNavigateBack,
   settings,
   onUpdateSettings,
-  user
+  user,
+  username
 }: SettingsProps) {
   const systemScheme = useColorScheme();
   const resolvedTheme = resolveThemePreference(settings.theme, systemScheme);
@@ -277,6 +279,9 @@ export function Settings({
              }
           </View>
         </View>
+        {username && <View style={styles.header}>
+          <Text style={styles.headerTitle}>Hey {username}!</Text>
+        </View>}
 
         {/* Timer Settings */}
         <SettingsSection
