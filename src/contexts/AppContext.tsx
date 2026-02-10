@@ -26,6 +26,8 @@ interface AppContextType {
   updateTask: (id: string, newTitle: string, newDate: Date) => void;
   deleteTask: (id: string) => void;
   updateSettings: (newSettings: SettingsData) => void;
+  streakCount: number;
+  login: () => void;
   confettiTrigger: number;
   triggerConfetti: () => void;
 }
@@ -43,6 +45,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     defaultTaskView: "all",
     colorBlindMode: false,
   });
+
+  const [streakCount, setStreakCount] = useState<number>(0);
+  const [lastLoginDate, setLastLoginDate] = useState<Date | null>(null);
 
   const [confettiTrigger, setConfettiTrigger] = useState(0);
 
@@ -368,6 +373,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setTasks(tasks.filter(task => task.id !== id));
   };
 
+  const updateStreak = () => {
+    const today = new Date();
+    if (lastLoginDate) {
+      const diffTime = Math.abs(today.getTime() - lastLoginDate.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      if (diffDays === 1) {
+        setStreakCount(prev => prev + 1);
+      } else if (diffDays > 1) {
+        setStreakCount(1);
+      }
+    } else {
+      setStreakCount(1);
+    }
+    setLastLoginDate(today);
+  };
+
+  const login = () => {
+    updateStreak();
+  };
+
+  // Call login() whenever the user logs in
+
   return (
     <AppContext.Provider
       value={{
@@ -379,6 +406,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         updateTask,
         deleteTask,
         updateSettings,
+        streakCount,
+        login,
         confettiTrigger,
         triggerConfetti,
       }}
