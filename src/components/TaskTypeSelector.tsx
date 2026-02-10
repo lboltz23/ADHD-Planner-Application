@@ -112,7 +112,7 @@ export function TaskTypeSelector({
       gap: 8,
       borderWidth: 0,
       marginBottom: 8,
-      //minWidth: '48%',
+      minWidth: '48%',
     },
     buttonSelected: {
       borderWidth: 9,
