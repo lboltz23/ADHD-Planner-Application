@@ -358,6 +358,22 @@ export function Settings({
         >
           <View style={styles.settingRow}>
             <View style={styles.settingLabel}>
+              <Text style={styles.settingLabelText}>Enable Notifications</Text>
+              <Text style={styles.settingSubtext}>
+                Send notifications to remind you of your tasks and during One Thing Mode.
+              </Text>
+            </View>
+            <Switch
+              value={settings.soundEnabled}
+              onValueChange={(checked) =>
+                updateSetting('notifications', checked)
+              }
+              trackColor={{ false: '#e5d9f2', true: '#ffc9d4' }}
+              thumbColor="#fff"
+            />
+          </View>
+          <View style={styles.settingRow}>
+            <View style={styles.settingLabel}>
               <Text style={styles.settingLabelText}>Sound Effects</Text>
               <Text style={styles.settingSubtext}>
                 Play sounds for timer and completions

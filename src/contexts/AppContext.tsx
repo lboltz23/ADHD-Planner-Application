@@ -37,6 +37,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const [settings, setSettings] = useState<SettingsData>({
     defaultTimerMinutes: 25,
+    notifications: false,
     soundEnabled: true,
     confettiEnabled: true,
     theme: "auto",
