@@ -1,19 +1,19 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
   ScrollView,
+  StyleSheet,
+  Text,
   TextInput,
-  FlatList,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Settings, Calendar, Zap } from 'lucide-react-native';
-import { Task, TaskType } from '../types';
+import { Task, TaskType, CreateTaskParams } from '../types';
 import { SettingsData } from './Settings';
-import { TaskTypeSelector } from './TaskTypeSelector';
 import { TaskCard } from './TaskCard';
+import AddTaskDialog from './AddTaskDialog';
+import { TaskTypeSelector } from './TaskTypeSelector';
+import { Calendar, Settings, Zap } from 'lucide-react-native';
 
 // Dashboard Props
 interface DashboardProps {
@@ -21,9 +21,10 @@ interface DashboardProps {
   onNavigateToOneThingMode: () => void;
   onNavigateToSettings: () => void;
   tasks: Task[];
-  onAddTask: (title: string, date: Date, type: TaskType) => void;
+  onAddTask: (params: CreateTaskParams) => void;
   onToggleTask: (id: string) => void;
-  onRescheduleTask: (id: string, newDate: Date) => void;
+  onEditTask: (id: string, updatedTitle: string, updatedDate: Date) => void;
+  onDeleteTask: (id: string) => void;
   settings: SettingsData;
   onTriggerConfetti?: () => void;
 }
@@ -35,36 +36,65 @@ export function Dashboard({
   tasks,
   onAddTask,
   onToggleTask,
-  onRescheduleTask,
+  onEditTask,
+  onDeleteTask,
   settings,
   onTriggerConfetti,
 }: DashboardProps) {
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [selectedType, setSelectedType] = useState<TaskType>('basic');
   const [taskView, setTaskView] = useState<'today' | 'upcoming'>('today');
+  const [showAddTaskDialog, setShowAddTaskDialog] = useState(false);
   // Ref to track previous progress for confetti trigger
   const previousProgressRef = useRef(0);
 
+  // Filter tasks from props for today
+  const todayTasks = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return tasks.filter((task) => {
+      const taskDate = new Date(task.due_date);
+      return taskDate.toDateString() === today.toDateString();
+    });
+  }, [tasks]);
+
+  // Filter tasks from props for upcoming (next 5 tasks after today)
+  const upcomingTasks = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return tasks
+      .filter((task) => {
+        const taskDate = new Date(task.due_date);
+        taskDate.setHours(0, 0, 0, 0);
+        return taskDate > today;
+      })
+      .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
+      .slice(0, 5);
+  }, [tasks]);
+
   const handleAddTask = () => {
-    if (newTaskTitle.trim()) {
-      onAddTask(newTaskTitle, new Date(), selectedType);
-      setNewTaskTitle('');
+    if (newTaskTitle.trim() && !showAddTaskDialog) {
+      setShowAddTaskDialog(true);
     }
   };
 
-  const todayTasks = tasks.filter((task) => {
-    const today = new Date();
-    const taskDate = new Date(task.date);
-    return taskDate.toDateString() === today.toDateString();
-  });
-// Upcoming tasks are those scheduled after today
-  const upcomingTasks = tasks
-    .filter((task) => {
-      const today = new Date();
-      const taskDate = new Date(task.date);
-      return taskDate > today;
-    })
-    .slice(0, 5);
+  const handleCreateTask = (params: CreateTaskParams) => {
+    onAddTask(params);
+    setNewTaskTitle('');  // Clear the input field
+    setShowAddTaskDialog(false);
+  };
+
+  const handleCloseDialog = () => {
+    setShowAddTaskDialog(false);
+    // Don't clear newTaskTitle - let user keep it if they cancel
+  };
+
+  const handleProgressBar = () => {
+    if (todayTasks.length === 0)
+      return false;
+    return true;
+  }
+
 // Calculate today's progress
   const completedTodayTasks = todayTasks.filter((task) => task.completed)
     .length;
@@ -106,6 +136,7 @@ export function Dashboard({
   }, [tasks]);
 
   useEffect(() => {
+    // Only trigger confetti if: all tasks are complete AND there's at least 1 task today
     if (
       todayProgress === 100 &&
       previousProgressRef.current < 100 &&
@@ -236,19 +267,19 @@ export function Dashboard({
       borderColor: '#e5d9f2',
       borderRadius: 8,
       paddingHorizontal: 12,
-      paddingVertical: 10,
+      paddingVertical: 8,
       fontSize: 14,
-      color: '#333',
+      color: '#473a44',
     },
     addButton: {
-      backgroundColor: '#a8d8ea',
-      borderRadius: 8,
-      padding: 10,
+      backgroundColor: '#96d7efff',
+      borderRadius: 6,
+      padding: 8,
       justifyContent: 'center',
       alignItems: 'center',
     },
     typeSelector: {
-      marginBottom: 8,
+      marginBottom: 16,
     },
     section: {
       marginBottom: 20,
@@ -358,7 +389,7 @@ export function Dashboard({
         </TouchableOpacity>
 
         {/* Progress Card */}
-        <View style={styles.progressCard}>
+        {handleProgressBar() && (<View style={styles.progressCard}>
           <Text style={styles.progressLabel}>Today's Progress</Text>
           <Text style={styles.progressSub}>
             {completedTodayTasks} of {todayTasks.length} tasks completed
@@ -371,12 +402,12 @@ export function Dashboard({
               ]}
             />
           </View>
-        </View>
+        </View>)}
 
         {/* Streak Counter */}
 
         {/* Add Task Section */}
-        <View style={styles.addTaskCard}>
+        <View style={styles.addTaskBorder}>
           <View style={styles.typeSelector}>
             <TaskTypeSelector
               selectedType={selectedType}
@@ -403,7 +434,7 @@ export function Dashboard({
             </TouchableOpacity>
           </View>
         </View>
-
+            
         {/* Task View Filter Buttons */}
         <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 8, marginBottom: 20 }}>
           <TouchableOpacity
@@ -451,7 +482,8 @@ export function Dashboard({
                     key={task.id}
                     task={task}
                     onToggle={onToggleTask}
-                    onReschedule={onRescheduleTask}
+                    onUpdate={onEditTask}
+                    onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
                   />
                 ))}
@@ -470,7 +502,8 @@ export function Dashboard({
                     key={task.id}
                     task={task}
                     onToggle={onToggleTask}
-                    onReschedule={onRescheduleTask}
+                    onUpdate={onEditTask}
+                    onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
                     showDate={true}
                   />
@@ -479,6 +512,15 @@ export function Dashboard({
             )}
           </View>
         )}
+        <AddTaskDialog
+          isOpen={showAddTaskDialog}
+          onClose={handleCloseDialog}
+          onAddTask={handleCreateTask}
+          initialTaskType={selectedType}
+          initialTitle={newTaskTitle}
+          colorBlindMode={settings.colorBlindMode}
+          tasks={tasks}
+        />
 
 
       </ScrollView>

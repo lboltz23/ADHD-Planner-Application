@@ -33,17 +33,17 @@ export function TaskTypeSelector({
     if (colorBlindMode) {
       return [
         {
-          value: "routine",
-          label: "Routine",
-          icon: Repeat,
-          color: getTaskTypeColor("routine", true),
-          bgColor: "#f5f5f5",
-        },
-        {
           value: "basic",
           label: "Basic",
           icon: CheckSquare,
           color: getTaskTypeColor("basic", true),
+          bgColor: "#f5f5f5",
+        },
+        {
+          value: "routine",
+          label: "Routine",
+          icon: Repeat,
+          color: getTaskTypeColor("routine", true),
           bgColor: "#f5f5f5",
         },
         {
@@ -65,18 +65,18 @@ export function TaskTypeSelector({
 
     return [
       {
+        value: "basic",
+        label: "Basic",
+        icon: CheckSquare,
+        color: "#a8d8ea",
+        bgColor: "#e5f0f3",
+      },
+      {
         value: "routine",
         label: "Routine",
         icon: Repeat,
         color: "#b8a4d9",
         bgColor: "#f5f0fa",
-      },
-      {
-        value: "basic",
-        label: "Basic",
-        icon: CheckSquare,
-        color: "#a8d8ea",
-        bgColor: "#f0f8fb",
       },
       {
         value: "related",
@@ -100,6 +100,7 @@ export function TaskTypeSelector({
   const styles = StyleSheet.create({
     container: {
       flexDirection: 'row',
+      flexWrap: 'wrap',
       gap: 8,
     },
     button: {
@@ -110,9 +111,12 @@ export function TaskTypeSelector({
       borderRadius: 8,
       gap: 8,
       borderWidth: 0,
+      marginBottom: 8,
+      minWidth: '48%',
     },
     buttonSelected: {
-      borderWidth: 2,
+      borderWidth: 9,
+      borderColor: '#020102',
     },
     buttonText: {
       fontSize: 14,
@@ -138,8 +142,8 @@ export function TaskTypeSelector({
               styles.button,
               {
                 backgroundColor: isSelected ? "#ffffffff" : type.bgColor,
-                borderColor: colorBlindMode && isSelected ? type.color : 'transparent',
-                borderWidth: isSelected ? (colorBlindMode ? 2 : 0) : 0,
+                borderColor: isSelected ? type.color : 'transparent',
+                borderWidth: isSelected ? 2 : 0,
               },
             ]}
             activeOpacity={0.8}

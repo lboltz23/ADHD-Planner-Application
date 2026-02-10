@@ -1,13 +1,32 @@
 // src/app/index.tsx
-import React from 'react';
+import React, {useEffect} from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Dashboard } from '../components/Dashboard';
 import { useApp } from '../contexts/AppContext';
+import { supabase } from '@/lib/supabaseClient';
+
 
 export default function DashboardScreen() {
   const router = useRouter();
-  const { tasks, settings, addTask, toggleTask, rescheduleTask } = useApp();
+  const { tasks, settings, addTask, toggleTask, updateTask, deleteTask, triggerConfetti } = useApp();
+
+ useEffect(() => {
+    const loadTasks = async () => {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*');
+
+      if (error) {
+        console.error('Supabase error:', error);
+      } else {
+        console.log('Supabase tasks:', data);
+        // later: sync these into AppContext
+      }
+    };
+
+    loadTasks();
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -18,8 +37,10 @@ export default function DashboardScreen() {
         tasks={tasks}
         onAddTask={addTask}
         onToggleTask={toggleTask}
-        onRescheduleTask={rescheduleTask}
+        onEditTask={updateTask}
+        onDeleteTask={deleteTask}
         settings={settings}
+        onTriggerConfetti={triggerConfetti}
       />
     </View>
   );

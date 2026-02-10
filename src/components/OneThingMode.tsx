@@ -1,23 +1,24 @@
-import React, { useState, useEffect, useRef } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  Animated,
-} from 'react-native';
 import {
   ArrowLeft,
-  Play,
-  Pause,
-  RotateCcw,
+  Bell,
   CheckCircle2,
+  Pause,
+  Play,
+  RotateCcw,
 } from 'lucide-react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  Animated,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Task } from '../types';
 import { SettingsData } from './Settings';
 import { getTaskTypeColor } from './taskColors';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface OneThingModeProps {
   onNavigateBack: () => void;
@@ -40,13 +41,26 @@ export function OneThingMode({
   );
   const [isRunning, setIsRunning] = useState(false);
   const [hasCompleted, setHasCompleted] = useState(false);
+  const [showAlertPopup, setShowAlertPopup] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+  const [shownIntervals, setShownIntervals] = useState<Set<number>>(new Set());
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const scaleAnim = useRef(new Animated.Value(1)).current;
+  const popupTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (popupTimeoutRef.current) {
+        clearTimeout(popupTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Get incomplete tasks for today
   const incompleteTasks = tasks.filter((task) => {
     const today = new Date();
-    const taskDate = new Date(task.date);
+    const taskDate = new Date(task.due_date);
     return taskDate.toDateString() === today.toDateString() && !task.completed;
   });
 
@@ -64,7 +78,13 @@ export function OneThingMode({
     if (isRunning && timeInSeconds > 0) {
       intervalRef.current = setInterval(() => {
         setTimeInSeconds((prev) => {
-          if (prev <= 1) {
+          const newTime = prev - 1;
+          const initialSeconds = settings.defaultTimerMinutes * 60;
+
+          // Check for key intervals
+          checkKeyIntervals(newTime, initialSeconds);
+
+          if (newTime <= 0) {
             setIsRunning(false);
             setHasCompleted(true);
             if (settings.confettiEnabled && onTriggerConfetti) {
@@ -73,7 +93,7 @@ export function OneThingMode({
             triggerPulseAnimation();
             return 0;
           }
-          return prev - 1;
+          return newTime;
         });
       }, 1000);
     } else {
@@ -87,7 +107,7 @@ export function OneThingMode({
         clearInterval(intervalRef.current);
       }
     };
-  }, [isRunning, timeInSeconds, settings.confettiEnabled, onTriggerConfetti]);
+  }, [isRunning, timeInSeconds, settings.confettiEnabled, settings.defaultTimerMinutes, onTriggerConfetti, shownIntervals]);
 
   const triggerPulseAnimation = () => {
     Animated.sequence([
@@ -104,15 +124,85 @@ export function OneThingMode({
     ]).start();
   };
 
+  const playSound = () => {
+    // Only play sound if enabled in settings
+    if (!settings.soundEnabled) {
+      return;
+    }
+
+    // Use native alert sound on both iOS and Android
+    try {
+      // For web and Expo, we can use the Web Audio API
+      if (typeof window !== 'undefined' && window.AudioContext) {
+        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.value = 880; // A5 note
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.5);
+      }
+    } catch (error) {
+      console.log('Sound not available in this environment');
+    }
+  };
+
+  const showTimerAlert = (message: string) => {
+    setAlertMessage(message);
+    setShowAlertPopup(true);
+    playSound();
+
+    if (popupTimeoutRef.current) {
+      clearTimeout(popupTimeoutRef.current);
+    }
+
+    popupTimeoutRef.current = setTimeout(() => {
+      setShowAlertPopup(false);
+    }, 3000);
+  };
+
+  const checkKeyIntervals = (seconds: number, initialSeconds: number) => {
+    const keyIntervals = [
+      { seconds: 60, label: '1 minute' },
+      { seconds: 300, label: '5 minutes' },
+      { seconds: 1800, label: '30 minutes' },
+      { seconds: Math.floor(initialSeconds / 2), label: 'Half time reached' },
+    ];
+
+    keyIntervals.forEach((interval) => {
+      if (seconds === interval.seconds && !shownIntervals.has(interval.seconds)) {
+        showTimerAlert(interval.label);
+        setShownIntervals((prev) => new Set(prev).add(interval.seconds));
+      }
+    });
+  };
+
   const toggleTimer = () => {
-    setIsRunning(!isRunning);
-    setHasCompleted(false);
+    // If timer is at 0, reset and start it
+    if (timeInSeconds === 0) {
+      setTimeInSeconds(settings.defaultTimerMinutes * 60);
+      setShownIntervals(new Set());
+      setIsRunning(true);
+      setHasCompleted(false);
+    } else {
+      setIsRunning(!isRunning);
+      setHasCompleted(false);
+    }
   };
 
   const resetTimer = () => {
     setIsRunning(false);
     setTimeInSeconds(settings.defaultTimerMinutes * 60);
     setHasCompleted(false);
+    setShownIntervals(new Set());
   };
 
   const handleCompleteTask = () => {
@@ -305,6 +395,29 @@ export function OneThingMode({
       color: '#333',
       flex: 1,
     },
+    alertPopupOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 1000,
+    },
+    alertPopupCard: {
+      backgroundColor: '#ffffff',
+      borderRadius: 16,
+      padding: 32,
+      alignItems: 'center',
+      gap: 16,
+      borderWidth: 2,
+      borderColor: '#b8a4d9',
+      maxWidth: 300,
+    },
+    alertPopupText: {
+      fontSize: 20,
+      fontWeight: '600',
+      color: '#6b5b7f',
+      textAlign: 'center',
+    },
   });
 
   return (
@@ -432,6 +545,16 @@ export function OneThingMode({
           </View>
         )}
       </ScrollView>
+
+      {/* Alert Popup */}
+      {showAlertPopup && (
+        <View style={styles.alertPopupOverlay}>
+          <View style={styles.alertPopupCard}>
+            <Bell size={32} color="#b8a4d9" />
+            <Text style={styles.alertPopupText}>{alertMessage}</Text>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
