@@ -115,7 +115,7 @@ export function Dashboard({
       while (streak < 30) {
         const dateString = currentDate.toDateString();
         const tasksForDate = tasks.filter((task) => {
-          const taskDate = new Date(task.date);
+          const taskDate = new Date(task.due_date);
           taskDate.setHours(0, 0, 0, 0);
           return taskDate.toDateString() === dateString && task.completed;
         });
@@ -298,6 +298,14 @@ export function Dashboard({
     },
     tasksList: {
       gap: 8,
+    },
+    addTaskBorder: {
+      backgroundColor: '#ffffff',
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: '#e5d9f2',
+      padding: 10,
+      marginBottom: 20,
     },
     streakContainer: {
       backgroundColor: '#ffffff',
