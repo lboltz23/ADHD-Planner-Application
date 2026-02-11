@@ -21,6 +21,7 @@ import Slider  from '@react-native-community/slider';
 export interface SettingsData {
   defaultTimerMinutes: number;
   soundEnabled: boolean;
+  notifications: boolean;
   confettiEnabled: boolean;
   theme: "auto" | "light" | "dark";
   defaultTaskView: "all" | "routine" | "basic" | "related" | "long_interval" ;
@@ -364,7 +365,7 @@ export function Settings({
               </Text>
             </View>
             <Switch
-              value={settings.soundEnabled}
+              value={settings.notifications}
               onValueChange={(checked) =>
                 updateSetting('notifications', checked)
               }
