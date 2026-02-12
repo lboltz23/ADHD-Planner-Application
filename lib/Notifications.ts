@@ -19,6 +19,20 @@ export async function scheduleTestNotification() {
   });
 }
 
+export async function scheduleTimedNotification(title:string,body:string,seconds:number) {
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: title,
+      body: body,
+    },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+      seconds: seconds,
+      repeats: false,
+    },
+  });
+}
+
 export async function disableNotifications() {
   await Notifications.cancelAllScheduledNotificationsAsync();
 }
