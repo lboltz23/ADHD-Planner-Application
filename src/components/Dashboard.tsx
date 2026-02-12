@@ -43,7 +43,7 @@ export function Dashboard({
 }: DashboardProps) {
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [selectedType, setSelectedType] = useState<TaskType>('basic');
-  const [taskView, setTaskView] = useState<'today' | 'upcoming'>('today');
+  const [taskView, setTaskView] = useState<'today' | 'upcoming' | 'repeating'>('today');
   const [showAddTaskDialog, setShowAddTaskDialog] = useState(false);
   // Ref to track previous progress for confetti trigger
   const previousProgressRef = useRef(0);
@@ -70,6 +70,10 @@ export function Dashboard({
       })
       .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
       .slice(0, 5);
+  }, [tasks]);
+
+  const repeatingTasks = useMemo(() => {
+    return tasks.filter((task) => task.is_template === true);
   }, [tasks]);
 
   const handleAddTask = () => {
@@ -476,9 +480,25 @@ export function Dashboard({
               Upcoming
             </Text>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => setTaskView('repeating')}
+            style={{
+              paddingVertical: 8,
+              paddingHorizontal: 16,
+              borderRadius: 8,
+              backgroundColor: taskView === 'repeating' ? '#f5a4e0' : '#ffffff',
+              borderWidth: 1,
+              borderColor: '#e5d9f2',
+            }}
+          >
+            <Text style={{ color: taskView === 'repeating' ? '#ffffff' : '#6b5b7f', fontWeight: '600' }}>
+              Repeating
+            </Text>
+          </TouchableOpacity>
         </View>
 
-        {taskView === 'today' ? (      
+        {taskView === 'today' ? (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Today</Text>
             {todayTasks.length === 0 ? (
@@ -498,7 +518,7 @@ export function Dashboard({
               </View>
             )}
           </View>
-        ) : (
+        ) : taskView === 'upcoming' ? (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Upcoming</Text>
             {upcomingTasks.length === 0 ? (
@@ -506,6 +526,27 @@ export function Dashboard({
             ) : (
               <View style={styles.tasksList}>
                 {upcomingTasks.map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    onToggle={onToggleTask}
+                    onUpdate={onEditTask}
+                    onDelete={onDeleteTask}
+                    colorBlindMode={settings.colorBlindMode}
+                    showDate={true}
+                  />
+                ))}
+              </View>
+            )}
+          </View>
+        ) : (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Repeating</Text>
+            {repeatingTasks.length === 0 ? (
+              <Text style={styles.noTasksMessage}>No repeating tasks</Text>
+            ) : (
+              <View style={styles.tasksList}>
+                {repeatingTasks.map((task) => (
                   <TaskCard
                     key={task.id}
                     task={task}
