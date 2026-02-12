@@ -1,21 +1,22 @@
-// src/app/CalendarView.tsx
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { CalendarView as CalendarComponent } from '../components/CalendarView';
+import { WeeklyView as CalendarComponent } from '../components/CalendarView';
 import { useApp } from '../contexts/AppContext';
 
 export default function CalendarViewScreen() {
   const router = useRouter();
-  const { tasks, settings, addTask, toggleTask, updateTask, deleteTask, triggerConfetti } = useApp();
+  const { tasks, settings, addTask, toggleTask, updateTask, deleteTask, triggerConfetti, rescheduleTask } = useApp();
 
   return (
     <View style={styles.container}>
       <CalendarComponent
         onNavigateBack={() => router.back()}
+        onNavigateSettings={() => router.push('/Settings')}
         tasks={tasks}
-        onAddTask={addTask}
         onToggleTask={toggleTask}
+        onRescheduleTask={rescheduleTask}
+        colorBlindMode={settings.colorBlindMode}
         onEditTask={updateTask}
         onDeleteTask={deleteTask}
         settings={settings}
