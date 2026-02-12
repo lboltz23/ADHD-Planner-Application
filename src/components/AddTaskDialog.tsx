@@ -8,6 +8,7 @@ import { getTaskTypeColor, getEnhancedTaskTypeColor } from "./taskColors";
 import TitleInput from "./TitleInput";
 import DateRangePicker from "./DateRangePicker";
 import RelatedTaskInput from "./RelatedTask";
+import NoteInput from "./NoteInput";
 
 const ALL_WEEKDAYS: Weekday[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const WEEKDAY_ABBREVIATIONS: Record<Weekday, string> = {
@@ -67,13 +68,11 @@ export default function AddTaskDialog({
 
     // Different validation based on task type
     if (initialTaskType === "routine" || initialTaskType === "long_interval") {
-      if (!startDate || !endDate) {
-        alert("Please select both start and end dates");
-        return;
-      }
+      // Default start date to today if not provided
+      const effectiveStartDate = startDate || new Date();
 
-      // Validate end date is after start date
-      if (endDate < startDate) {
+      // Validate end date is after start date if both are provided
+      if (endDate && endDate < effectiveStartDate) {
         alert("End date must be after start date");
         return;
       }
@@ -90,13 +89,13 @@ export default function AddTaskDialog({
       // Use startDate as the primary task date
       onAddTask({
         title: taskTitle,
-        date: startDate,
+        due_date: effectiveStartDate,
         type: initialTaskType,
-        repeatDays: initialTaskType === "routine" ? selectedDays : undefined,
-        intervalMonths: interval,
+        days_selected: initialTaskType === "routine" ? selectedDays : undefined,
+        recurrence_interval: interval,
         notes,
-        startDate: startDate,
-        endDate: endDate,
+        start_date: effectiveStartDate,
+        end_date: endDate || undefined,
       });
     } else {
       // For basic and related types
@@ -104,14 +103,22 @@ export default function AddTaskDialog({
         alert("Please select a date");
         return;
       }
+
+      // Validate parent task is selected for related tasks
+      if (initialTaskType === "related" && !parentTaskId) {
+        alert("Please select a parent task to link to");
+        return;
+      }
+
       // Convert selected date string to Date object in local timezone (not UTC) to avoid timezone issues
       const [year, month, day] = selectedDate.split('-').map(Number);
-      const date = new Date(year, month - 1, day);
+      const dueDate = new Date(year, month - 1, day);
       onAddTask({
         title: taskTitle,
-        date,
+        due_date: dueDate,
         type: initialTaskType,
-        parentTaskId: initialTaskType === "related" && parentTaskId ? parentTaskId : undefined,
+        parent_task_id: initialTaskType === "related" ? parentTaskId : undefined,
+        notes: notes,
       });
     }
 
@@ -170,7 +177,7 @@ export default function AddTaskDialog({
             {initialTaskType === "basic" && (
               <View style={styles.section}>
                 <TitleInput value={taskTitle} onChange={handleInputChange} />
-
+                <NoteInput value={notes} onChange={setNotes} />
                 <Text style={styles.label}>Select Date *</Text>
                 {/* Calendar */}
                 <Calendar
@@ -192,6 +199,7 @@ export default function AddTaskDialog({
             {initialTaskType === "routine" && (
               <View style={styles.section}>
                 <TitleInput value={taskTitle} onChange={handleInputChange} />
+                <NoteInput value={notes} onChange={setNotes} />
 
                 <DateRangePicker
                   startDate={startDate}
@@ -227,6 +235,8 @@ export default function AddTaskDialog({
             {initialTaskType === "related" && (
               <View style={styles.section}>
                 <TitleInput value={taskTitle} onChange={handleInputChange} />
+                <NoteInput value={notes} onChange={setNotes} />
+
                 <RelatedTaskInput
                   tasks={tasks}
                   selectedTaskId={parentTaskId}
@@ -252,6 +262,7 @@ export default function AddTaskDialog({
             {initialTaskType === "long_interval" && (
               <View style={styles.section}>
                 <TitleInput value={taskTitle} onChange={handleInputChange} />
+                <NoteInput value={notes} onChange={setNotes} />
 
                 <DateRangePicker
                   startDate={startDate}

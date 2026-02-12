@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -23,7 +23,8 @@ interface DashboardProps {
   tasks: Task[];
   onAddTask: (params: CreateTaskParams) => void;
   onToggleTask: (id: string) => void;
-  onRescheduleTask: (id: string, newDate: Date) => void;
+  onEditTask: (id: string, updatedTitle: string, updatedDate: Date) => void;
+  onDeleteTask: (id: string) => void;
   settings: SettingsData;
   onTriggerConfetti?: () => void;
 }
@@ -35,16 +36,43 @@ export function Dashboard({
   tasks,
   onAddTask,
   onToggleTask,
-  onRescheduleTask,
+  onEditTask,
+  onDeleteTask,
   settings,
   onTriggerConfetti,
 }: DashboardProps) {
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [selectedType, setSelectedType] = useState<TaskType>('basic');
   const [taskView, setTaskView] = useState<'today' | 'upcoming'>('today');
-  const [showAddTaskDialog, setShowAddTaskDialog] = useState(false); 
+  const [showAddTaskDialog, setShowAddTaskDialog] = useState(false);
   // Ref to track previous progress for confetti trigger
   const previousProgressRef = useRef(0);
+
+  // Filter tasks from props for today
+  const todayTasks = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return tasks.filter((task) => {
+      if (task.is_template) return false;
+      const taskDate = new Date(task.due_date);
+      return taskDate.toDateString() === today.toDateString();
+    });
+  }, [tasks]);
+
+  // Filter tasks from props for upcoming (next 5 tasks after today)
+  const upcomingTasks = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return tasks
+      .filter((task) => {
+        if (task.is_template) return false;
+        const taskDate = new Date(task.due_date);
+        taskDate.setHours(0, 0, 0, 0);
+        return taskDate > today;
+      })
+      .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
+      .slice(0, 5);
+  }, [tasks]);
 
   const handleAddTask = () => {
     if (newTaskTitle.trim() && !showAddTaskDialog) {
@@ -69,19 +97,6 @@ export function Dashboard({
     return true;
   }
 
-  const todayTasks = tasks.filter((task) => {
-    const today = new Date();
-    const taskDate = new Date(task.date);
-    return taskDate.toDateString() === today.toDateString();
-  });
-// Upcoming tasks are those scheduled after today
-  const upcomingTasks = tasks
-    .filter((task) => {
-      const today = new Date();
-      const taskDate = new Date(task.date);
-      return taskDate > today;
-    })
-    .slice(0, 5);
 // Calculate today's progress
   const completedTodayTasks = todayTasks.filter((task) => task.completed)
     .length;
@@ -89,6 +104,38 @@ export function Dashboard({
     todayTasks.length > 0
       ? (completedTodayTasks / todayTasks.length) * 100
       : 0;
+
+  // Calculate streak count
+  const [streakCount, setStreakCount] = useState(0);
+
+  useEffect(() => {
+    const calculateStreak = () => {
+      let streak = 100000000;
+      let currentDate = new Date();
+      currentDate.setHours(0, 0, 0, 0);
+
+      while (streak < 30) {
+        const dateString = currentDate.toDateString();
+        const tasksForDate = tasks.filter((task) => {
+          const taskDate = new Date(task.due_date);
+          taskDate.setHours(0, 0, 0, 0);
+          return taskDate.toDateString() === dateString && task.completed;
+        });
+
+        if (tasksForDate.length > 0) {
+          streak++;
+        } else {
+          break;
+        }
+
+        currentDate.setDate(currentDate.getDate() - 1);
+      }
+
+      setStreakCount(streak);
+    };
+
+    calculateStreak();
+  }, [tasks]);
 
   useEffect(() => {
     // Only trigger confetti if: all tasks are complete AND there's at least 1 task today
@@ -256,13 +303,44 @@ export function Dashboard({
     },
     addTaskBorder: {
       backgroundColor: '#ffffff',
-      height: 125,
       borderRadius: 8,
       borderWidth: 1,
       borderColor: '#e5d9f2',
       padding: 10,
-      marginBottom: 15,
-      paddingVertical: 10,
+      marginBottom: 20,
+    },
+    streakContainer: {
+      backgroundColor: '#ffffff',
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 20,
+      borderWidth: 1,
+      borderColor: '#e5d9f2',
+      alignItems: 'center',
+    },
+    streakText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: '#6b5b7f',
+    },
+    streakBadge: {
+      backgroundColor: '#ffe5cc',
+      paddingVertical: 8,
+      paddingHorizontal: 10,
+      borderRadius: 8,
+      alignItems: 'center',
+      justifyContent: 'center',
+      minWidth: 50,
+    },
+    streakBadgeText: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: '#ff9500',
+    },
+    streakBadgeLabel: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: '#ff9500',
     },
   });
 
@@ -283,6 +361,10 @@ export function Dashboard({
             </Text>
           </View>
           <View style={styles.headerRight}>
+            <View style={styles.streakBadge}>
+              <Text style={styles.streakBadgeText}>{streakCount}</Text>
+              <Text style={styles.streakBadgeLabel}>day</Text>
+            </View>
             <TouchableOpacity
               style={styles.iconButton}
               onPress={onNavigateToSettings}
@@ -331,6 +413,8 @@ export function Dashboard({
             />
           </View>
         </View>)}
+
+        {/* Streak Counter */}
 
         {/* Add Task Section */}
         <View style={styles.addTaskBorder}>
@@ -408,7 +492,8 @@ export function Dashboard({
                     key={task.id}
                     task={task}
                     onToggle={onToggleTask}
-                    onReschedule={onRescheduleTask}
+                    onUpdate={onEditTask}
+                    onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
                   />
                 ))}
@@ -427,7 +512,8 @@ export function Dashboard({
                     key={task.id}
                     task={task}
                     onToggle={onToggleTask}
-                    onReschedule={onRescheduleTask}
+                    onUpdate={onEditTask}
+                    onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
                     showDate={true}
                   />

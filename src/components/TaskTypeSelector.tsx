@@ -100,6 +100,7 @@ export function TaskTypeSelector({
   const styles = StyleSheet.create({
     container: {
       flexDirection: 'row',
+      flexWrap: 'wrap',
       gap: 8,
     },
     button: {
@@ -110,6 +111,8 @@ export function TaskTypeSelector({
       borderRadius: 8,
       gap: 8,
       borderWidth: 0,
+      marginBottom: 8,
+      minWidth: '48%',
     },
     buttonSelected: {
       borderWidth: 9,

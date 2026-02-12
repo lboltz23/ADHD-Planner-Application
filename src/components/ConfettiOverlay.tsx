@@ -1,6 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
+import { Dimensions } from 'react-native';
+
+
+const { width, height } = Dimensions.get('window');
 
 interface ConfettiOverlayProps {
   trigger: number; // Use a counter to trigger confetti
