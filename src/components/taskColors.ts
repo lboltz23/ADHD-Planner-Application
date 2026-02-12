@@ -15,6 +15,13 @@ export const defaultColors: TaskColorScheme = {
   long_interval: "#f5a4e0ff", // Magenta
 };
 
+export const createTaskColors : TaskColorScheme = {
+  routine: "#9a72db", // Lavender
+  basic: "#76cae8",   // Blue
+  related: "#fe859e", // Pink
+  long_interval: "rgb(243, 102, 205)", // Magenta
+}
+
 // Color blind friendly scheme with high contrast
 export const colorBlindColors: TaskColorScheme = {
   routine: "#0077BB", // Blue (deuteranopia safe)
@@ -25,5 +32,10 @@ export const colorBlindColors: TaskColorScheme = {
 
 export function getTaskTypeColor(type: Task["type"], colorBlindMode: boolean): string {
   const colors = colorBlindMode ? colorBlindColors : defaultColors;
+  return colors[type];
+}
+
+export function getEnhancedTaskTypeColor(type: Task["type"], colorBlindMode: boolean): string {
+  const colors = colorBlindMode ? colorBlindColors : createTaskColors;
   return colors[type];
 }

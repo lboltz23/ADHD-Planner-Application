@@ -1,7 +1,8 @@
 {
-  "name": "planner-prototype",
+  "name": "planable",
   "main": "expo-router/entry",
   "version": "1.0.0",
+  "scheme": "planable",
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
@@ -13,6 +14,7 @@
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
     "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-native-community/datetimepicker": "^8.6.0",
     "@react-native-community/slider": "5.0.1",
     "@react-native-google-signin/google-signin": "^16.1.1",
     "@react-navigation/bottom-tabs": "^7.4.0",
@@ -38,8 +40,9 @@
     "react-native": "0.81.5",
     "react-native-calendars": "^1.1313.0",
     "react-native-confetti-cannon": "^1.5.2",
+    "react-native-element-dropdown": "^2.12.4",
     "react-native-gesture-handler": "~2.28.0",
-    "react-native-google-sign-in": "^1.0.16",
+    "react-native-get-random-values": "^2.0.0",
     "react-native-reanimated": "~4.1.1",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",
@@ -47,11 +50,13 @@
     "react-native-url-polyfill": "^3.0.0",
     "react-native-walkthrough-tooltip": "^1.6.0",
     "react-native-web": "~0.21.0",
-    "react-native-worklets": "0.5.1"
+    "react-native-worklets": "0.5.1",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@types/react": "~19.1.0",
     "@types/react-native": "^0.72.8",
+    "@types/uuid": "^10.0.0",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
     "typescript": "~5.9.2"

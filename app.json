@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "planner-prototype",
-    "slug": "planner-prototype",
+    "name": "PlanAble",
+    "slug": "PlanAble",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./src/assets/images/icon.png",
-    "scheme": "plannerprototype",
+    "scheme": "PlanAble",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -20,19 +20,13 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.plannerprototype"
+      "package": "com.planable.app"
     },
     "web": {
       "output": "static",
       "favicon": "./src/assets/images/favicon.png"
     },
     "plugins": [
-      [
-        "@react-native-google-signin/google-signin",
-        {
-          "iosUrlScheme": "com.googleusercontent.apps._some_id_here_"
-        }
-      ],
       "expo-router",
       [
         "expo-splash-screen",

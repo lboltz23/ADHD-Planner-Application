@@ -6,11 +6,10 @@ import {
   StyleSheet,
   ScrollView,
   TextInput,
-  FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Plus } from 'lucide-react-native';
-import { Task, TaskType } from '../types';
+import { Task, TaskType, CreateTaskParams } from '../types';
 import { SettingsData } from './Settings';
 import { ProgressCircle } from './ProgressCircle';
 import { TaskTypeSelector } from './TaskTypeSelector';
@@ -20,9 +19,10 @@ import { TaskCard } from './TaskCard';
 interface CalendarViewProps {
   onNavigateBack: () => void;
   tasks: Task[];
-  onAddTask: (title: string, date: Date, type: TaskType) => void;
+  onAddTask: (params: CreateTaskParams) => void;
   onToggleTask: (id: string) => void;
-  onRescheduleTask: (id: string, newDate: Date) => void;
+  onEditTask: (id: string, newTitle: string, newDate: Date) => void;
+  onDeleteTask: (id: string) => void;
   settings: SettingsData;
   onTriggerConfetti?: () => void;
 }
@@ -32,13 +32,13 @@ export function CalendarView({
   tasks,
   onAddTask,
   onToggleTask,
-  onRescheduleTask,
+  onEditTask,
+  onDeleteTask,
   settings,
   onTriggerConfetti,
 }: CalendarViewProps) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [newTaskTitle, setNewTaskTitle] = useState('');
-  const [newTaskTime, setNewTaskTime] = useState("");
   const [selectedType, setSelectedType] = useState<TaskType>('basic');
   const previousProgressRef = useRef(0);
   const previousDateRef = useRef<string>('');
@@ -46,13 +46,17 @@ export function CalendarView({
 // Function to handle adding a new task
   const handleAddTask = () => {
     if (newTaskTitle.trim()) {
-      onAddTask(newTaskTitle, selectedDate, selectedType);
+      onAddTask({
+        title: newTaskTitle,
+        due_date: selectedDate,
+        type: selectedType,
+      });
       setNewTaskTitle('');
     }
   };
 // Filter tasks for the selected date
   const tasksForSelectedDate = tasks.filter((task) => {
-    const taskDate = new Date(task.date);
+    const taskDate = new Date(task.due_date);
     return taskDate.toDateString() === selectedDate.toDateString();
   });
 
@@ -455,6 +459,8 @@ export function CalendarView({
                   key={task.id}
                   task={task}
                   onToggle={onToggleTask}
+                  onDelete={onDeleteTask}
+                  onUpdate={onEditTask}
                   colorBlindMode={settings.colorBlindMode}
                 />
               ))}
