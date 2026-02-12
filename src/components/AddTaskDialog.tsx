@@ -68,13 +68,11 @@ export default function AddTaskDialog({
 
     // Different validation based on task type
     if (initialTaskType === "routine" || initialTaskType === "long_interval") {
-      if (!startDate || !endDate) {
-        alert("Please select both start and end dates");
-        return;
-      }
+      // Default start date to today if not provided
+      const effectiveStartDate = startDate || new Date();
 
-      // Validate end date is after start date
-      if (endDate < startDate) {
+      // Validate end date is after start date if both are provided
+      if (endDate && endDate < effectiveStartDate) {
         alert("End date must be after start date");
         return;
       }
@@ -91,13 +89,13 @@ export default function AddTaskDialog({
       // Use startDate as the primary task date
       onAddTask({
         title: taskTitle,
-        due_date: startDate,
+        due_date: effectiveStartDate,
         type: initialTaskType,
         days_selected: initialTaskType === "routine" ? selectedDays : undefined,
         recurrence_interval: interval,
         notes,
-        start_date: startDate,
-        end_date: endDate,
+        start_date: effectiveStartDate,
+        end_date: endDate || undefined,
       });
     } else {
       // For basic and related types
