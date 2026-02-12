@@ -113,8 +113,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
           data.forEach((row: any) => {
             // Check if this is a recurring template
-            if (row.is_template) {
-              // Add the template itself for the Recurring view
+            if (row.is_template && row.start_date && row.end_date) {
+              // Add the template itself for the Repeating view
               allTasks.push({
                 id: row.id,
                 title: row.title,
@@ -128,10 +128,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 is_template: true,
                 days_selected: row.days_selected,
                 recurrence_interval: row.recurrence_interval,
-                start_date: row.start_date ? new Date(row.start_date) : undefined,
-                end_date: row.end_date ? new Date(row.end_date) : undefined,
+                start_date: new Date(row.start_date),
+                end_date: new Date(row.end_date),
               });
-              // Generate instances from the template (only if dates exist)
+              // Generate instances from the template
               const instances = generateTaskInstancesFromTemplate(row);
               allTasks.push(...instances);
             } else {
@@ -304,7 +304,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     ));
 
     // Check if this is a recurring task instance (has a parent_task_id)
-    if (task.parent_task_id) {
+    if (task.is_template === false && task.parent_task_id) {
       // Extract the date from the instance ID (format: templateId_YYYY-MM-DD)
       const dateStr = task.due_date.toISOString().split('T')[0];
 
