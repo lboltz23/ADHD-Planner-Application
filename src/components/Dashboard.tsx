@@ -11,8 +11,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Task, TaskType, CreateTaskParams } from '../types';
 import { SettingsData } from './Settings';
 import { TaskCard } from './TaskCard';
-import AddTaskDialog from './AddTaskDialog';
 import { TaskTypeSelector } from './TaskTypeSelector';
+import AddTaskDialog from './AddTaskDialog';
 import { Calendar, Settings, Zap } from 'lucide-react-native';
 
 // Dashboard Props
@@ -23,8 +23,7 @@ interface DashboardProps {
   tasks: Task[];
   onAddTask: (params: CreateTaskParams) => void;
   onToggleTask: (id: string) => void;
-  onEditTask: (id: string, updatedTitle: string, updatedDate: Date) => void;
-  onDeleteTask: (id: string) => void;
+  onRescheduleTask: (id: string, newDate: Date) => void;
   settings: SettingsData;
   onTriggerConfetti?: () => void;
 }
@@ -36,8 +35,7 @@ export function Dashboard({
   tasks,
   onAddTask,
   onToggleTask,
-  onEditTask,
-  onDeleteTask,
+  onRescheduleTask,
   settings,
   onTriggerConfetti,
 }: DashboardProps) {
@@ -410,8 +408,7 @@ export function Dashboard({
                     key={task.id}
                     task={task}
                     onToggle={onToggleTask}
-                    onUpdate={onEditTask}
-                    onDelete={onDeleteTask}
+                    onReschedule={onRescheduleTask}
                     colorBlindMode={settings.colorBlindMode}
                   />
                 ))}
@@ -430,8 +427,7 @@ export function Dashboard({
                     key={task.id}
                     task={task}
                     onToggle={onToggleTask}
-                    onUpdate={onEditTask}
-                    onDelete={onDeleteTask}
+                    onReschedule={onRescheduleTask}
                     colorBlindMode={settings.colorBlindMode}
                     showDate={true}
                   />

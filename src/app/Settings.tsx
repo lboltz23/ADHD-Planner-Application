@@ -9,10 +9,21 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { settings, updateSettings } = useApp();
 
+
+  // Fixed bug, when reloading on seetings screen it saved setting screen as root
+  // Will allow movement through screens without getting stuck on settings screen
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/'); // goes to _index.tsx
+    }
+  };
+
   return (
     <View style={styles.container}>
       <SettingsComponent
-        onNavigateBack={() => router.back()}
+        onNavigateBack={handleBack}
         settings={settings}
         onUpdateSettings={updateSettings}
       />

@@ -1,25 +1,33 @@
 // src/contexts/AppContext.tsx
-import React, { createContext, useContext, useState, useCallback, useMemo, useEffect, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+  ReactNode,
+} from 'react';
 import { Task, CreateTaskParams, Weekday } from '../types';
 import { SettingsData } from '../components/Settings';
 import { supabase } from '@/lib/supabaseClient';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
 
-// Map JavaScript day numbers (0=Sunday) to Weekday names
 const DAY_NUMBER_TO_WEEKDAY: Record<number, Weekday> = {
-  0: "Sunday",
-  1: "Monday",
-  2: "Tuesday",
-  3: "Wednesday",
-  4: "Thursday",
-  5: "Friday",
-  6: "Saturday",
+  0: 'Sunday',
+  1: 'Monday',
+  2: 'Tuesday',
+  3: 'Wednesday',
+  4: 'Thursday',
+  5: 'Friday',
+  6: 'Saturday',
 };
 
 interface AppContextType {
   tasks: Task[];
   settings: SettingsData;
+  loadingTasks: boolean;
+  tasksError: string | null;
   addTask: (params: CreateTaskParams) => void;
   toggleTask: (id: string) => void;
   rescheduleTask: (id: string, newDate: Date, newTime?: string) => void;
@@ -34,245 +42,265 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [tasks, setTasks] = useState<Task[]>([]);
-
   const [settings, setSettings] = useState<SettingsData>({
     defaultTimerMinutes: 25,
     soundEnabled: true,
     confettiEnabled: true,
-    theme: "auto",
-    defaultTaskView: "all",
+    theme: 'auto',
+    defaultTaskView: 'all',
     colorBlindMode: false,
   });
-
   const [confettiTrigger, setConfettiTrigger] = useState(0);
+  const [loadingTasks, setLoadingTasks] = useState(true);
+  const [tasksError, setTasksError] = useState<string | null>(null);
 
-  // Default user ID - replace with actual user ID when auth is implemented
-  // const DEFAULT_USER_ID = '9dfa5616-322a-4287-a980-d33754320861';
+  // Load tasks on mount (with dev login)
+  useEffect(() => {
+    const initialize = async () => {
+      setLoadingTasks(true);
+      setTasksError(null);
 
-  // Load tasks from Supabase on mount
-  // useEffect(() => {
-  //   const loadTasks = async () => {
-  //     try {
-  //       const { data, error } = await supabase
-  //         .from('tasks')
-  //         .select('*')
-  //         .eq('user_id', DEFAULT_USER_ID);
+    // DEV LOGIN (remove later)
+    const { data: loginData, error: loginError } =
+      await supabase.auth.signInWithPassword({
+        email: 'test@adhdplanner.com',
+        password: 'test1234',
+      });
 
-  //       if (error) {
-  //         console.error('Error loading tasks from Supabase:', error);
-  //         return;
-  //       }
-
-  //       if (data) {
-  //         // Convert Supabase tasks to our Task type
-  //         const loadedTasks: Task[] = data.map((row: any) => ({
-  //           id: row.id,
-  //           title: row.title,
-  //           date: new Date(row.due_date),
-  //           completed: row.completed || false,
-  //           type: row.type as Task['type'],
-  //           notes: row.description,
-  //         }));
-  //         setTasks(loadedTasks);
-  //       }
-  //     } catch (error) {
-  //       console.error('Failed to load tasks:', error);
-  //     }
-  //   };
-
-  //   loadTasks();
-  // }, []);
-
-  // Helper function to generate scheduled days for recurring tasks
-  const generateScheduledDays = (
-    startDate: Date,
-    endDate: Date,
-    repeatDays?: Weekday[],
-    intervalMonths?: number
-  ): Date[] => {
-    const scheduledDays: Date[] = [];
-    const current = new Date(startDate);
-    const end = new Date(endDate);
-
-    // Set times to midnight for consistent comparison
-    current.setHours(0, 0, 0, 0);
-    end.setHours(0, 0, 0, 0);
-
-    // If repeatDays is provided (routine tasks), filter by selected weekdays
-    if (repeatDays && repeatDays.length > 0) {
-      while (current <= end) {
-        const dayOfWeek = DAY_NUMBER_TO_WEEKDAY[current.getDay()];
-        if (repeatDays.includes(dayOfWeek)) {
-          scheduledDays.push(new Date(current));
-        }
-        current.setDate(current.getDate() + 1);
-      }
-    } else if (intervalMonths) {
-      // For long_interval tasks, use intervalMonths
-      while (current <= end) {
-        scheduledDays.push(new Date(current));
-        current.setMonth(current.getMonth() + intervalMonths);
-      }
-    } else {
-      // Default to daily if nothing specified
-      while (current <= end) {
-        scheduledDays.push(new Date(current));
-        current.setDate(current.getDate() + 1);
-      }
+    if (loginError) {
+      console.log('Dev login error:', loginError.message);
+      setTasksError('Login failed.');
+      setLoadingTasks(false);
+      return;
     }
 
-    return scheduledDays;
-  };
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-  const addTask = useCallback(async (params: CreateTaskParams) => {
-    const { title, date, type, repeatDays, intervalMonths, parentTaskId, notes, startDate, endDate } = params;
-    const baseId = uuidv4();
+    if (userError || !user) {
+      setTasksError('Failed to get user.');
+      setLoadingTasks(false);
+      return;
+    }
 
-    // Check if this is a recurring task
-    if ((type === "routine" || type === "long_interval") && startDate && endDate) {
-      // Generate scheduled days
-      const scheduledDays = generateScheduledDays(
-        startDate,
-        endDate,
-        repeatDays,
-        intervalMonths
-      );
+    // Ensure profile exists
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
 
-      // Create individual task instances for each scheduled day
-      const recurringTasks: Task[] = scheduledDays.map((scheduledDate) => ({
-        id: uuidv4(),
-        title,
-        date: scheduledDate,
-        completed: false,
-        type,
-        notes,
-        repeatDays,
-        intervalMonths,
-        startDate,
-        endDate,
-        scheduledDays,
-        isRecurring: true,
-        recurringTaskId: baseId,
-        instanceDate: scheduledDate,
+    if (profileError && profileError.code !== 'PGRST116') {
+      console.error('Profile fetch error:', profileError);
+    }
+
+    if (!profileData) {
+      await supabase.from('profiles').insert({
+        id: user.id,
+      });
+    } else {
+      // Load settings from profile
+      setSettings({
+        theme: profileData.theme ?? 'auto',
+        defaultTimerMinutes: profileData.default_timer_minutes ?? 25,
+        soundEnabled: profileData.sound_enabled ?? true,
+        confettiEnabled: profileData.confetti_enabled ?? true,
+        defaultTaskView: profileData.default_task_view ?? 'all',
+        colorBlindMode: profileData.color_blind_mode ?? false,
+      });
+    }
+
+    // Load tasks
+    const { data: tasksData, error: tasksError } = await supabase
+      .from('tasks')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+
+    if (tasksError) {
+      console.error('Error loading tasks:', tasksError);
+      setTasksError('Failed to load tasks.');
+    } else if (tasksData) {
+      const loadedTasks: Task[] = tasksData.map((row: any) => ({
+        id: row.id,
+        title: row.title,
+        date: new Date(row.due_date),
+        completed: row.completed ?? false,
+        type: row.type,
+        notes: row.description,
       }));
 
-      // Insert all recurring tasks into Supabase
-      // const supabaseTasks = recurringTasks.map(task => ({
-      //   id: task.id,
-      //   title: task.title,
-      //   due_date: task.date.toISOString(),
-      //   completed: task.completed,
-      //   type: task.type,
-      //   description: task.notes,
-      //   user_id: DEFAULT_USER_ID,
-      // }));
-
-      // const { error } = await supabase.from('tasks').insert(supabaseTasks);
-      // if (error) {
-      //   console.error('Error inserting recurring tasks:', error);
-      // } else {
-      //   setTasks(prev => [...prev, ...recurringTasks]);
-      // }
-      setTasks(prev => [...prev, ...recurringTasks]);
-    } else {
-      // Regular non-recurring task
-      const newTask: Task = {
-        id: baseId,
-        title,
-        date,
-        completed: false,
-        type,
-        notes,
-        parentTaskId,
-      };
-
-      // Insert into Supabase
-      // const { error } = await supabase.from('tasks').insert({
-      //   id: newTask.id,
-      //   title: newTask.title,
-      //   due_date: newTask.date.toISOString(),
-      //   completed: newTask.completed,
-      //   type: newTask.type,
-      //   description: newTask.notes,
-      //   user_id: DEFAULT_USER_ID,
-      // });
-
-      // if (error) {
-      //   console.error('Error inserting task:', error);
-      // } else {
-      //   setTasks(prev => [...prev, newTask]);
-      // }
-      setTasks(prev => [...prev, newTask]);
+      setTasks(loadedTasks);
     }
+
+    setLoadingTasks(false);
+  };
+
+  initialize();
+}, []);
+
+
+  // Add Task
+  const addTask = useCallback(async (params: CreateTaskParams) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const newTask: Task = {
+      id: uuidv4(),
+      title: params.title,
+      date: params.date,
+      completed: false,
+      type: params.type,
+      notes: params.notes,
+    };
+
+    const { error } = await supabase.from('tasks').insert({
+      id: newTask.id,
+      title: newTask.title,
+      due_date: newTask.date.toISOString(),
+      completed: false,
+      type: newTask.type,
+      description: newTask.notes,
+      user_id: user.id,
+      is_template: false,
+    });
+
+
+    if (error) {
+      console.error('Error inserting task:', error);
+      return;
+    }
+
+    setTasks(prev => [newTask, ...prev]);
   }, []);
 
-  const toggleTask = useCallback((id: string) => {
-    setTasks(prev => prev.map(task =>
-      task.id === id ? { ...task, completed: !task.completed } : task
-    ));
+  // Toggle Task
+  const toggleTask = useCallback(async (id: string) => {
+  setTasks(prev => {
+    const updated = prev.map(task =>
+      task.id === id
+        ? { ...task, completed: !task.completed }
+        : task
+    );
 
-    // Supabase sync commented out
-    // const task = tasks.find(t => t.id === id);
-    // if (task) {
-    //   const { error } = await supabase
-    //     .from('tasks')
-    //     .update({ completed: !task.completed })
-    //     .eq('id', id);
+    const toggledTask = prev.find(t => t.id === id);
+    if (toggledTask) {
+      supabase
+        .from('tasks')
+        .update({ completed: !toggledTask.completed })
+        .eq('id', id);
+    }
 
-    //   if (error) {
-    //     console.error('Error toggling task:', error);
-    //     setTasks(prev => prev.map(task =>
-    //       task.id === id ? { ...task, completed: !task.completed } : task
-    //     ));
-    //   }
-    // }
+    return updated;
+  });
+}, []);
+
+  //  Reschedule
+  const rescheduleTask = useCallback(async (
+    id: string,
+    newDate: Date
+  ) => {
+    setTasks(prev =>
+      prev.map(task =>
+        task.id === id
+          ? { ...task, date: newDate }
+          : task
+      )
+    );
+
+    const { error } = await supabase
+      .from('tasks')
+      .update({ due_date: newDate.toISOString() })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Reschedule error:', error);
+    }
+
   }, []);
 
-  const rescheduleTask = useCallback((id: string, newDate: Date, newTime?: string) => {
-    setTasks(prev => prev.map(task =>
-      task.id === id ? { ...task, date: newDate, time: newTime } : task
-    ));
+  //  Update Task
+  const updateTask = useCallback(async (
+    id: string,
+    newTitle: string,
+    newDate: Date
+  ) => {
+    const { error } = await supabase
+      .from('tasks')
+      .update({
+        title: newTitle,
+        due_date: newDate.toISOString(),
+      })
+      .eq('id', id);
 
-    // Supabase sync commented out
-    // const { error } = await supabase
-    //   .from('tasks')
-    //   .update({ due_date: newDate.toISOString() })
-    //   .eq('id', id);
+    if (error) {
+      console.error('Update task error:', error);
+    }
 
-    // if (error) {
-    //   console.error('Error rescheduling task:', error);
-    //   const originalTask = tasks.find(t => t.id === id);
-    //   if (originalTask) {
-    //     setTasks(prev => prev.map(task =>
-    //       task.id === id ? { ...task, date: originalTask.date, time: originalTask.time } : task
-    //     ));
-    //   }
-    // }
+
+    setTasks(prev =>
+      prev.map(task =>
+        task.id === id
+          ? { ...task, title: newTitle, date: newDate }
+          : task
+      )
+    );
   }, []);
 
-  const updateSettings = useCallback((newSettings: SettingsData) => {
+  //  Delete Task
+  const deleteTask = useCallback(async (id: string) => {
+    const { error } = await supabase
+      .from('tasks')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Delete error:', error);
+    }
+
+
+    setTasks(prev => prev.filter(task => task.id !== id));
+  }, []);
+
+    const updateSettings = useCallback(async (newSettings: SettingsData) => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return;
+
+    const { error } = await supabase.from('profiles').upsert({
+      id: user.id,
+      theme: newSettings.theme,
+      default_timer_minutes: newSettings.defaultTimerMinutes,
+      sound_enabled: newSettings.soundEnabled,
+      confetti_enabled: newSettings.confettiEnabled,
+      default_task_view: newSettings.defaultTaskView,
+      color_blind_mode: newSettings.colorBlindMode,
+    });
+
+    if (error) {
+      console.error('Error saving settings:', error);
+      return;
+    }
+
     setSettings(newSettings);
   }, []);
+
 
   const triggerConfetti = useCallback(() => {
     setConfettiTrigger(prev => prev + 1);
   }, []);
-
-  const updateTask = (id: string, newTitle: string, newDate: Date) => {
-    setTasks(tasks.map(task =>
-      task.id === id ? { ...task, title: newTitle, date: newDate } : task
-    ));
-  };
-
-  const deleteTask = (id: string) => {
-    setTasks(tasks.filter(task => task.id !== id));
-  };
 
   return (
     <AppContext.Provider
       value={{
         tasks,
         settings,
+        loadingTasks,
+        tasksError,
         addTask,
         toggleTask,
         rescheduleTask,
@@ -290,8 +318,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
 export function useApp() {
   const context = useContext(AppContext);
-  if (context === undefined) {
-    throw new Error('useApp must be used within an AppProvider');
+  if (!context) {
+    throw new Error('useApp must be used within AppProvider');
   }
   return context;
 }

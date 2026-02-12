@@ -11,23 +11,6 @@ export default function DashboardScreen() {
   const router = useRouter();
   const { tasks, settings, addTask, toggleTask, updateTask, deleteTask, triggerConfetti } = useApp();
 
- useEffect(() => {
-    const loadTasks = async () => {
-      const { data, error } = await supabase
-        .from('tasks')
-        .select('*');
-
-      if (error) {
-        console.error('Supabase error:', error);
-      } else {
-        console.log('Supabase tasks:', data);
-        // later: sync these into AppContext
-      }
-    };
-
-    loadTasks();
-  }, []);
-
   return (
     <View style={styles.container}>
       <Dashboard
