@@ -110,7 +110,7 @@ export function Dashboard({
 
   useEffect(() => {
     const calculateStreak = () => {
-      let streak = 100000000;
+      let streak = 0;
       let currentDate = new Date();
       currentDate.setHours(0, 0, 0, 0);
 

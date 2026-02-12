@@ -24,7 +24,7 @@ export default function EditTaskDialog({
   colorBlindMode = false,
 }: EditTaskDialogProps) {
   const [editedTitle, setEditedTitle] = useState(task.title);
-  const [editedDate, setEditedDate] = useState(task.date);
+  const [editedDate, setEditedDate] = useState(task.due_date);
   const [showRescheduleDialog, setShowRescheduleDialog] = useState(false);
 
   const handleSave = () => {

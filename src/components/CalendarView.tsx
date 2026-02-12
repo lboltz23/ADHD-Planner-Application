@@ -6,6 +6,7 @@ import { ArrowLeft, Settings, ChevronDown, Plus } from 'lucide-react-native';
 import { TaskCard } from './TaskCard';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Task } from '../types';
+import { SettingsData } from './Settings';
 import { ProgressCircle } from './ProgressCircle';
 // import { useApp } from '../contexts/AppContext'; // Uncomment when enabling Supabase
 
@@ -13,12 +14,16 @@ interface WeeklyViewProps {
   tasks: Task[];
   onToggleTask: (id: string) => void;
   onRescheduleTask: (id: string, newDate: Date) => void;
+  onEditTask: (id: string, newTitle: string, newDate: Date) => void;
+  onDeleteTask: (id: string) => void;
   colorBlindMode?: boolean;
   onNavigateBack: () => void;
   onNavigateSettings: () => void;
+  settings: SettingsData;
+  onTriggerConfetti?: () => void;
 }
 
-export function WeeklyView({ tasks, onToggleTask, onRescheduleTask, colorBlindMode, onNavigateBack, onNavigateSettings }: WeeklyViewProps) {
+export function WeeklyView({ tasks, onToggleTask, onEditTask, onDeleteTask, colorBlindMode, onNavigateBack, onNavigateSettings }: WeeklyViewProps) {
   const screenWidth = Dimensions.get('window').width;
   const scrollViewRef = useRef<ScrollView>(null);
 
@@ -123,7 +128,8 @@ export function WeeklyView({ tasks, onToggleTask, onRescheduleTask, colorBlindMo
   const tasksByDate = useMemo(() => {
     const map: { [key: string]: Task[] } = {};
     tasks.forEach(task => {
-      const key = task.date.toDateString();
+      if (task.is_template) return;
+      const key = new Date(task.due_date).toDateString();
       if (!map[key]) map[key] = [];
       map[key].push(task);
     });
@@ -158,8 +164,9 @@ export function WeeklyView({ tasks, onToggleTask, onRescheduleTask, colorBlindMo
   };
 
   const todayTasks = tasks.filter((task) => {
+    if (task.is_template) return false;
     const today = new Date();
-    const taskDate = new Date(task.date);
+    const taskDate = new Date(task.due_date);
     return taskDate.toDateString() === today.toDateString();
   });
   const completedTodayTasks = todayTasks.filter((task) => task.completed)
@@ -259,7 +266,8 @@ export function WeeklyView({ tasks, onToggleTask, onRescheduleTask, colorBlindMo
                         key={task.id}
                         task={task}
                         onToggle={onToggleTask}
-                        onReschedule={onRescheduleTask}
+                        onUpdate={onEditTask}
+                        onDelete={onDeleteTask}
                         colorBlindMode={!!colorBlindMode}
                       />
                     ))

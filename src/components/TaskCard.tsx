@@ -107,18 +107,6 @@ export function TaskCard({
   const style = getTaskStyle(task.type);
   const IconComponent = style.Icon;
 
-  // Called by RescheduleDialog which returns a dateString (YYYY-MM-DD).
-  const handleRescheduleFromDialog = (newDateString: string) => {
-    // convert to Date in local timezone at noon to avoid timezone edge cases
-    const [year, month, day] = newDateString.split('-').map(Number);
-    const newDate = new Date(year, month - 1, day, 12, 0, 0, 0);
-    if (onReschedule) {
-      onReschedule(task.id, newDate);
-    }
-    setShowRescheduleDialog(false);
-  };
-
-  
   const formatDate = (date: string | Date) => {
     const dateObj = new Date(date);
     return dateObj.toLocaleDateString("en-US", {
