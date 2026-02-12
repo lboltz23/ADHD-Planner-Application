@@ -56,8 +56,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Helper function to generate task instances from a recurring template
   const generateTaskInstancesFromTemplate = (template: any): Task[] => {
+    if (!template.start_date) return [];
     const startDate = new Date(template.start_date);
-    const endDate = new Date(template.end_date);
+    // If no end date, generate a rolling 3-month window from today
+    const endDate = template.end_date
+      ? new Date(template.end_date)
+      : new Date(new Date().getFullYear(), new Date().getMonth() + 3, new Date().getDate());
     const daysSelected = template.days_selected as Weekday[] | undefined;
     const intervalMonths = template.recurrence_interval as number | undefined;
     const createdAt = new Date(template.created_at);
@@ -204,20 +208,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const now = new Date();
 
     // Check if this is a recurring task
-    if ((type === "routine" || type === "long_interval") && start_date && end_date) {
+    if (type === "routine" || type === "long_interval") {
       // Store only ONE template task in Supabase with is_template = true
-      const templateTask = {
+      const templateTask: Record<string, any> = {
         id: baseId,
         title,
         type,
         notes: notes,
         user_id: DEFAULT_USER_ID,
         is_template: true,
-        start_date: start_date.toISOString(),
-        end_date: end_date.toISOString(),
+        start_date: start_date ? start_date.toISOString() : null,
+        end_date: end_date ? end_date.toISOString() : null,
         days_selected: days_selected,
         recurrence_interval: recurrence_interval,
-        due_date: start_date.toISOString(), // Use start_date as due_date for template
+        due_date: (start_date || due_date).toISOString(),
         completed: false,
       };
 
@@ -225,13 +229,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (error) {
         console.error('Error inserting recurring task template:', error);
       } else {
-        // Generate instances locally for display
+        // Add template to local state
+        const templateForState: Task = {
+          id: baseId,
+          user_id: DEFAULT_USER_ID,
+          title,
+          due_date: start_date || due_date,
+          completed: false,
+          type,
+          notes,
+          created_at: now,
+          updated_at: now,
+          is_template: true,
+          days_selected,
+          recurrence_interval,
+          start_date: start_date || undefined,
+          end_date: end_date || undefined,
+        };
+        // Generate instances locally for display (only if both dates exist)
         const instances = generateTaskInstancesFromTemplate({
           ...templateTask,
           created_at: now.toISOString(),
           updated_at: now.toISOString(),
         });
-        setTasks(prev => [...prev, ...instances]);
+        setTasks(prev => [...prev, templateForState, ...instances]);
       }
     } else {
       // Regular non-recurring task (basic or related)
