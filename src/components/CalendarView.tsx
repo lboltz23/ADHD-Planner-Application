@@ -56,6 +56,7 @@ export function CalendarView({
   };
 // Filter tasks for the selected date
   const tasksForSelectedDate = tasks.filter((task) => {
+    if (task.is_template) return false;
     const taskDate = new Date(task.due_date);
     return taskDate.toDateString() === selectedDate.toDateString();
   });

@@ -53,6 +53,7 @@ export function Dashboard({
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     return tasks.filter((task) => {
+      if (task.is_template) return false;
       const taskDate = new Date(task.due_date);
       return taskDate.toDateString() === today.toDateString();
     });
@@ -64,6 +65,7 @@ export function Dashboard({
     today.setHours(0, 0, 0, 0);
     return tasks
       .filter((task) => {
+        if (task.is_template) return false;
         const taskDate = new Date(task.due_date);
         taskDate.setHours(0, 0, 0, 0);
         return taskDate > today;
