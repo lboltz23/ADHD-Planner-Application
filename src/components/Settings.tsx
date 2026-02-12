@@ -17,6 +17,8 @@ import {
   Eye,
 } from 'lucide-react-native';
 import Slider  from '@react-native-community/slider';
+import * as Notifications from "expo-notifications";
+import { disableNotifications, requestNotificationPermission,scheduleTestNotification } from '@/lib/Notifications';
 
 export interface SettingsData {
   defaultTimerMinutes: number;
@@ -216,6 +218,7 @@ export function Settings({
     'long_interval',
   ];
 
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -367,7 +370,31 @@ export function Settings({
             <Switch
               value={settings.notifications}
               onValueChange={(checked) =>
-                updateSetting('notifications', checked)
+                {updateSetting('notifications', checked);
+                  if (checked){
+                    requestNotificationPermission();
+                  } else {
+                    disableNotifications();
+                  }
+                }
+              }
+              trackColor={{ false: '#e5d9f2', true: '#ffc9d4' }}
+              thumbColor="#fff"
+            />
+          </View>
+          <View style={styles.settingRow}>
+            <View style={styles.settingLabel}>
+              <Text style={styles.settingLabelText}>Send Noti</Text>
+              <Text style={styles.settingSubtext}>
+                Test
+              </Text>
+            </View>
+            <Switch
+              value={settings.notifications}
+              onValueChange={(checked) =>
+                {
+                  scheduleTestNotification()
+                }
               }
               trackColor={{ false: '#e5d9f2', true: '#ffc9d4' }}
               thumbColor="#fff"
