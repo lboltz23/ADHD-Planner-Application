@@ -116,8 +116,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
           const overridesByTemplate = new Map<string, Map<string, any>>();
 
           data.forEach((row: any) => {
-            if (!row.is_template && row.parent_task_id) {
-              // This is a persisted instance override
+            // Recurring instance overrides have parent_task_id but are NOT "related" type
+            if (!row.is_template && row.parent_task_id && row.type !== 'related') {
               if (!overridesByTemplate.has(row.parent_task_id)) {
                 overridesByTemplate.set(row.parent_task_id, new Map());
               }
@@ -127,8 +127,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
           });
 
           data.forEach((row: any) => {
-            // Skip override rows here — they're handled separately
-            if (!row.is_template && row.parent_task_id) return;
+            // Skip recurring override rows — they're handled during instance generation
+            if (!row.is_template && row.parent_task_id && row.type !== 'related') return;
 
             // Check if this is a recurring template
             if (row.is_template && row.start_date && row.end_date) {

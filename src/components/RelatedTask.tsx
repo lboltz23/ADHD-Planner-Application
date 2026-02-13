@@ -15,9 +15,10 @@ export default function RelatedTaskInput({
   selectedTaskId,
   onSelect,
 }: RelatedTaskInputProps) {
-  const uniqueTasks = tasks.filter((task, index, self) => {
+  const selectableTasks = tasks.filter((task) => {
+    // For recurring types, only show the template, not every instance
     if (task.type === "routine" || task.type === "long_interval") {
-      return self.findIndex((t) => t.parent_task_id === task.parent_task_id) === index;
+      return task.is_template === true;
     }
     return true;
   });
@@ -29,7 +30,7 @@ export default function RelatedTaskInput({
         style={styles.dropdown}
         placeholderStyle={styles.placeholderText}
         selectedTextStyle={styles.selectedText}
-        data={uniqueTasks}
+        data={selectableTasks}
         labelField="title"
         valueField="id"
         placeholder="Select a task"
