@@ -5,12 +5,13 @@ import { Calendar } from "react-native-calendars";
 import { Task } from "../types";
 import { getTaskTypeColor, getEnhancedTaskTypeColor } from "./taskColors";
 import TitleInput from "./TitleInput";
+import NoteInput from "./NoteInput";
 
 export interface EditTaskProps {
   isOpen: boolean;
   onClose: () => void;
   task: Task;
-  onSave: (id: string, newTitle: string, newDate: Date) => void;
+  onSave: (id: string, newTitle: string, newDate: Date, newNotes?: string) => void;
   onDelete: (id: string) => void;
   onToggle: (id: string) => void;
   colorBlindMode?: boolean;
@@ -27,7 +28,7 @@ export default function EditTask({
 }: EditTaskProps) {
   const [editedTitle, setEditedTitle] = useState(task.title);
   const [editedDate, setEditedDate] = useState(task.due_date);
-
+  const [editiedNotes, setEditedNotes] = useState(task.notes || "");
   const handleSave = () => {
     if (editedTitle.trim()) {
       onSave(task.id, editedTitle.trim(), editedDate);
@@ -77,9 +78,8 @@ export default function EditTask({
 
               {/* Content */}
               <View style={styles.section}>
-                <Text style={styles.label}>Task Title</Text>
                 <TitleInput value={editedTitle} onChange={setEditedTitle} />
-
+                <NoteInput value = {editiedNotes} onChange={setEditedNotes} />
                 <Text style={styles.label}>Due Date</Text>
                 <Calendar
                   onDayPress={handleDateSelect}
@@ -96,15 +96,7 @@ export default function EditTask({
                   }}
                   style={styles.calendar}
                 />
-
-                {task.notes && (
-                  <>
-                    <Text style={styles.label}>Notes</Text>
-                    <Text style={styles.notesText}>{task.notes}</Text>
-                  </>
-                )}
-              </View>
-
+                </View>
               {/* Action Buttons */}
               <View style={styles.buttonRow}>
                 <View style={styles.leftButtons}>
