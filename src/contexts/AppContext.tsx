@@ -497,6 +497,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setTasks(prev => prev.map(t =>
         t.id === id ? { ...t, title: newTitle, due_date: newDate, updated_at: new Date() } : t
       ));
+    } else if (task.is_template) {
+      // Template — update the template and propagate title to all its instances
+      const { error } = await supabase
+        .from('tasks')
+        .update({ title: newTitle, due_date: newDate.toISOString(), updated_at: new Date().toISOString() })
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error updating template:', error);
+        return;
+      }
+
+      setTasks(prev => prev.map(t => {
+        if (t.id === id) {
+          // Update the template itself
+          return { ...t, title: newTitle, due_date: newDate, updated_at: new Date() };
+        }
+        if (t.parent_task_id === id) {
+          // Update all instances that still inherit from this template (synthetic in-memory ones)
+          const isSynthetic = t.id.includes('_') && /\d{4}-\d{2}-\d{2}$/.test(t.id);
+          if (isSynthetic) {
+            return { ...t, title: newTitle };
+          }
+        }
+        return t;
+      }));
     } else {
       // Regular non-recurring task — update directly
       const { error } = await supabase
