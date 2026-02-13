@@ -111,7 +111,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (data) {
           const allTasks: Task[] = [];
 
+          // Collect override rows (persisted instance edits) keyed by parent_task_id
+          // Each entry maps a template ID to a set of due_date strings that have overrides
+          const overridesByTemplate = new Map<string, Map<string, any>>();
+
           data.forEach((row: any) => {
+            if (!row.is_template && row.parent_task_id) {
+              // This is a persisted instance override
+              if (!overridesByTemplate.has(row.parent_task_id)) {
+                overridesByTemplate.set(row.parent_task_id, new Map());
+              }
+              const dateStr = row.due_date ? new Date(row.due_date).toISOString().split('T')[0] : '';
+              overridesByTemplate.get(row.parent_task_id)!.set(dateStr, row);
+            }
+          });
+
+          data.forEach((row: any) => {
+            // Skip override rows here — they're handled separately
+            if (!row.is_template && row.parent_task_id) return;
+
             // Check if this is a recurring template
             if (row.is_template && row.start_date && row.end_date) {
               // Add the template itself for the Repeating view
@@ -131,9 +149,33 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 start_date: new Date(row.start_date),
                 end_date: new Date(row.end_date),
               });
-              // Generate instances from the template
+
+              // Generate instances from the template, skipping dates with override rows
               const instances = generateTaskInstancesFromTemplate(row);
-              allTasks.push(...instances);
+              const templateOverrides = overridesByTemplate.get(row.id);
+
+              instances.forEach(instance => {
+                const dateStr = instance.due_date.toISOString().split('T')[0];
+                if (templateOverrides?.has(dateStr)) {
+                  // Use the persisted override row instead of the generated instance
+                  const override = templateOverrides.get(dateStr)!;
+                  allTasks.push({
+                    id: override.id,
+                    title: override.title,
+                    user_id: override.user_id,
+                    created_at: new Date(override.created_at),
+                    updated_at: new Date(override.updated_at),
+                    due_date: new Date(override.due_date),
+                    completed: override.completed || false,
+                    type: override.type as Task['type'],
+                    notes: override.notes,
+                    is_template: false,
+                    parent_task_id: override.parent_task_id,
+                  });
+                } else {
+                  allTasks.push(instance);
+                }
+              });
             } else {
               // Regular non-recurring task
               allTasks.push({
@@ -401,11 +443,77 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setConfettiTrigger(prev => prev + 1);
   }, []);
 
-  const updateTask = (id: string, newTitle: string, newDate: Date) => {
-    setTasks(tasks.map(task =>
-      task.id === id ? { ...task, title: newTitle, due_date: newDate } : task
-    ));
-  };
+  const updateTask = useCallback(async (id: string, newTitle: string, newDate: Date) => {
+    // Find the task being edited
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+
+    // Check if this is an in-memory recurring instance (synthetic ID: templateId_YYYY-MM-DD)
+    const isRecurringInstance = task.parent_task_id && !task.is_template;
+    const isSyntheticId = isRecurringInstance && id.includes('_') && /\d{4}-\d{2}-\d{2}$/.test(id);
+
+    if (isSyntheticId) {
+      // This is an in-memory instance — insert a new override row in Supabase
+      const newId = uuidv4();
+      const now = new Date();
+
+      const overrideRow = {
+        id: newId,
+        title: newTitle,
+        type: task.type,
+        due_date: newDate.toISOString(),
+        completed: task.completed,
+        user_id: task.user_id,
+        is_template: false,
+        parent_task_id: task.parent_task_id,
+        notes: task.notes || null,
+      };
+
+      const { error } = await supabase.from('tasks').insert(overrideRow);
+
+      if (error) {
+        console.error('Error inserting recurring instance override:', error);
+        return;
+      }
+
+      // Replace the synthetic instance with the persisted override in local state
+      setTasks(prev => prev.map(t =>
+        t.id === id
+          ? { ...t, id: newId, title: newTitle, due_date: newDate, created_at: now, updated_at: now }
+          : t
+      ));
+    } else if (isRecurringInstance) {
+      // Already-persisted override row — update it in Supabase
+      const { error } = await supabase
+        .from('tasks')
+        .update({ title: newTitle, due_date: newDate.toISOString(), updated_at: new Date().toISOString() })
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error updating recurring instance override:', error);
+        return;
+      }
+
+      setTasks(prev => prev.map(t =>
+        t.id === id ? { ...t, title: newTitle, due_date: newDate, updated_at: new Date() } : t
+      ));
+    } else {
+      // Regular non-recurring task — update directly
+      const { error } = await supabase
+        .from('tasks')
+        .update({ title: newTitle, due_date: newDate.toISOString(), updated_at: new Date().toISOString() })
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error updating task:', error);
+        return;
+      }
+
+      setTasks(prev => prev.map(t =>
+        t.id === id ? { ...t, title: newTitle, due_date: newDate, updated_at: new Date() } : t
+      ));
+    }
+  }, [tasks]);
 
   const deleteTask = (id: string) => {
     setTasks(tasks.filter(task => task.id !== id));
