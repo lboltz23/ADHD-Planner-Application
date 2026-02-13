@@ -448,12 +448,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const task = tasks.find(t => t.id === id);
     if (!task) return;
 
-    // Check if this is an in-memory recurring instance (synthetic ID: templateId_YYYY-MM-DD)
+    // Check if this is a recurring instance (has a parent template)
     const isRecurringInstance = task.parent_task_id && !task.is_template;
-    const isSyntheticId = isRecurringInstance && id.includes('_') && /\d{4}-\d{2}-\d{2}$/.test(id);
+    // In-memory instances have IDs like "templateId_2026-02-13" — they don't exist in the DB yet
+    const isInMemoryInstance = isRecurringInstance && id.includes('_') && /\d{4}-\d{2}-\d{2}$/.test(id);
 
-    if (isSyntheticId) {
-      // This is an in-memory instance — insert a new override row in Supabase
+    if (isInMemoryInstance) {
+      // This instance only exists in memory — insert a new row in Supabase
       const newId = uuidv4();
       const now = new Date();
 
@@ -515,9 +516,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
           return { ...t, title: newTitle, due_date: newDate, updated_at: new Date() };
         }
         if (t.parent_task_id === id) {
-          // Update all instances that still inherit from this template (synthetic in-memory ones)
-          const isSynthetic = t.id.includes('_') && /\d{4}-\d{2}-\d{2}$/.test(t.id);
-          if (isSynthetic) {
+          // Update in-memory instances that still inherit from this template
+          const isInMemory = t.id.includes('_') && /\d{4}-\d{2}-\d{2}$/.test(t.id);
+          if (isInMemory) {
             return { ...t, title: newTitle };
           }
         }
