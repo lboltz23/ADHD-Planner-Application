@@ -6,6 +6,26 @@ export interface TaskColorScheme {
   related: string;
   long_interval: string;
 }
+export interface FilterColorScheme {
+  today: string;
+  upcoming: string;
+  repeating: string;
+  open: string;
+}
+
+export const defaultFilterColors: FilterColorScheme = {
+  today: "#b8a4d9",
+  upcoming: "#a8d8ea",
+  repeating: "#f5a4e0ff",
+  open: "#ffc9d4",
+};
+
+export const colorBlindFilterColors: FilterColorScheme = {
+  today: "#0077BB", // Blue (deuteranopia safe)
+  upcoming: "#EE7733",   // Orange (protanopia safe)
+  repeating: "#009988", // Teal (tritanopia safe)
+  open: "#CC3311", // Red (high contrast)
+};
 
 // Default pastel color scheme
 export const defaultColors: TaskColorScheme = {
@@ -38,4 +58,11 @@ export function getTaskTypeColor(type: Task["type"], colorBlindMode: boolean): s
 export function getEnhancedTaskTypeColor(type: Task["type"], colorBlindMode: boolean): string {
   const colors = colorBlindMode ? colorBlindColors : createTaskColors;
   return colors[type];
+}
+
+export type FilterType = keyof FilterColorScheme;
+
+export function getFilterColor(filter: FilterType, colorBlindMode: boolean): string {
+  const colors = colorBlindMode ? colorBlindFilterColors : defaultFilterColors;
+  return colors[filter];
 }

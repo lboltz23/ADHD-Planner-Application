@@ -14,6 +14,7 @@ import { TaskCard } from './TaskCard';
 import AddTaskDialog from './AddTaskDialog';
 import { TaskTypeSelector } from './TaskTypeSelector';
 import { Calendar, Settings, Zap } from 'lucide-react-native';
+import { getFilterColor } from './taskColors';
 
 // Dashboard Props
 interface DashboardProps {
@@ -43,7 +44,7 @@ export function Dashboard({
 }: DashboardProps) {
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [selectedType, setSelectedType] = useState<TaskType>('basic');
-  const [taskView, setTaskView] = useState<'today' | 'upcoming' | 'repeating'>('today');
+  const [taskView, setTaskView] = useState<'today' | 'upcoming' | 'repeating' | 'open'>('today');
   const [showAddTaskDialog, setShowAddTaskDialog] = useState(false);
   // Ref to track previous progress for confetti trigger
   const previousProgressRef = useRef(0);
@@ -78,6 +79,20 @@ export function Dashboard({
     return tasks.filter((task) => task.is_template === true);
   }, [tasks]);
 
+  const openTasks = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return tasks
+      .filter((task) => {
+        if (task.is_template) return false;
+        const taskDate = new Date(task.due_date);
+        taskDate.setHours(0, 0, 0, 0);
+        return taskDate < today;
+      })
+      .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
+      .slice(0, 5);
+  }, [tasks]);
+ 
   const handleAddTask = () => {
     if (newTaskTitle.trim() && !showAddTaskDialog) {
       setShowAddTaskDialog(true);
@@ -452,12 +467,28 @@ export function Dashboard({
         {/* Task View Filter Buttons */}
         <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 8, marginBottom: 20 }}>
           <TouchableOpacity
+            onPress={() => setTaskView('open')}
+            style={{
+              paddingVertical: 8,
+              paddingHorizontal: 16,
+              borderRadius: 8,
+              backgroundColor: taskView === 'open' ? getFilterColor('open', settings.colorBlindMode) : '#ffffff',
+              borderWidth: 1,
+              borderColor: '#e5d9f2',
+            }}
+          >
+            <Text style={{ color: taskView === 'open' ? '#ffffff' : '#6b5b7f', fontWeight: '600' }}>
+              Open
+            </Text>
+          </TouchableOpacity>
+        
+          <TouchableOpacity
             onPress={() => setTaskView('today')}
             style={{
             paddingVertical: 8,
             paddingHorizontal: 16,
             borderRadius: 8,
-            backgroundColor: taskView === 'today' ? '#b8a4d9' : '#ffffff',
+            backgroundColor: taskView === 'today' ? getFilterColor('today', settings.colorBlindMode) : '#ffffff',
             borderWidth: 1,
             borderColor: '#e5d9f2',
             }}
@@ -473,7 +504,7 @@ export function Dashboard({
               paddingVertical: 8,
               paddingHorizontal: 16,
               borderRadius: 8,
-              backgroundColor: taskView === 'upcoming' ? '#a8d8ea' : '#ffffff',
+              backgroundColor: taskView === 'upcoming' ? getFilterColor('upcoming', settings.colorBlindMode) : '#ffffff',
               borderWidth: 1,
               borderColor: '#e5d9f2',
             }}
@@ -489,7 +520,7 @@ export function Dashboard({
               paddingVertical: 8,
               paddingHorizontal: 16,
               borderRadius: 8,
-              backgroundColor: taskView === 'repeating' ? '#f5a4e0' : '#ffffff',
+              backgroundColor: taskView === 'repeating' ? getFilterColor('repeating', settings.colorBlindMode) : '#ffffff',
               borderWidth: 1,
               borderColor: '#e5d9f2',
             }}
@@ -536,6 +567,26 @@ export function Dashboard({
                     onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
                     showDate={true}
+                  />
+                ))}
+              </View>
+            )}
+          </View>
+        ) : taskView === 'open' ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Open</Text>
+            {openTasks.length === 0 ? (
+              <Text style={styles.noTasksMessage}>No open tasks</Text>
+            ) : (
+              <View style={styles.tasksList}>
+                {openTasks.map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    onToggle={onToggleTask}
+                    onUpdate={onEditTask}
+                    onDelete={onDeleteTask}
+                    colorBlindMode={settings.colorBlindMode}
                   />
                 ))}
               </View>
