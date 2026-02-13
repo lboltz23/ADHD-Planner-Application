@@ -19,7 +19,7 @@ import EditTask from "./EditTask";
 interface TaskCardProps {
   task: Task;
   onToggle: (id: string) => void;
-  onUpdate: (id: string, newTitle: string, newDate: Date) => void;
+  onUpdate: (id: string, fields: { title?: string; due_date?: Date; notes?: string }) => void;
   onDelete: (id: string) => void;
   showDate?: boolean;
   colorBlindMode?: boolean;

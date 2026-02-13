@@ -10,7 +10,7 @@ export interface EditTaskProps {
   isOpen: boolean;
   onClose: () => void;
   task: Task;
-  onSave: (id: string, newTitle: string, newDate: Date) => void;
+  onSave: (id: string, fields: { title?: string; due_date?: Date; notes?: string }) => void;
   onDelete: (id: string) => void;
   onToggle: (id: string) => void;
   colorBlindMode?: boolean;
@@ -30,7 +30,7 @@ export default function EditTask({
 
   const handleSave = () => {
     if (editedTitle.trim()) {
-      onSave(task.id, editedTitle.trim(), editedDate);
+      onSave(task.id, { title: editedTitle.trim(), due_date: editedDate });
       onClose();
     }
   };

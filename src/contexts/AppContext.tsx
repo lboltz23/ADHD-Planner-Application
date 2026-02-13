@@ -22,8 +22,7 @@ interface AppContextType {
   settings: SettingsData;
   addTask: (params: CreateTaskParams) => void;
   toggleTask: (id: string) => void;
-  rescheduleTask: (id: string, newDate: Date) => void;
-  updateTask: (id: string, newTitle: string, newDate: Date) => void;
+  updateTask: (id: string, fields: { title?: string; due_date?: Date; notes?: string }) => void;
   deleteTask: (id: string) => void;
   updateSettings: (newSettings: SettingsData) => void;
   streakCount: number;
@@ -369,25 +368,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [tasks]);
 
-  const rescheduleTask = useCallback(async (id: string, newDate: Date) => {
+  const updateTask = useCallback(async (id: string, fields: { title?: string; due_date?: Date; notes?: string }) => {
     // Optimistically update UI first
+    const originalTask = tasks.find(t => t.id === id);
     setTasks(prev => prev.map(task =>
-      task.id === id ? { ...task, due_date: newDate } : task
+      task.id === id ? { ...task, ...fields } : task
     ));
 
-    // Update in Supabase
+    // Build Supabase update payload
+    const supabaseFields: Record<string, any> = {};
+    if (fields.title !== undefined) supabaseFields.title = fields.title;
+    if (fields.due_date !== undefined) supabaseFields.due_date = fields.due_date.toISOString();
+    if (fields.notes !== undefined) supabaseFields.notes = fields.notes;
+
     const { error } = await supabase
       .from('tasks')
-      .update({ due_date: newDate.toISOString() })
+      .update(supabaseFields)
       .eq('id', id);
 
     if (error) {
-      console.error('Error rescheduling task:', error);
-      // Revert on error - find original date
-      const originalTask = tasks.find(t => t.id === id);
+      console.error('Error updating task:', error);
+      // Revert on error
       if (originalTask) {
         setTasks(prev => prev.map(task =>
-          task.id === id ? { ...task, due_date: originalTask.due_date } : task
+          task.id === id ? originalTask : task
         ));
       }
     }
@@ -401,15 +405,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setConfettiTrigger(prev => prev + 1);
   }, []);
 
-  const updateTask = (id: string, newTitle: string, newDate: Date) => {
-    setTasks(tasks.map(task =>
-      task.id === id ? { ...task, title: newTitle, due_date: newDate } : task
-    ));
-  };
+  const deleteTask = useCallback(async (id: string) => {
+    // Optimistically update UI first
+    const originalTasks = tasks;
+    setTasks(prev => prev.filter(task => task.id !== id));
 
-  const deleteTask = (id: string) => {
-    setTasks(tasks.filter(task => task.id !== id));
-  };
+    // Delete from Supabase
+    const { error } = await supabase
+      .from('tasks')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting task:', error);
+      // Revert on error
+      setTasks(originalTasks);
+    }
+  }, [tasks]);
 
   const updateStreak = () => {
     const today = new Date();
@@ -440,7 +452,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         settings,
         addTask,
         toggleTask,
-        rescheduleTask,
         updateTask,
         deleteTask,
         updateSettings,
