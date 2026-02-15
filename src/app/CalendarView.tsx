@@ -3,15 +3,18 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { WeeklyView as CalendarComponent } from '../components/CalendarView';
 import { useApp } from '../contexts/AppContext';
+import { useSafeBack } from '../hooks/use-Safe-Back';
+
 
 export default function CalendarViewScreen() {
   const router = useRouter();
   const { tasks, settings, addTask, toggleTask, updateTask, deleteTask, triggerConfetti } = useApp();
+  const handleBack = useSafeBack();
 
   return (
     <View style={styles.container}>
       <CalendarComponent
-        onNavigateBack={() => router.back()}
+        onNavigateBack={handleBack}
         onNavigateSettings={() => router.push('/Settings')}
         tasks={tasks}
         onToggleTask={toggleTask}
