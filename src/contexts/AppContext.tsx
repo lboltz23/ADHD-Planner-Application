@@ -178,7 +178,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 }
               });
             } else {
-              // Regular non-recurring task
+              // Regular non-recurring task (basic or related)
               allTasks.push({
                 id: row.id,
                 title: row.title,
@@ -190,6 +190,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 type: row.type as Task['type'],
                 notes: row.notes,
                 is_template: false,
+                parent_task_id: row.parent_task_id || undefined,
               });
             }
           });
