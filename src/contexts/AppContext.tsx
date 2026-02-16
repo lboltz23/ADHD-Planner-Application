@@ -348,11 +348,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
     ));
 
     // Check if this is a recurring task instance (has a parent_task_id, but not a "related" task)
-    if (task.is_template === false && task.parent_task_id && task.type !== 'related') {
-      // Extract the date from the instance ID (format: templateId_YYYY-MM-DD)
+    const isRecurringInstance = task.is_template === false && task.parent_task_id && task.type !== 'related';
+    const isInMemoryInstance = isRecurringInstance && id.includes('_') && /\d{4}-\d{2}-\d{2}$/.test(id);
+
+    if (isRecurringInstance && !isInMemoryInstance) {
+      // Persisted override row — update its own completed field directly
+      const { error } = await supabase
+        .from('tasks')
+        .update({ completed: newCompletedState })
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error toggling persisted override:', error);
+        setTasks(prev => prev.map(t =>
+          t.id === id ? { ...t, completed: !newCompletedState } : t
+        ));
+      }
+    } else if (isInMemoryInstance) {
+      // In-memory instance — update the template's completed_dates
       const dateStr = toLocalDateString(task.due_date);
 
-      // Get current completed_dates from Supabase
       const { data: templateData, error: fetchError } = await supabase
         .from('tasks')
         .select('completed_dates')
@@ -361,7 +376,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       if (fetchError) {
         console.error('Error fetching template:', fetchError);
-        // Revert on error
         setTasks(prev => prev.map(t =>
           t.id === id ? { ...t, completed: !newCompletedState } : t
         ));
@@ -372,18 +386,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
       let updatedCompletedDates: string[];
 
       if (newCompletedState) {
-        // Add date to completed_dates if not already present
         if (!currentCompletedDates.includes(dateStr)) {
           updatedCompletedDates = [...currentCompletedDates, dateStr];
         } else {
           updatedCompletedDates = currentCompletedDates;
         }
       } else {
-        // Remove date from completed_dates
         updatedCompletedDates = currentCompletedDates.filter(d => d !== dateStr);
       }
 
-      // Update the template's completed_dates in Supabase
       const { error: updateError } = await supabase
         .from('tasks')
         .update({ completed_dates: updatedCompletedDates })
@@ -391,7 +402,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       if (updateError) {
         console.error('Error updating completed_dates:', updateError);
-        // Revert on error
         setTasks(prev => prev.map(t =>
           t.id === id ? { ...t, completed: !newCompletedState } : t
         ));
