@@ -422,68 +422,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [tasks]);
 
-  const rescheduleTask = useCallback(async (id: string, newDate: Date) => {
-    const task = tasks.find(t => t.id === id);
-    if (!task) return;
-
-    const isRecurringInstance = task.parent_task_id && !task.is_template && task.type !== 'related';
-    const isInMemoryInstance = isRecurringInstance && id.includes('_') && /\d{4}-\d{2}-\d{2}$/.test(id);
-
-    // Optimistically update UI first
-    setTasks(prev => prev.map(t =>
-      t.id === id ? { ...t, due_date: newDate } : t
-    ));
-
-    if (isInMemoryInstance) {
-      // In-memory instance — insert a persisted override row with the new date
-      const newId = uuidv4();
-      const now = new Date();
-
-      const overrideRow = {
-        id: newId,
-        title: task.title,
-        type: task.type,
-        due_date: toLocalDateString(newDate),
-        completed: task.completed,
-        user_id: task.user_id,
-        is_template: false,
-        parent_task_id: task.parent_task_id,
-        notes: task.notes || null,
-      };
-
-      const { error } = await supabase.from('tasks').insert(overrideRow);
-
-      if (error) {
-        console.error('Error inserting rescheduled instance override:', error);
-        setTasks(prev => prev.map(t =>
-          t.id === id ? { ...t, due_date: task.due_date } : t
-        ));
-        return;
-      }
-
-      // Replace the synthetic instance with the persisted one in local state
-      setTasks(prev => prev.map(t =>
-        t.id === id
-          ? { ...t, id: newId, due_date: newDate, created_at: now, updated_at: now }
-          : t
-      ));
-      return;
-    }
-
-    // Persisted task (regular, related, override, or template) — update in Supabase
-    const { error } = await supabase
-      .from('tasks')
-      .update({ due_date: toLocalDateString(newDate) })
-      .eq('id', id);
-
-    if (error) {
-      console.error('Error rescheduling task:', error);
-      setTasks(prev => prev.map(t =>
-        t.id === id ? { ...t, due_date: task.due_date } : t
-      ));
-    }
-  }, [tasks]);
-
   const updateSettings = useCallback((newSettings: SettingsData) => {
     setSettings(newSettings);
   }, []);
@@ -492,18 +430,36 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setConfettiTrigger(prev => prev + 1);
   }, []);
 
-  const updateTask = useCallback(async (id: string, newTitle: string, newDate: Date) => {
-    // Find the task being edited
+  const updateTask = useCallback(async (id: string, fields: { title?: string; due_date?: Date; notes?: string }) => {
     const task = tasks.find(t => t.id === id);
     if (!task) return;
 
-    // Check if this is a recurring instance (has a parent template)
-    const isRecurringInstance = task.parent_task_id && !task.is_template;
-    // In-memory instances have IDs like "templateId_2026-02-13" — they don't exist in the DB yet
+    const newTitle = fields.title ?? task.title;
+    const newDate = fields.due_date ?? task.due_date;
+    const newNotes = fields.notes ?? task.notes;
+
+    // Build the Supabase update payload (only changed fields)
+    const supabaseUpdate: Record<string, any> = { updated_at: new Date().toISOString() };
+    if (fields.title !== undefined) supabaseUpdate.title = fields.title;
+    if (fields.due_date !== undefined) supabaseUpdate.due_date = toLocalDateString(fields.due_date);
+    if (fields.notes !== undefined) supabaseUpdate.notes = fields.notes;
+
+    // Local state update object
+    const localUpdate: Partial<Task> = { updated_at: new Date() };
+    if (fields.title !== undefined) localUpdate.title = fields.title;
+    if (fields.due_date !== undefined) localUpdate.due_date = fields.due_date;
+    if (fields.notes !== undefined) localUpdate.notes = fields.notes;
+
+    const isRecurringInstance = task.parent_task_id && !task.is_template && task.type !== 'related';
     const isInMemoryInstance = isRecurringInstance && id.includes('_') && /\d{4}-\d{2}-\d{2}$/.test(id);
 
+    // Optimistically update UI
+    setTasks(prev => prev.map(t =>
+      t.id === id ? { ...t, ...localUpdate } : t
+    ));
+
     if (isInMemoryInstance) {
-      // This instance only exists in memory — insert a new row in Supabase
+      // In-memory instance — insert a new persisted override row
       const newId = uuidv4();
       const now = new Date();
 
@@ -516,78 +472,76 @@ export function AppProvider({ children }: { children: ReactNode }) {
         user_id: task.user_id,
         is_template: false,
         parent_task_id: task.parent_task_id,
-        notes: task.notes || null,
+        notes: newNotes || null,
       };
 
       const { error } = await supabase.from('tasks').insert(overrideRow);
 
       if (error) {
         console.error('Error inserting recurring instance override:', error);
+        // Revert
+        setTasks(prev => prev.map(t =>
+          t.id === id ? { ...t, title: task.title, due_date: task.due_date, notes: task.notes } : t
+        ));
         return;
       }
 
-      // Replace the synthetic instance with the persisted override in local state
+      // Replace the synthetic instance with the persisted one
       setTasks(prev => prev.map(t =>
         t.id === id
-          ? { ...t, id: newId, title: newTitle, due_date: newDate, created_at: now, updated_at: now }
+          ? { ...t, id: newId, created_at: now, updated_at: now }
           : t
       ));
     } else if (isRecurringInstance) {
-      // Already-persisted override row — update it in Supabase
+      // Persisted override row — update it
       const { error } = await supabase
         .from('tasks')
-        .update({ title: newTitle, due_date: toLocalDateString(newDate), updated_at: new Date().toISOString() })
+        .update(supabaseUpdate)
         .eq('id', id);
 
       if (error) {
         console.error('Error updating recurring instance override:', error);
-        return;
+        setTasks(prev => prev.map(t =>
+          t.id === id ? { ...t, title: task.title, due_date: task.due_date, notes: task.notes } : t
+        ));
       }
-
-      setTasks(prev => prev.map(t =>
-        t.id === id ? { ...t, title: newTitle, due_date: newDate, updated_at: new Date() } : t
-      ));
     } else if (task.is_template) {
-      // Template — update the template and propagate title to all its instances
+      // Template — update and propagate title to in-memory instances
       const { error } = await supabase
         .from('tasks')
-        .update({ title: newTitle, due_date: toLocalDateString(newDate), updated_at: new Date().toISOString() })
+        .update(supabaseUpdate)
         .eq('id', id);
 
       if (error) {
         console.error('Error updating template:', error);
+        setTasks(prev => prev.map(t =>
+          t.id === id ? { ...t, title: task.title, due_date: task.due_date, notes: task.notes } : t
+        ));
         return;
       }
 
-      setTasks(prev => prev.map(t => {
-        if (t.id === id) {
-          // Update the template itself
-          return { ...t, title: newTitle, due_date: newDate, updated_at: new Date() };
-        }
-        if (t.parent_task_id === id) {
-          // Update in-memory instances that still inherit from this template
-          const isInMemory = t.id.includes('_') && /\d{4}-\d{2}-\d{2}$/.test(t.id);
-          if (isInMemory) {
-            return { ...t, title: newTitle };
+      // Propagate title change to in-memory instances
+      if (fields.title !== undefined) {
+        setTasks(prev => prev.map(t => {
+          if (t.parent_task_id === id && t.id.includes('_') && /\d{4}-\d{2}-\d{2}$/.test(t.id)) {
+            return { ...t, title: fields.title! };
           }
-        }
-        return t;
-      }));
+          return t;
+        }));
+      }
     } else {
       // Regular non-recurring task — update directly
       const { error } = await supabase
         .from('tasks')
-        .update({ title: newTitle, due_date: toLocalDateString(newDate), updated_at: new Date().toISOString() })
+        .update(supabaseUpdate)
         .eq('id', id);
 
       if (error) {
         console.error('Error updating task:', error);
-        return;
+        setTasks(prev => prev.map(t =>
+          t.id === id ? { ...t, title: task.title, due_date: task.due_date, notes: task.notes } : t
+        ));
       }
-
-      setTasks(prev => prev.map(t =>
-        t.id === id ? { ...t, title: newTitle, due_date: newDate, updated_at: new Date() } : t
-      ));
     }
   }, [tasks]);
 
