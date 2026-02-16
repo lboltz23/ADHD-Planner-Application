@@ -261,11 +261,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         notes: notes,
         user_id: DEFAULT_USER_ID,
         is_template: true,
-        start_date: start_date ? start_date.toISOString() : null,
-        end_date: end_date ? end_date.toISOString() : null,
+        start_date: start_date ? toLocalDateString(start_date) : null,
+        end_date: end_date ? toLocalDateString(end_date) : null,
         days_selected: days_selected,
         recurrence_interval: recurrence_interval,
-        due_date: (start_date || due_date).toISOString(),
+        due_date: toLocalDateString(start_date || due_date),
         completed: false,
       };
 
@@ -318,7 +318,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.from('tasks').insert({
         id: newTask.id,
         title: newTask.title,
-        due_date: newTask.due_date.toISOString(),
+        due_date: toLocalDateString(newTask.due_date),
         completed: newTask.completed,
         type: newTask.type,
         notes: newTask.notes,
@@ -444,7 +444,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         id: newId,
         title: task.title,
         type: task.type,
-        due_date: newDate.toISOString(),
+        due_date: toLocalDateString(newDate),
         completed: task.completed,
         user_id: task.user_id,
         is_template: false,
@@ -474,7 +474,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // Persisted task (regular, related, override, or template) — update in Supabase
     const { error } = await supabase
       .from('tasks')
-      .update({ due_date: newDate.toISOString() })
+      .update({ due_date: toLocalDateString(newDate) })
       .eq('id', id);
 
     if (error) {
@@ -512,7 +512,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         id: newId,
         title: newTitle,
         type: task.type,
-        due_date: newDate.toISOString(),
+        due_date: toLocalDateString(newDate),
         completed: task.completed,
         user_id: task.user_id,
         is_template: false,
@@ -537,7 +537,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // Already-persisted override row — update it in Supabase
       const { error } = await supabase
         .from('tasks')
-        .update({ title: newTitle, due_date: newDate.toISOString(), updated_at: new Date().toISOString() })
+        .update({ title: newTitle, due_date: toLocalDateString(newDate), updated_at: new Date().toISOString() })
         .eq('id', id);
 
       if (error) {
@@ -552,7 +552,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // Template — update the template and propagate title to all its instances
       const { error } = await supabase
         .from('tasks')
-        .update({ title: newTitle, due_date: newDate.toISOString(), updated_at: new Date().toISOString() })
+        .update({ title: newTitle, due_date: toLocalDateString(newDate), updated_at: new Date().toISOString() })
         .eq('id', id);
 
       if (error) {
@@ -578,7 +578,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // Regular non-recurring task — update directly
       const { error } = await supabase
         .from('tasks')
-        .update({ title: newTitle, due_date: newDate.toISOString(), updated_at: new Date().toISOString() })
+        .update({ title: newTitle, due_date: toLocalDateString(newDate), updated_at: new Date().toISOString() })
         .eq('id', id);
 
       if (error) {
