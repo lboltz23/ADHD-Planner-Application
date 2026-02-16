@@ -83,7 +83,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         due_date: scheduledDate,
         completed: isCompleted,
         type: template.type as Task['type'],
-        notes: template.description,
+        notes: template.notes,
         created_at: createdAt,
         updated_at: updatedAt,
         is_template: false,
@@ -144,7 +144,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 due_date: new Date(row.due_date),
                 completed: false,
                 type: row.type as Task['type'],
-                notes: row.description,
+                notes: row.notes,
                 is_template: true,
                 days_selected: row.days_selected,
                 recurrence_interval: row.recurrence_interval,
@@ -189,7 +189,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 due_date: new Date(row.due_date),
                 completed: row.completed || false,
                 type: row.type as Task['type'],
-                notes: row.description,
+                notes: row.notes,
                 is_template: false,
               });
             }
@@ -347,8 +347,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       t.id === id ? { ...t, completed: newCompletedState } : t
     ));
 
-    // Check if this is a recurring task instance (has a parent_task_id)
-    if (task.is_template === false && task.parent_task_id) {
+    // Check if this is a recurring task instance (has a parent_task_id, but not a "related" task)
+    if (task.is_template === false && task.parent_task_id && task.type !== 'related') {
       // Extract the date from the instance ID (format: templateId_YYYY-MM-DD)
       const dateStr = toLocalDateString(task.due_date);
 
@@ -414,12 +414,54 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [tasks]);
 
   const rescheduleTask = useCallback(async (id: string, newDate: Date) => {
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+
+    const isRecurringInstance = task.parent_task_id && !task.is_template && task.type !== 'related';
+    const isInMemoryInstance = isRecurringInstance && id.includes('_') && /\d{4}-\d{2}-\d{2}$/.test(id);
+
     // Optimistically update UI first
-    setTasks(prev => prev.map(task =>
-      task.id === id ? { ...task, due_date: newDate } : task
+    setTasks(prev => prev.map(t =>
+      t.id === id ? { ...t, due_date: newDate } : t
     ));
 
-    // Update in Supabase
+    if (isInMemoryInstance) {
+      // In-memory instance — insert a persisted override row with the new date
+      const newId = uuidv4();
+      const now = new Date();
+
+      const overrideRow = {
+        id: newId,
+        title: task.title,
+        type: task.type,
+        due_date: newDate.toISOString(),
+        completed: task.completed,
+        user_id: task.user_id,
+        is_template: false,
+        parent_task_id: task.parent_task_id,
+        notes: task.notes || null,
+      };
+
+      const { error } = await supabase.from('tasks').insert(overrideRow);
+
+      if (error) {
+        console.error('Error inserting rescheduled instance override:', error);
+        setTasks(prev => prev.map(t =>
+          t.id === id ? { ...t, due_date: task.due_date } : t
+        ));
+        return;
+      }
+
+      // Replace the synthetic instance with the persisted one in local state
+      setTasks(prev => prev.map(t =>
+        t.id === id
+          ? { ...t, id: newId, due_date: newDate, created_at: now, updated_at: now }
+          : t
+      ));
+      return;
+    }
+
+    // Persisted task (regular, related, override, or template) — update in Supabase
     const { error } = await supabase
       .from('tasks')
       .update({ due_date: newDate.toISOString() })
@@ -427,13 +469,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     if (error) {
       console.error('Error rescheduling task:', error);
-      // Revert on error - find original date
-      const originalTask = tasks.find(t => t.id === id);
-      if (originalTask) {
-        setTasks(prev => prev.map(task =>
-          task.id === id ? { ...task, due_date: originalTask.due_date } : task
-        ));
-      }
+      setTasks(prev => prev.map(t =>
+        t.id === id ? { ...t, due_date: task.due_date } : t
+      ));
     }
   }, [tasks]);
 
