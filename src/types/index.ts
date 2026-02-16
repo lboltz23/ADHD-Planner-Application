@@ -21,6 +21,7 @@ export interface Task {
   parent_task_id?: string; // For templates, refers to the template task ID
   is_template?: boolean; // Whether this is a recurring template
   completed_dates?: string[]; // For recurring templates, tracks which dates have been completed
+  excluded_dates?: string[]; // For recurring templates, tracks which instance dates have been deleted
 }
 
 export interface CreateTaskParams {
@@ -35,6 +36,14 @@ export interface CreateTaskParams {
 
   recurrence_interval?: number; // For long interval tasks
   parent_task_id?: string; // For related tasks
+}
+
+// Format a Date as YYYY-MM-DD in local timezone (avoids UTC shift from toISOString)
+export function toLocalDateString(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 export interface UpdateTaskParams {

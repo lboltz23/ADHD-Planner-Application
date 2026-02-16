@@ -1,12 +1,11 @@
 // src/contexts/AppContext.tsx
 import React, { createContext, useContext, useState, useCallback, useMemo, useEffect, ReactNode } from 'react';
-import { Task, CreateTaskParams, Weekday, UpdateTaskParams } from '../types';
+import { Task, CreateTaskParams, Weekday, UpdateTaskParams, toLocalDateString } from '../types';
 import { SettingsData } from '../components/Settings';
 import { supabase } from '@/lib/supabaseClient';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
 
-// Map JavaScript day numbers (0=Sunday) to Weekday names
 const DAY_NUMBER_TO_WEEKDAY: Record<number, Weekday> = {
   0: "Sunday",
   1: "Monday",
@@ -67,11 +66,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const createdAt = new Date(template.created_at);
     const updatedAt = new Date(template.updated_at);
     const completedDates: string[] = template.completed_dates || [];
+    const excludedDates: string[] = template.excluded_dates || [];
 
     const scheduledDays = generateScheduledDays(startDate, endDate, daysSelected, intervalMonths);
 
-    return scheduledDays.map((scheduledDate) => {
-      const dateStr = scheduledDate.toISOString().split('T')[0];
+    return scheduledDays
+      .filter((scheduledDate) => !excludedDates.includes(toLocalDateString(scheduledDate)))
+      .map((scheduledDate) => {
+      const dateStr = toLocalDateString(scheduledDate);
       const isCompleted = completedDates.includes(dateStr);
 
       return {
@@ -121,7 +123,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
               if (!overridesByTemplate.has(row.parent_task_id)) {
                 overridesByTemplate.set(row.parent_task_id, new Map());
               }
-              const dateStr = row.due_date ? new Date(row.due_date).toISOString().split('T')[0] : '';
+              const dateStr = row.due_date ? toLocalDateString(new Date(row.due_date)) : '';
               overridesByTemplate.get(row.parent_task_id)!.set(dateStr, row);
             }
           });
@@ -155,7 +157,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
               const templateOverrides = overridesByTemplate.get(row.id);
 
               instances.forEach(instance => {
-                const dateStr = instance.due_date.toISOString().split('T')[0];
+                const dateStr = toLocalDateString(instance.due_date);
                 if (templateOverrides?.has(dateStr)) {
                   // Use the persisted override row instead of the generated instance
                   const override = templateOverrides.get(dateStr)!;
@@ -348,7 +350,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // Check if this is a recurring task instance (has a parent_task_id)
     if (task.is_template === false && task.parent_task_id) {
       // Extract the date from the instance ID (format: templateId_YYYY-MM-DD)
-      const dateStr = task.due_date.toISOString().split('T')[0];
+      const dateStr = toLocalDateString(task.due_date);
 
       // Get current completed_dates from Supabase
       const { data: templateData, error: fetchError } = await supabase
@@ -542,9 +544,131 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [tasks]);
 
-  const deleteTask = (id: string) => {
-    setTasks(tasks.filter(task => task.id !== id));
-  };
+  const deleteTask = useCallback(async (id: string) => {
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+
+    const isRecurringInstance = task.parent_task_id && !task.is_template && task.type !== 'related';
+    const isInMemoryInstance = isRecurringInstance && id.includes('_') && /\d{4}-\d{2}-\d{2}$/.test(id);
+
+    // Optimistically update UI
+    setTasks(prev => prev.filter(t => {
+      if (t.id === id) return false;
+      // Remove generated instances if deleting a template
+      if (task.is_template && t.parent_task_id === id) return false;
+      return true;
+    }));
+
+    if (isInMemoryInstance) {
+      // In-memory instance — add its date to the template's excluded_dates
+      // so it won't regenerate on next load
+      const dateStr = toLocalDateString(task.due_date);
+
+      const { data: templateData, error: fetchError } = await supabase
+        .from('tasks')
+        .select('excluded_dates')
+        .eq('id', task.parent_task_id)
+        .single();
+
+      if (fetchError) {
+        console.error('Error fetching template for instance deletion:', fetchError);
+        setTasks(prev => [...prev, task]);
+        return;
+      }
+
+      const currentDates: string[] = templateData?.excluded_dates || [];
+      if (!currentDates.includes(dateStr)) {
+        const { error: updateError } = await supabase
+          .from('tasks')
+          .update({ excluded_dates: [...currentDates, dateStr] })
+          .eq('id', task.parent_task_id);
+
+        if (updateError) {
+          console.error('Error excluding instance date:', updateError);
+          setTasks(prev => [...prev, task]);
+        }
+      }
+      return;
+    }
+
+    if (isRecurringInstance) {
+      // Persisted override row — delete it from Supabase and add its date to
+      // the template's excluded_dates so it won't regenerate
+      const dateStr = toLocalDateString(task.due_date);
+
+      const { error: deleteError } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', id);
+
+      if (deleteError) {
+        console.error('Error deleting override row:', deleteError);
+        setTasks(prev => [...prev, task]);
+        return;
+      }
+
+      const { data: templateData } = await supabase
+        .from('tasks')
+        .select('excluded_dates')
+        .eq('id', task.parent_task_id)
+        .single();
+
+      const currentDates: string[] = templateData?.excluded_dates || [];
+      if (!currentDates.includes(dateStr)) {
+        await supabase
+          .from('tasks')
+          .update({ excluded_dates: [...currentDates, dateStr] })
+          .eq('id', task.parent_task_id);
+      }
+      return;
+    }
+
+    // Unlink related tasks that reference this as their parent
+    const relatedChildren = tasks.filter(t => t.parent_task_id === id && t.type === 'related');
+    if (relatedChildren.length > 0) {
+      const { error: unlinkError } = await supabase
+        .from('tasks')
+        .update({ parent_task_id: null })
+        .eq('parent_task_id', id)
+        .eq('type', 'related');
+
+      if (unlinkError) {
+        console.error('Error unlinking related tasks:', unlinkError);
+      }
+
+      // Clear parent_task_id locally for related children
+      setTasks(prev => prev.map(t =>
+        t.parent_task_id === id && t.type === 'related'
+          ? { ...t, parent_task_id: undefined }
+          : t
+      ));
+    }
+
+    // Delete persisted instance overrides if this is a template
+    if (task.is_template) {
+      const { error: overrideError } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('parent_task_id', id)
+        .neq('type', 'related');
+
+      if (overrideError) {
+        console.error('Error deleting instance overrides:', overrideError);
+      }
+    }
+
+    // Delete the task itself from Supabase
+    const { error } = await supabase
+      .from('tasks')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting task:', error);
+      // Revert — add the task back to local state
+      setTasks(prev => [...prev, task]);
+    }
+  }, [tasks]);
 
   const updateStreak = () => {
     const today = new Date();

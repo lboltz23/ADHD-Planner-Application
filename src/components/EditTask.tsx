@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, Text, Modal, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
 import { X, Trash2, CheckCircle2, Link as LinkIcon } from "lucide-react-native";
 import { Calendar } from "react-native-calendars";
-import { Task } from "../types";
+import { Task, toLocalDateString } from "../types";
 import { getTaskTypeColor, getEnhancedTaskTypeColor } from "./taskColors";
 import TitleInput from "./TitleInput";
 import { useApp } from "../contexts/AppContext";
@@ -102,7 +102,7 @@ export default function EditTask({
                       selectedColor: "#b8a4d9",
                     }
                   }}
-                  minDate={new Date().toISOString().split('T')[0]}
+                  minDate={toLocalDateString(new Date())}
                   theme={{
                     todayTextColor: "#a8d8ea",
                     arrowColor: "#a8d8ea",

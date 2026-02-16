@@ -16,12 +16,29 @@ export default function RelatedTaskInput({
   onSelect,
 }: RelatedTaskInputProps) {
   const selectableTasks = tasks.filter((task) => {
+    // Hide completed tasks
+    if (task.completed) return false;
+
     // For recurring types, only show the template, not every instance
     if (task.type === "routine" || task.type === "long_interval") {
       return task.is_template === true;
     }
+
     return true;
   });
+
+  if (selectableTasks.length === 0) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.label}>Related To:</Text>
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyText}>
+            No tasks available. Create a task first to link to.
+          </Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -66,5 +83,17 @@ const styles = StyleSheet.create({
   selectedText: {
     fontSize: 14,
     color: AppColors.primary,
+  },
+  emptyState: {
+    backgroundColor: AppColors.inputBackground,
+    borderWidth: 1,
+    borderColor: AppColors.border,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 14,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: AppColors.placeholder,
   },
 });
