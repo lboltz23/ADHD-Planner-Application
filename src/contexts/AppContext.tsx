@@ -21,8 +21,7 @@ interface AppContextType {
   settings: SettingsData;
   addTask: (params: CreateTaskParams) => void;
   toggleTask: (id: string) => void;
-  rescheduleTask: (id: string, newDate: Date) => void;
-  updateTask: (id: string, newTitle: string, newDate: Date) => void;
+  updateTask: (id: string, fields: { title?: string; due_date?: Date; notes?: string }) => void;
   deleteTask: (id: string) => void;
   updateSettings: (newSettings: SettingsData) => void;
   streakCount: number;
@@ -747,7 +746,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         settings,
         addTask,
         toggleTask,
-        rescheduleTask,
         updateTask,
         deleteTask,
         updateSettings,
