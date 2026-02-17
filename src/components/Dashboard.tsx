@@ -14,6 +14,7 @@ import { TaskCard } from './TaskCard';
 import AddTaskDialog from './AddTaskDialog';
 import { TaskTypeSelector } from './TaskTypeSelector';
 import { Calendar, Settings, Zap } from 'lucide-react-native';
+import { getFilterColor } from './taskColors';
 
 // Dashboard Props
 interface DashboardProps {
@@ -23,7 +24,7 @@ interface DashboardProps {
   tasks: Task[];
   onAddTask: (params: CreateTaskParams) => void;
   onToggleTask: (id: string) => void;
-  onEditTask: (id: string, updatedTitle: string, updatedDate: Date) => void;
+  onEditTask: (id: string, fields: { title?: string; due_date?: Date; notes?: string }) => void;
   onDeleteTask: (id: string) => void;
   settings: SettingsData;
   onTriggerConfetti?: () => void;
@@ -43,7 +44,7 @@ export function Dashboard({
 }: DashboardProps) {
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [selectedType, setSelectedType] = useState<TaskType>('basic');
-  const [taskView, setTaskView] = useState<'today' | 'upcoming'>('today');
+  const [taskView, setTaskView] = useState<'today' | 'upcoming' | 'repeating' | 'open'>('today');
   const [showAddTaskDialog, setShowAddTaskDialog] = useState(false);
   // Ref to track previous progress for confetti trigger
   const previousProgressRef = useRef(0);
@@ -53,6 +54,7 @@ export function Dashboard({
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     return tasks.filter((task) => {
+      if (task.is_template) return false;
       const taskDate = new Date(task.due_date);
       return taskDate.toDateString() === today.toDateString();
     });
@@ -64,6 +66,7 @@ export function Dashboard({
     today.setHours(0, 0, 0, 0);
     return tasks
       .filter((task) => {
+        if (task.is_template) return false;
         const taskDate = new Date(task.due_date);
         taskDate.setHours(0, 0, 0, 0);
         return taskDate > today;
@@ -72,6 +75,24 @@ export function Dashboard({
       .slice(0, 5);
   }, [tasks]);
 
+  const repeatingTasks = useMemo(() => {
+    return tasks.filter((task) => task.is_template === true);
+  }, [tasks]);
+
+  const openTasks = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return tasks
+      .filter((task) => {
+        if (task.is_template) return false;
+        const taskDate = new Date(task.due_date);
+        taskDate.setHours(0, 0, 0, 0);
+        return taskDate < today;
+      })
+      .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
+      .slice(0, 5);
+  }, [tasks]);
+ 
   const handleAddTask = () => {
     if (newTaskTitle.trim() && !showAddTaskDialog) {
       setShowAddTaskDialog(true);
@@ -102,6 +123,38 @@ export function Dashboard({
     todayTasks.length > 0
       ? (completedTodayTasks / todayTasks.length) * 100
       : 0;
+
+  // Calculate streak count
+  const [streakCount, setStreakCount] = useState(0);
+
+  useEffect(() => {
+    const calculateStreak = () => {
+      let streak = 0;
+      let currentDate = new Date();
+      currentDate.setHours(0, 0, 0, 0);
+
+      while (streak < 30) {
+        const dateString = currentDate.toDateString();
+        const tasksForDate = tasks.filter((task) => {
+          const taskDate = new Date(task.due_date);
+          taskDate.setHours(0, 0, 0, 0);
+          return taskDate.toDateString() === dateString && task.completed;
+        });
+
+        if (tasksForDate.length > 0) {
+          streak++;
+        } else {
+          break;
+        }
+
+        currentDate.setDate(currentDate.getDate() - 1);
+      }
+
+      setStreakCount(streak);
+    };
+
+    calculateStreak();
+  }, [tasks]);
 
   useEffect(() => {
     // Only trigger confetti if: all tasks are complete AND there's at least 1 task today
@@ -269,13 +322,44 @@ export function Dashboard({
     },
     addTaskBorder: {
       backgroundColor: '#ffffff',
-      //height: 125,
       borderRadius: 8,
       borderWidth: 1,
       borderColor: '#e5d9f2',
       padding: 10,
       marginBottom: 20,
-      //paddingVertical: 10,
+    },
+    streakContainer: {
+      backgroundColor: '#ffffff',
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 20,
+      borderWidth: 1,
+      borderColor: '#e5d9f2',
+      alignItems: 'center',
+    },
+    streakText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: '#6b5b7f',
+    },
+    streakBadge: {
+      backgroundColor: '#ffe5cc',
+      paddingVertical: 8,
+      paddingHorizontal: 10,
+      borderRadius: 8,
+      alignItems: 'center',
+      justifyContent: 'center',
+      minWidth: 50,
+    },
+    streakBadgeText: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: '#ff9500',
+    },
+    streakBadgeLabel: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: '#ff9500',
     },
   });
 
@@ -296,6 +380,10 @@ export function Dashboard({
             </Text>
           </View>
           <View style={styles.headerRight}>
+            <View style={styles.streakBadge}>
+              <Text style={styles.streakBadgeText}>{streakCount}</Text>
+              <Text style={styles.streakBadgeLabel}>day</Text>
+            </View>
             <TouchableOpacity
               style={styles.iconButton}
               onPress={onNavigateToSettings}
@@ -345,6 +433,8 @@ export function Dashboard({
           </View>
         </View>)}
 
+        {/* Streak Counter */}
+
         {/* Add Task Section */}
         <View style={styles.addTaskBorder}>
           <View style={styles.typeSelector}>
@@ -377,12 +467,28 @@ export function Dashboard({
         {/* Task View Filter Buttons */}
         <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 8, marginBottom: 20 }}>
           <TouchableOpacity
+            onPress={() => setTaskView('open')}
+            style={{
+              paddingVertical: 8,
+              paddingHorizontal: 16,
+              borderRadius: 8,
+              backgroundColor: taskView === 'open' ? getFilterColor('open', settings.colorBlindMode) : '#ffffff',
+              borderWidth: 1,
+              borderColor: '#e5d9f2',
+            }}
+          >
+            <Text style={{ color: taskView === 'open' ? '#ffffff' : '#6b5b7f', fontWeight: '600' }}>
+              Open
+            </Text>
+          </TouchableOpacity>
+        
+          <TouchableOpacity
             onPress={() => setTaskView('today')}
             style={{
             paddingVertical: 8,
             paddingHorizontal: 16,
             borderRadius: 8,
-            backgroundColor: taskView === 'today' ? '#b8a4d9' : '#ffffff',
+            backgroundColor: taskView === 'today' ? getFilterColor('today', settings.colorBlindMode) : '#ffffff',
             borderWidth: 1,
             borderColor: '#e5d9f2',
             }}
@@ -398,7 +504,7 @@ export function Dashboard({
               paddingVertical: 8,
               paddingHorizontal: 16,
               borderRadius: 8,
-              backgroundColor: taskView === 'upcoming' ? '#a8d8ea' : '#ffffff',
+              backgroundColor: taskView === 'upcoming' ? getFilterColor('upcoming', settings.colorBlindMode) : '#ffffff',
               borderWidth: 1,
               borderColor: '#e5d9f2',
             }}
@@ -407,9 +513,25 @@ export function Dashboard({
               Upcoming
             </Text>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => setTaskView('repeating')}
+            style={{
+              paddingVertical: 8,
+              paddingHorizontal: 16,
+              borderRadius: 8,
+              backgroundColor: taskView === 'repeating' ? getFilterColor('repeating', settings.colorBlindMode) : '#ffffff',
+              borderWidth: 1,
+              borderColor: '#e5d9f2',
+            }}
+          >
+            <Text style={{ color: taskView === 'repeating' ? '#ffffff' : '#6b5b7f', fontWeight: '600' }}>
+              Repeating
+            </Text>
+          </TouchableOpacity>
         </View>
 
-        {taskView === 'today' ? (      
+        {taskView === 'today' ? (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Today</Text>
             {todayTasks.length === 0 ? (
@@ -429,7 +551,7 @@ export function Dashboard({
               </View>
             )}
           </View>
-        ) : (
+        ) : taskView === 'upcoming' ? (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Upcoming</Text>
             {upcomingTasks.length === 0 ? (
@@ -437,6 +559,47 @@ export function Dashboard({
             ) : (
               <View style={styles.tasksList}>
                 {upcomingTasks.map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    onToggle={onToggleTask}
+                    onUpdate={onEditTask}
+                    onDelete={onDeleteTask}
+                    colorBlindMode={settings.colorBlindMode}
+                    showDate={true}
+                  />
+                ))}
+              </View>
+            )}
+          </View>
+        ) : taskView === 'open' ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Open</Text>
+            {openTasks.length === 0 ? (
+              <Text style={styles.noTasksMessage}>No open tasks</Text>
+            ) : (
+              <View style={styles.tasksList}>
+                {openTasks.map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    onToggle={onToggleTask}
+                    onUpdate={onEditTask}
+                    onDelete={onDeleteTask}
+                    colorBlindMode={settings.colorBlindMode}
+                  />
+                ))}
+              </View>
+            )}
+          </View>
+        ) : (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Repeating</Text>
+            {repeatingTasks.length === 0 ? (
+              <Text style={styles.noTasksMessage}>No repeating tasks</Text>
+            ) : (
+              <View style={styles.tasksList}>
+                {repeatingTasks.map((task) => (
                   <TaskCard
                     key={task.id}
                     task={task}
