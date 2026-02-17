@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { View, Text, Modal, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
-import { X, Trash2, CheckCircle2 } from "lucide-react-native";
+import { X, Trash2, CheckCircle2, Link as LinkIcon } from "lucide-react-native";
 import { Calendar } from "react-native-calendars";
-import { Task } from "../types";
+import { Task, toLocalDateString } from "../types";
 import { getTaskTypeColor, getEnhancedTaskTypeColor } from "./taskColors";
 import TitleInput from "./TitleInput";
+import { useApp } from "../contexts/AppContext";
 
 export interface EditTaskProps {
   isOpen: boolean;
@@ -25,8 +26,13 @@ export default function EditTask({
   onToggle,
   colorBlindMode = false,
 }: EditTaskProps) {
+  const { tasks } = useApp();
   const [editedTitle, setEditedTitle] = useState(task.title);
   const [editedDate, setEditedDate] = useState(task.due_date);
+
+  const parentTask = task.type === "related" && task.parent_task_id
+    ? tasks.find(t => t.id === task.parent_task_id)
+    : undefined;
 
   const handleSave = () => {
     if (editedTitle.trim()) {
@@ -80,6 +86,13 @@ export default function EditTask({
                 <Text style={styles.label}>Task Title</Text>
                 <TitleInput value={editedTitle} onChange={setEditedTitle} />
 
+                {parentTask && (
+                  <View style={styles.parentTaskRow}>
+                    <LinkIcon size={14} color="#ffc9d4" />
+                    <Text style={styles.parentTaskText}>Related to: {parentTask.title}</Text>
+                  </View>
+                )}
+
                 <Text style={styles.label}>Due Date</Text>
                 <Calendar
                   onDayPress={handleDateSelect}
@@ -89,7 +102,7 @@ export default function EditTask({
                       selectedColor: "#b8a4d9",
                     }
                   }}
-                  minDate={new Date().toISOString().split('T')[0]}
+                  minDate={toLocalDateString(new Date())}
                   theme={{
                     todayTextColor: "#a8d8ea",
                     arrowColor: "#a8d8ea",
@@ -273,5 +286,21 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "600",
     fontSize: 14,
+  },
+  parentTaskRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 8,
+    padding: 10,
+    backgroundColor: "#fef9fc",
+    borderWidth: 1,
+    borderColor: "#ffc9d4",
+    borderRadius: 8,
+  },
+  parentTaskText: {
+    fontSize: 13,
+    color: "#6b5b7f",
+    flex: 1,
   },
 });

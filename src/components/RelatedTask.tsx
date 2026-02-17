@@ -15,12 +15,30 @@ export default function RelatedTaskInput({
   selectedTaskId,
   onSelect,
 }: RelatedTaskInputProps) {
-  const uniqueTasks = tasks.filter((task, index, self) => {
+  const selectableTasks = tasks.filter((task) => {
+    // Hide completed tasks
+    if (task.completed) return false;
+
+    // For recurring types, only show the template, not every instance
     if (task.type === "routine" || task.type === "long_interval") {
-      return self.findIndex((t) => t.parent_task_id === task.parent_task_id) === index;
+      return task.is_template === true;
     }
+
     return true;
   });
+
+  if (selectableTasks.length === 0) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.label}>Related To:</Text>
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyText}>
+            No tasks available. Create a task first to link to.
+          </Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -29,7 +47,7 @@ export default function RelatedTaskInput({
         style={styles.dropdown}
         placeholderStyle={styles.placeholderText}
         selectedTextStyle={styles.selectedText}
-        data={uniqueTasks}
+        data={selectableTasks}
         labelField="title"
         valueField="id"
         placeholder="Select a task"
@@ -65,5 +83,17 @@ const styles = StyleSheet.create({
   selectedText: {
     fontSize: 14,
     color: AppColors.primary,
+  },
+  emptyState: {
+    backgroundColor: AppColors.inputBackground,
+    borderWidth: 1,
+    borderColor: AppColors.border,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 14,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: AppColors.placeholder,
   },
 });

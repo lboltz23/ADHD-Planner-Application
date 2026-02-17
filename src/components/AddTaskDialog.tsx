@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, Text, Modal, TouchableOpacity, StyleSheet, TextInput, ScrollView } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Plus, X } from "lucide-react-native";
-import { Task, TaskType, CreateTaskParams, Weekday } from "../types";
+import { Task, TaskType, CreateTaskParams, Weekday, toLocalDateString } from "../types";
 import { Calendar } from "react-native-calendars";
 import { getTaskTypeColor, getEnhancedTaskTypeColor } from "./taskColors";
 import TitleInput from "./TitleInput";
@@ -187,7 +187,7 @@ export default function AddTaskDialog({
                       ? { [selectedDate]: { selected: true, selectedColor: "#b8a4d9" } }
                       : {}
                   }
-                  minDate={new Date().toISOString().split('T')[0]}
+                  minDate={toLocalDateString(new Date())}
                   theme={{
                     todayTextColor: "#a8d8ea",
                     arrowColor: "#a8d8ea",
@@ -250,7 +250,7 @@ export default function AddTaskDialog({
                       ? { [selectedDate]: { selected: true, selectedColor: "#b8a4d9" } }
                       : {}
                   }
-                  minDate={new Date().toISOString().split('T')[0]}
+                  minDate={toLocalDateString(new Date())}
                   theme={{
                     todayTextColor: "#a8d8ea",
                     arrowColor: "#a8d8ea",
