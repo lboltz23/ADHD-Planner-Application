@@ -6,12 +6,14 @@ import { Task, toLocalDateString } from "../types";
 import { getTaskTypeColor, getEnhancedTaskTypeColor } from "./taskColors";
 import TitleInput from "./TitleInput";
 import NoteInput from "./NoteInput";
+import RelatedTaskInput from "./RelatedTask";
 
 export interface EditTaskProps {
   isOpen: boolean;
   onClose: () => void;
   task: Task;
-  onSave: (id: string, fields: { title?: string; due_date?: Date; notes?: string }) => void;
+  tasks: Task[]; // Pass all tasks for related task selection
+  onSave: (id: string, fields: { title?: string; due_date?: Date; notes?: string; parent_id?: string; start_date?: Date; end_date?: Date; recurrence_interval?: number; days_selected?: string[] }) => void;
   onDelete: (id: string) => void;
   onToggle: (id: string) => void;
   colorBlindMode?: boolean;
@@ -21,6 +23,7 @@ export default function EditTask({
   isOpen,
   onClose,
   task,
+  tasks = [],
   onSave,
   onDelete,
   onToggle,
@@ -28,10 +31,16 @@ export default function EditTask({
 }: EditTaskProps) {
   const [editedTitle, setEditedTitle] = useState(task.title);
   const [editedDate, setEditedDate] = useState(task.due_date);
+  const [editedStartDate, setEditedStartDate] = useState(task.start_date);
+  const [editedEndDate, setEditedEndDate] = useState(task.end_date);
+  const [editedInterval, setEditedInterval] = useState(task.recurrence_interval);
+  const [editedParentId, setEditedParentId] = useState(task.parent_task_id);
   const [editiedNotes, setEditedNotes] = useState(task.notes || "");
+  const [editedDaysSelected, setEditedDaysSelected] = useState(task.days_selected || []);
+
   const handleSave = () => {
     if (editedTitle.trim()) {
-      onSave(task.id, { title: editedTitle.trim(), due_date: editedDate, notes: editiedNotes });
+      onSave(task.id, { title: editedTitle.trim(), due_date: editedDate, notes: editiedNotes, start_date: editedStartDate, end_date: editedEndDate, recurrence_interval: editedInterval, parent_id: editedParentId, days_selected: editedDaysSelected });
       onClose();
     }
   };
@@ -80,23 +89,35 @@ export default function EditTask({
               <View style={styles.section}>
                 <TitleInput value={editedTitle} onChange={setEditedTitle} />
                 <NoteInput value = {editiedNotes} onChange={setEditedNotes} />
-                <Text style={styles.label}>Due Date</Text>
-                <Calendar
-                  onDayPress={handleDateSelect}
-                  markedDates={{
-                    [getDateString(editedDate)]: {
-                      selected: true,
-                      selectedColor: "#b8a4d9",
-                    }
-                  }}
-                  minDate={toLocalDateString(new Date())}
-                  theme={{
-                    todayTextColor: "#a8d8ea",
-                    arrowColor: "#a8d8ea",
-                  }}
-                  style={styles.calendar}
-                />
-                </View>
+                {task.type === "related" ? (
+                    <RelatedTaskInput
+                      tasks={tasks}
+                      selectedTaskId={editedParentId || task.parent_task_id || ""}
+                      onSelect={setEditedParentId}
+                      />
+                ) : null}
+                {task.type === "basic" || task.type === "related" || task.is_template === false ? (
+                  <>
+                    <Text style={styles.label}>Due Date</Text>
+                    <Calendar
+                      onDayPress={handleDateSelect}
+                      markedDates={{
+                        [getDateString(editedDate)]: {
+                          selected: true,
+                          selectedColor: "#b8a4d9",
+                        }
+                      }}
+                      minDate={toLocalDateString(new Date())}
+                      theme={{
+                        todayTextColor: "#a8d8ea",
+                        arrowColor: "#a8d8ea",
+                      }}
+                      style={styles.calendar}
+                    />
+                  </>
+                ) : null}
+
+              </View>
               {/* Action Buttons */}
               <View style={styles.buttonRow}>
                 <View style={styles.leftButtons}>
