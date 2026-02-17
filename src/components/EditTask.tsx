@@ -11,7 +11,7 @@ export interface EditTaskProps {
   isOpen: boolean;
   onClose: () => void;
   task: Task;
-  onSave: (id: string, newTitle: string, newDate: Date, newNotes?: string) => void;
+  onSave: (id: string, fields: { title?: string; due_date?: Date; notes?: string }) => void;
   onDelete: (id: string) => void;
   onToggle: (id: string) => void;
   colorBlindMode?: boolean;
@@ -26,13 +26,12 @@ export default function EditTask({
   onToggle,
   colorBlindMode = false,
 }: EditTaskProps) {
-  const { tasks } = useApp();
   const [editedTitle, setEditedTitle] = useState(task.title);
   const [editedDate, setEditedDate] = useState(task.due_date);
   const [editiedNotes, setEditedNotes] = useState(task.notes || "");
   const handleSave = () => {
     if (editedTitle.trim()) {
-      onSave(task.id, { title: editedTitle.trim(), due_date: editedDate });
+      onSave(task.id, { title: editedTitle.trim(), due_date: editedDate, notes: editiedNotes });
       onClose();
     }
   };
