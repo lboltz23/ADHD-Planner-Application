@@ -5,13 +5,13 @@ import { Calendar } from "react-native-calendars";
 import { Task, toLocalDateString } from "../types";
 import { getTaskTypeColor, getEnhancedTaskTypeColor } from "./taskColors";
 import TitleInput from "./TitleInput";
-import { useApp } from "../contexts/AppContext";
+import NoteInput from "./NoteInput";
 
 export interface EditTaskProps {
   isOpen: boolean;
   onClose: () => void;
   task: Task;
-  onSave: (id: string, fields: { title?: string; due_date?: Date; notes?: string }) => void;
+  onSave: (id: string, newTitle: string, newDate: Date, newNotes?: string) => void;
   onDelete: (id: string) => void;
   onToggle: (id: string) => void;
   colorBlindMode?: boolean;
@@ -29,11 +29,7 @@ export default function EditTask({
   const { tasks } = useApp();
   const [editedTitle, setEditedTitle] = useState(task.title);
   const [editedDate, setEditedDate] = useState(task.due_date);
-
-  const parentTask = task.type === "related" && task.parent_task_id
-    ? tasks.find(t => t.id === task.parent_task_id)
-    : undefined;
-
+  const [editiedNotes, setEditedNotes] = useState(task.notes || "");
   const handleSave = () => {
     if (editedTitle.trim()) {
       onSave(task.id, { title: editedTitle.trim(), due_date: editedDate });
@@ -83,16 +79,8 @@ export default function EditTask({
 
               {/* Content */}
               <View style={styles.section}>
-                <Text style={styles.label}>Task Title</Text>
                 <TitleInput value={editedTitle} onChange={setEditedTitle} />
-
-                {parentTask && (
-                  <View style={styles.parentTaskRow}>
-                    <LinkIcon size={14} color="#ffc9d4" />
-                    <Text style={styles.parentTaskText}>Related to: {parentTask.title}</Text>
-                  </View>
-                )}
-
+                <NoteInput value = {editiedNotes} onChange={setEditedNotes} />
                 <Text style={styles.label}>Due Date</Text>
                 <Calendar
                   onDayPress={handleDateSelect}
@@ -109,15 +97,7 @@ export default function EditTask({
                   }}
                   style={styles.calendar}
                 />
-
-                {task.notes && (
-                  <>
-                    <Text style={styles.label}>Notes</Text>
-                    <Text style={styles.notesText}>{task.notes}</Text>
-                  </>
-                )}
-              </View>
-
+                </View>
               {/* Action Buttons */}
               <View style={styles.buttonRow}>
                 <View style={styles.leftButtons}>
