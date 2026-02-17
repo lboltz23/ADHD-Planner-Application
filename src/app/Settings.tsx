@@ -16,17 +16,11 @@ export default function SettingsScreen() {
   const [user, setUser] = useState<User | null>(null)
   const [username, setUsername] = useState<string | null>(null)
 
-    useFocusEffect(
-        useCallback(() => {
-          supabase.auth.getUser().then(({ data: { user } }) => {
-            setUser(user)
-          })
-  
-          supabase.auth.onAuthStateChange((_event, session) => {
+      useEffect(() =>{
+        supabase.auth.onAuthStateChange((_event, session) => {
             setUser(session?.user ?? null)
           })
-        }, [])
-      )
+      },[])
   const handleBack = useSafeBack();
   const { colors } = useAppTheme();
 
@@ -35,7 +29,11 @@ export default function SettingsScreen() {
           const username = await getProfile(user)
           setUsername(username)
         } 
-        GetUsername();
+        if(user){
+          GetUsername();
+        } else {
+          setUsername(null);
+        }
       },[user])
 
   return (
