@@ -4,15 +4,18 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { OneThingMode as OneThingComponent } from '../components/OneThingMode';
 import { useApp } from '../contexts/AppContext';
+import { useSafeBack } from '../hooks/use-Safe-Back';
+
 
 export default function OneThingModeScreen() {
   const router = useRouter();
   const { tasks, settings, toggleTask, triggerConfetti } = useApp();
+  const handleBack = useSafeBack();
 
   return (
     <View style={styles.container}>
       <OneThingComponent
-        onNavigateBack={() => router.back()}
+        onNavigateBack={handleBack}
         tasks={tasks}
         onToggleTask={toggleTask}
         settings={settings}

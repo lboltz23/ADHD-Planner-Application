@@ -13,8 +13,7 @@ import { ProgressCircle } from './ProgressCircle';
 interface WeeklyViewProps {
   tasks: Task[];
   onToggleTask: (id: string) => void;
-  onRescheduleTask: (id: string, newDate: Date) => void;
-  onEditTask: (id: string, newTitle: string, newDate: Date) => void;
+  onEditTask: (id: string, fields: { title?: string; due_date?: Date; notes?: string }) => void;
   onDeleteTask: (id: string) => void;
   colorBlindMode?: boolean;
   onNavigateBack: () => void;

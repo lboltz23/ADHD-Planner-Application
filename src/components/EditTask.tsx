@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { View, Text, Modal, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
-import { X, Trash2, CheckCircle2 } from "lucide-react-native";
+import { X, Trash2, CheckCircle2, Link as LinkIcon } from "lucide-react-native";
 import { Calendar } from "react-native-calendars";
-import { Task } from "../types";
+import { Task, toLocalDateString } from "../types";
 import { getTaskTypeColor, getEnhancedTaskTypeColor } from "./taskColors";
 import TitleInput from "./TitleInput";
 import NoteInput from "./NoteInput";
@@ -26,12 +26,13 @@ export default function EditTask({
   onToggle,
   colorBlindMode = false,
 }: EditTaskProps) {
+  const { tasks } = useApp();
   const [editedTitle, setEditedTitle] = useState(task.title);
   const [editedDate, setEditedDate] = useState(task.due_date);
   const [editiedNotes, setEditedNotes] = useState(task.notes || "");
   const handleSave = () => {
     if (editedTitle.trim()) {
-      onSave(task.id, editedTitle.trim(), editedDate);
+      onSave(task.id, { title: editedTitle.trim(), due_date: editedDate });
       onClose();
     }
   };
@@ -89,7 +90,7 @@ export default function EditTask({
                       selectedColor: "#b8a4d9",
                     }
                   }}
-                  minDate={new Date().toISOString().split('T')[0]}
+                  minDate={toLocalDateString(new Date())}
                   theme={{
                     todayTextColor: "#a8d8ea",
                     arrowColor: "#a8d8ea",
@@ -265,5 +266,21 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "600",
     fontSize: 14,
+  },
+  parentTaskRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 8,
+    padding: 10,
+    backgroundColor: "#fef9fc",
+    borderWidth: 1,
+    borderColor: "#ffc9d4",
+    borderRadius: 8,
+  },
+  parentTaskText: {
+    fontSize: 13,
+    color: "#6b5b7f",
+    flex: 1,
   },
 });
