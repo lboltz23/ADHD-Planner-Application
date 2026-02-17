@@ -2,11 +2,23 @@ import React, { useState } from "react";
 import { View, Text, Modal, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
 import { X, Trash2, CheckCircle2, Link as LinkIcon } from "lucide-react-native";
 import { Calendar } from "react-native-calendars";
-import { Task, toLocalDateString } from "../types";
+import { Task, toLocalDateString, Weekday } from "../types";
 import { getTaskTypeColor, getEnhancedTaskTypeColor } from "./taskColors";
 import TitleInput from "./TitleInput";
 import NoteInput from "./NoteInput";
 import RelatedTaskInput from "./RelatedTask";
+import DateRangePicker from "./DateRangePicker";
+
+const ALL_WEEKDAYS: Weekday[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const WEEKDAY_ABBREVIATIONS: Record<Weekday, string> = {
+  Monday: "Mon",
+  Tuesday: "Tue",
+  Wednesday: "Wed",
+  Thursday: "Thu",
+  Friday: "Fri",
+  Saturday: "Sat",
+  Sunday: "Sun",
+};
 
 export interface EditTaskProps {
   isOpen: boolean;
@@ -36,7 +48,7 @@ export default function EditTask({
   const [editedInterval, setEditedInterval] = useState(task.recurrence_interval);
   const [editedParentId, setEditedParentId] = useState(task.parent_task_id);
   const [editiedNotes, setEditedNotes] = useState(task.notes || "");
-  const [editedDaysSelected, setEditedDaysSelected] = useState(task.days_selected || []);
+  const [editedDaysSelected, setEditedDaysSelected] = useState<Weekday[]>([]);
 
   const handleSave = () => {
     if (editedTitle.trim()) {
@@ -44,6 +56,12 @@ export default function EditTask({
       onClose();
     }
   };
+
+  const toggleDay = (day: Weekday) => {
+      setEditedDaysSelected((prev) =>
+        prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
+      );
+    };
 
   const handleDelete = () => {
     onDelete(task.id);
@@ -116,6 +134,40 @@ export default function EditTask({
                     />
                   </>
                 ) : null}
+                {task.type === "routine" && task.is_template === true ? (
+                  <>
+                    <DateRangePicker
+                      start_date={editedStartDate}
+                      end_date={editedEndDate}
+                      onStartDateChange={setEditedStartDate}
+                      onEndDateChange={setEditedEndDate}
+                    />
+
+                   <Text style={styles.label}>Repeat On (select days) *</Text>
+                   <View style={styles.frequencyRow}>
+                  {ALL_WEEKDAYS.map((day) => (
+                    <TouchableOpacity
+                      key={day}
+                      style={[
+                        styles.frequencyButton,
+                        editedDaysSelected.includes(day) && styles.frequencyButtonActive,
+                      ]}
+                      onPress={() => toggleDay(day)}
+                    >
+                      <Text
+                        style={[
+                          styles.frequencyText,
+                          editedDaysSelected.includes(day) && styles.frequencyTextActive,
+                        ]}
+                      >
+                        {WEEKDAY_ABBREVIATIONS[day]}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                  </>
+                )}
 
               </View>
               {/* Action Buttons */}
