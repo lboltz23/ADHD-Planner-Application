@@ -20,6 +20,7 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { User } from '@supabase/supabase-js';
 import { signOut } from '@/lib/supabaseClient';
+import { DotLoader } from './DotLoader';
 
 export interface SettingsData {
   defaultTimerMinutes: number;
@@ -35,7 +36,10 @@ interface SettingsProps {
   settings: SettingsData;
   onUpdateSettings: (settings: SettingsData) => void;
   user : User | null;
-  username: string | null;
+  username: {
+    username:string | null;
+    loading: boolean
+  }
 }
 
 interface SettingsSectionProps {
@@ -270,8 +274,10 @@ export function Settings({
              }
           </View>
         </View>
-        {username && <View style={styles.header}>
-          <Text style={styles.headerTitle}>Hey {username}!</Text>
+        {username.username && <View style={styles.header}>
+          {username.loading ? <DotLoader/> :
+          <Text style={styles.headerTitle}>Hey {username.username}!</Text>
+          }
         </View>}
 
         {/* Timer Settings */}

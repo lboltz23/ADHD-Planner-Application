@@ -12,12 +12,28 @@ export default function SettingsScreen() {
   const { settings, updateSettings } = useApp();
   const [user, setUser] = useState<User | null>(null)
   const [username, setUsername] = useState<string | null>(null)
+  const [loading,setLoading] = useState(false)
 
-      useEffect(() =>{
-        supabase.auth.onAuthStateChange((_event, session) => {
-            setUser(session?.user ?? null)
-          })
-      },[])
+     useEffect(() => {
+      const init = async () => {
+        const { data } = await supabase.auth.getSession()
+        setUser(data.session?.user ?? null)
+      }
+
+      setLoading(true);
+      init()
+
+      const { data: subscription } = supabase.auth.onAuthStateChange(
+        (_event, session) => {
+          setUser(session?.user ?? null)
+        }
+      )
+
+      setLoading(false);
+      return () => {
+        subscription.subscription.unsubscribe()
+      }
+    }, [])
 
       useEffect(() =>{
         const GetUsername = async () =>{
@@ -38,7 +54,7 @@ export default function SettingsScreen() {
         settings={settings}
         onUpdateSettings={updateSettings}
         user={user}
-        username={username}
+        username={{username,loading}}
       />
     </View>
   );
