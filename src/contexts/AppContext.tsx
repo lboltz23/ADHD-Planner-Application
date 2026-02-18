@@ -7,7 +7,6 @@ import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
 
 // Parse a date string from Supabase as a LOCAL date (avoids UTC timezone shift)
-// e.g., "2025-02-15T00:00:00+00:00" → Feb 15 local, not Feb 14
 function parseLocalDate(dateStr: string): Date {
   const [y, m, d] = dateStr.split('T')[0].split('-').map(Number);
   return new Date(y, m - 1, d);

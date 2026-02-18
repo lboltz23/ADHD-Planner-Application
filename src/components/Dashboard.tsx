@@ -84,13 +84,13 @@ export function Dashboard({
     today.setHours(0, 0, 0, 0);
     return tasks
       .filter((task) => {
-        if (task.is_template) return false;
+        if (task.is_template || task.type === 'routine' ||  task.type === 'long_interval') return false;
         const taskDate = new Date(task.due_date);
         taskDate.setHours(0, 0, 0, 0);
         return taskDate < today;
       })
-      .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
-      .slice(0, 5);
+      .sort((a, b) => new Date(b.due_date).getTime() - new Date(a.due_date).getTime())
+      .slice(0, 7);
   }, [tasks]);
  
   const handleAddTask = () => {
