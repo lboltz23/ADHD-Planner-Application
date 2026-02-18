@@ -81,7 +81,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     const scheduledDays = generateScheduledDays(startDate, endDate, daysSelected, intervalMonths);
 
-    return scheduledDays.map((scheduledDate) => {
+    return scheduledDays
+      .filter((scheduledDate) => {
+        const dateStr = toLocalDateString(scheduledDate);
+        return !excludedDates.includes(dateStr);
+      })
+      .map((scheduledDate) => {
       // Use local date format to avoid UTC shift (e.g., "2025-02-15" not "2025-02-14")
       const dateStr = toLocalDateString(scheduledDate);
       const isCompleted = completedDates.includes(dateStr);
@@ -608,7 +613,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             due_date: dueDate,
             completed: row.completed || false,
             type: row.type as Task['type'],
-            notes: row.description,
+            notes: row.notes,
             is_template: false,
             parent_task_id: row.parent_task_id,
           });
