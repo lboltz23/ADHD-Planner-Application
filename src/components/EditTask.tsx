@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { View, Text, Modal, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
-import { X, Trash2, CheckCircle2 } from "lucide-react-native";
+import { X, Trash2, CheckCircle2, Link as LinkIcon } from "lucide-react-native";
 import { Calendar } from "react-native-calendars";
-import { Task } from "../types";
+import { Task, toLocalDateString } from "../types";
 import { getTaskTypeColor, getEnhancedTaskTypeColor } from "./taskColors";
 import TitleInput from "./TitleInput";
+import NoteInput from "./NoteInput";
 
 export interface EditTaskProps {
   isOpen: boolean;
@@ -27,10 +28,10 @@ export default function EditTask({
 }: EditTaskProps) {
   const [editedTitle, setEditedTitle] = useState(task.title);
   const [editedDate, setEditedDate] = useState(task.due_date);
-
+  const [editiedNotes, setEditedNotes] = useState(task.notes || "");
   const handleSave = () => {
     if (editedTitle.trim()) {
-      onSave(task.id, { title: editedTitle.trim(), due_date: editedDate });
+      onSave(task.id, { title: editedTitle.trim(), due_date: editedDate, notes: editiedNotes });
       onClose();
     }
   };
@@ -77,9 +78,8 @@ export default function EditTask({
 
               {/* Content */}
               <View style={styles.section}>
-                <Text style={styles.label}>Task Title</Text>
                 <TitleInput value={editedTitle} onChange={setEditedTitle} />
-
+                <NoteInput value = {editiedNotes} onChange={setEditedNotes} />
                 <Text style={styles.label}>Due Date</Text>
                 <Calendar
                   onDayPress={handleDateSelect}
@@ -89,22 +89,14 @@ export default function EditTask({
                       selectedColor: "#b8a4d9",
                     }
                   }}
-                  minDate={new Date().toISOString().split('T')[0]}
+                  minDate={toLocalDateString(new Date())}
                   theme={{
                     todayTextColor: "#a8d8ea",
                     arrowColor: "#a8d8ea",
                   }}
                   style={styles.calendar}
                 />
-
-                {task.notes && (
-                  <>
-                    <Text style={styles.label}>Notes</Text>
-                    <Text style={styles.notesText}>{task.notes}</Text>
-                  </>
-                )}
-              </View>
-
+                </View>
               {/* Action Buttons */}
               <View style={styles.buttonRow}>
                 <View style={styles.leftButtons}>
@@ -273,5 +265,21 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "600",
     fontSize: 14,
+  },
+  parentTaskRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 8,
+    padding: 10,
+    backgroundColor: "#fef9fc",
+    borderWidth: 1,
+    borderColor: "#ffc9d4",
+    borderRadius: 8,
+  },
+  parentTaskText: {
+    fontSize: 13,
+    color: "#6b5b7f",
+    flex: 1,
   },
 });
