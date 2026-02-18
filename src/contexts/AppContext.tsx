@@ -29,6 +29,7 @@ interface AppContextType {
   login: () => void;
   confettiTrigger: number;
   triggerConfetti: () => void;
+  fetchTasksForMonth: (year: number, month: number) => Promise<Task[]>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -405,6 +406,77 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setConfettiTrigger(prev => prev + 1);
   }, []);
 
+  const fetchTasksForMonth = useCallback(async (year: number, month: number): Promise<Task[]> => {
+    const monthStart = new Date(year, month, 1);
+    const monthEnd = new Date(year, month + 1, 0); // Last day of the month
+    const monthStartISO = monthStart.toISOString();
+    const monthEndISO = new Date(year, month + 1, 0, 23, 59, 59).toISOString();
+
+    try {
+      // Fetch regular (non-template) tasks with due_date in this month
+      const { data: regularData, error: regularError } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('user_id', DEFAULT_USER_ID)
+        .eq('is_template', false)
+        .gte('due_date', monthStartISO)
+        .lte('due_date', monthEndISO);
+
+      if (regularError) {
+        console.error('Error fetching regular tasks for month:', regularError);
+        return [];
+      }
+
+      // Fetch recurring templates whose date range overlaps with this month
+      const { data: templateData, error: templateError } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('user_id', DEFAULT_USER_ID)
+        .eq('is_template', true)
+        .lte('start_date', monthEndISO)
+        .gte('end_date', monthStartISO);
+
+      if (templateError) {
+        console.error('Error fetching templates for month:', templateError);
+        return [];
+      }
+
+      const result: Task[] = [];
+
+      // Map regular tasks
+      (regularData || []).forEach((row: any) => {
+        result.push({
+          id: row.id,
+          title: row.title,
+          user_id: row.user_id,
+          created_at: new Date(row.created_at),
+          updated_at: new Date(row.updated_at),
+          due_date: new Date(row.due_date),
+          completed: row.completed || false,
+          type: row.type as Task['type'],
+          notes: row.description,
+          is_template: false,
+          parent_task_id: row.parent_task_id,
+        });
+      });
+
+      // Generate instances from templates, filtered to this month
+      (templateData || []).forEach((row: any) => {
+        const instances = generateTaskInstancesFromTemplate(row);
+        const monthInstances = instances.filter(inst => {
+          const d = inst.due_date;
+          return d >= monthStart && d <= monthEnd;
+        });
+        result.push(...monthInstances);
+      });
+
+      return result;
+    } catch (error) {
+      console.error('Error in fetchTasksForMonth:', error);
+      return [];
+    }
+  }, []);
+
   const deleteTask = useCallback(async (id: string) => {
     // Optimistically update UI first
     const originalTasks = tasks;
@@ -459,6 +531,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         login,
         confettiTrigger,
         triggerConfetti,
+        fetchTasksForMonth,
       }}
     >
       {children}
