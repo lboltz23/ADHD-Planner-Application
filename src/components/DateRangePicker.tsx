@@ -17,8 +17,8 @@ export default function DateRangePicker({
   endDate,
   onStartDateChange,
   onEndDateChange,
-  startLabel = "Start Date",
-  endLabel = "End Date",
+  startLabel = "Start Date: ",
+  endLabel = "End Date: ",
 }: DateRangePickerProps) {
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
