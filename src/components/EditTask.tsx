@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, Modal, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
+import { View, Text, Modal, TouchableOpacity, StyleSheet, ScrollView, TextInput } from "react-native";
 import { X, Trash2, CheckCircle2, Link as LinkIcon } from "lucide-react-native";
 import { Calendar } from "react-native-calendars";
 import { Task, toLocalDateString, Weekday } from "../types";
@@ -25,7 +25,7 @@ export interface EditTaskProps {
   onClose: () => void;
   task: Task;
   tasks: Task[]; // Pass all tasks for related task selection
-  onSave: (id: string, fields: { title?: string; due_date?: Date; notes?: string; parent_id?: string; start_date?: Date; end_date?: Date; recurrence_interval?: number; days_selected?: string[] }) => void;
+  onSave: (id: string, fields: { title?: string; due_date?: Date; notes?: string; parent_id?: string; start_date?: Date; end_date?: Date; recurrence_interval?: number; days_selected?: Weekday[] }) => void;
   onDelete: (id: string) => void;
   onToggle: (id: string) => void;
   colorBlindMode?: boolean;
@@ -48,7 +48,7 @@ export default function EditTask({
   const [editedInterval, setEditedInterval] = useState(task.recurrence_interval);
   const [editedParentId, setEditedParentId] = useState(task.parent_task_id);
   const [editiedNotes, setEditedNotes] = useState(task.notes || "");
-  const [editedDaysSelected, setEditedDaysSelected] = useState<Weekday[]>([]);
+  const [editedDaysSelected, setEditedDaysSelected] = useState<Weekday[]>(task.days_selected || []);
 
   const handleSave = () => {
     if (editedTitle.trim()) {
@@ -137,15 +137,15 @@ export default function EditTask({
                 {task.type === "routine" && task.is_template === true ? (
                   <>
                     <DateRangePicker
-                      start_date={editedStartDate}
-                      end_date={editedEndDate}
+                      startDate={editedStartDate || new Date()}
+                      endDate={editedEndDate || new Date()}
                       onStartDateChange={setEditedStartDate}
                       onEndDateChange={setEditedEndDate}
                     />
 
                    <Text style={styles.label}>Repeat On (select days) *</Text>
                    <View style={styles.frequencyRow}>
-                  {ALL_WEEKDAYS.map((day) => (
+                    {ALL_WEEKDAYS.map((day) => (
                     <TouchableOpacity
                       key={day}
                       style={[
@@ -163,12 +163,33 @@ export default function EditTask({
                         {WEEKDAY_ABBREVIATIONS[day]}
                       </Text>
                     </TouchableOpacity>
-                  ))}
+                    ))}
+                  </View>
+                </>
+                ): null}
+                {task.type === "long_interval" && task.is_template === true ? (
+                  <>
+                  <DateRangePicker
+                    startDate={editedStartDate || new Date()}
+                    endDate={editedEndDate || new Date()}
+                    onStartDateChange={setEditedStartDate}
+                    onEndDateChange={setEditedEndDate}
+                  />
+
+                <View style={styles.inputRow}>
+                  <Text style={styles.label}>Interval (months):</Text>
+                  <TextInput
+                    style={styles.dateInput}
+                    value={editedInterval ? String(editedInterval) : ""}
+                    onChangeText={(text) => setEditedInterval(text ? parseInt(text, 10) || undefined : undefined)}
+                    placeholder="e.g., 3"
+                    placeholderTextColor="#999"
+                    keyboardType="numeric"
+                  />
                 </View>
-
-                  </>
-                )}
-
+                </>
+                ) : null}
+                  
               </View>
               {/* Action Buttons */}
               <View style={styles.buttonRow}>
@@ -354,5 +375,50 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#6b5b7f",
     flex: 1,
+  },
+  frequencyRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 12,
+  },
+  frequencyButton: {
+    flexGrow: 1,
+    flexBasis: "28%",
+    minWidth: 80,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#e5d9f2",
+    backgroundColor: "#f8f6fb",
+    alignItems: "center",
+  },
+  frequencyButtonActive: {
+    backgroundColor: "#b8a4d9",
+    borderColor: "#b8a4d9",
+  },
+  frequencyText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#6b5b7f",
+  },
+  frequencyTextActive: {
+    color: "#ffffff",
+  },
+  inputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  dateInput: {
+    backgroundColor: "#f8f6fb",
+    borderWidth: 1,
+    borderColor: "#e5d9f2",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: "#6b5b7f",
   },
 });
