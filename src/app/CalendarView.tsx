@@ -6,14 +6,13 @@ import { useApp } from '../contexts/AppContext';
 
 export default function CalendarViewScreen() {
   const router = useRouter();
-  const { tasks, settings, addTask, toggleTask, updateTask, deleteTask, triggerConfetti } = useApp();
+  const { settings, toggleTask, updateTask, deleteTask, triggerConfetti } = useApp();
 
   return (
     <View style={styles.container}>
       <CalendarComponent
         onNavigateBack={() => router.back()}
         onNavigateSettings={() => router.push('/Settings')}
-        tasks={tasks}
         onToggleTask={toggleTask}
         colorBlindMode={settings.colorBlindMode}
         onEditTask={updateTask}

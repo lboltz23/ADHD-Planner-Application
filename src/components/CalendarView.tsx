@@ -10,7 +10,6 @@ import { ProgressCircle } from './ProgressCircle';
 import { useApp } from '../contexts/AppContext'; 
 
 interface WeeklyViewProps {
-  tasks: Task[];
   onToggleTask: (id: string) => void;
   onEditTask: (id: string, fields: { title?: string; due_date?: Date; notes?: string }) => void;
   onDeleteTask: (id: string) => void;
@@ -21,7 +20,7 @@ interface WeeklyViewProps {
   onTriggerConfetti?: () => void;
 }
 
-export function WeeklyView({ tasks, onToggleTask, onEditTask, onDeleteTask, colorBlindMode, onNavigateBack, onNavigateSettings }: WeeklyViewProps) {
+export function WeeklyView({ onToggleTask, onEditTask, onDeleteTask, colorBlindMode, onNavigateBack, onNavigateSettings }: WeeklyViewProps) {
   const screenWidth = Dimensions.get('window').width;
   const scrollViewRef = useRef<ScrollView>(null);
 
@@ -34,10 +33,10 @@ export function WeeklyView({ tasks, onToggleTask, onEditTask, onDeleteTask, colo
   const [showMonthDropdown, setShowMonthDropdown] = useState(false);
 
   
-  const { fetchTasksForMonth } = useApp();
+  const { fetchTasksForMonth, tasks } = useApp();
   const [monthTasks, setMonthTasks] = useState<Task[]>([]);
 
-  // Fetch tasks when month changes
+  // Fetch tasks when month changes or when global tasks change (toggle/edit/delete)
   useEffect(() => {
     const loadMonthTasks = async () => {
       try {
@@ -51,7 +50,7 @@ export function WeeklyView({ tasks, onToggleTask, onEditTask, onDeleteTask, colo
       }
     };
     loadMonthTasks();
-  }, [selectedMonth.year, selectedMonth.month, fetchTasksForMonth]);
+  }, [selectedMonth.year, selectedMonth.month, fetchTasksForMonth, tasks]);
   
   
   const tasksByDate = useMemo(() => {
@@ -133,11 +132,10 @@ export function WeeklyView({ tasks, onToggleTask, onEditTask, onDeleteTask, colo
     setDaysToShow(prev => prev + 7);
   };
 
-  const todayTasks = tasks.filter((task) => {
+  const todayTasks = monthTasks.filter((task) => {
     if (task.is_template) return false;
     const today = new Date();
-    const taskDate = new Date(task.due_date);
-    return taskDate.toDateString() === today.toDateString();
+    return task.due_date.toDateString() === today.toDateString();
   });
   
   const completedTodayTasks = todayTasks.filter((task) => task.completed)

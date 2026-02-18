@@ -6,6 +6,22 @@ import { supabase } from '@/lib/supabaseClient';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
 
+// Parse a date string from Supabase as a LOCAL date (avoids UTC timezone shift)
+// e.g., "2025-02-15T00:00:00+00:00" → Feb 15 local, not Feb 14
+function parseLocalDate(dateStr: string): Date {
+  const [y, m, d] = dateStr.split('T')[0].split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+// Format a local Date as "YYYY-MM-DD" without going through UTC
+// e.g., local Feb 15 → "2025-02-15", not "2025-02-14" (which toISOString might produce)
+function formatLocalDateStr(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 // Map JavaScript day numbers (0=Sunday) to Weekday names
 const DAY_NUMBER_TO_WEEKDAY: Record<number, Weekday> = {
   0: "Sunday",
@@ -57,21 +73,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Helper function to generate task instances from a recurring template
   const generateTaskInstancesFromTemplate = (template: any): Task[] => {
     if (!template.start_date) return [];
-    const startDate = new Date(template.start_date);
-    // If no end date, generate a rolling 3-month window from today
+    // Parse dates as LOCAL to avoid UTC timezone shift
+    const startDate = typeof template.start_date === 'string'
+      ? parseLocalDate(template.start_date)
+      : template.start_date;
     const endDate = template.end_date
-      ? new Date(template.end_date)
+      ? (typeof template.end_date === 'string' ? parseLocalDate(template.end_date) : template.end_date)
       : new Date(new Date().getFullYear(), new Date().getMonth() + 3, new Date().getDate());
     const daysSelected = template.days_selected as Weekday[] | undefined;
     const intervalMonths = template.recurrence_interval as number | undefined;
-    const createdAt = new Date(template.created_at);
-    const updatedAt = new Date(template.updated_at);
+    const createdAt = typeof template.created_at === 'string' ? new Date(template.created_at) : template.created_at;
+    const updatedAt = typeof template.updated_at === 'string' ? new Date(template.updated_at) : template.updated_at;
     const completedDates: string[] = template.completed_dates || [];
 
     const scheduledDays = generateScheduledDays(startDate, endDate, daysSelected, intervalMonths);
 
     return scheduledDays.map((scheduledDate) => {
-      const dateStr = scheduledDate.toISOString().split('T')[0];
+      // Use local date format to avoid UTC shift (e.g., "2025-02-15" not "2025-02-14")
+      const dateStr = formatLocalDateStr(scheduledDate);
       const isCompleted = completedDates.includes(dateStr);
 
       return {
@@ -121,15 +140,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 user_id: row.user_id,
                 created_at: new Date(row.created_at),
                 updated_at: new Date(row.updated_at),
-                due_date: new Date(row.due_date),
+                due_date: parseLocalDate(row.due_date),
                 completed: false,
                 type: row.type as Task['type'],
                 notes: row.description,
                 is_template: true,
                 days_selected: row.days_selected,
                 recurrence_interval: row.recurrence_interval,
-                start_date: new Date(row.start_date),
-                end_date: new Date(row.end_date),
+                start_date: parseLocalDate(row.start_date),
+                end_date: parseLocalDate(row.end_date),
               });
               // Generate instances from the template
               const instances = generateTaskInstancesFromTemplate(row);
@@ -142,7 +161,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 user_id: row.user_id,
                 created_at: new Date(row.created_at),
                 updated_at: new Date(row.updated_at),
-                due_date: new Date(row.due_date),
+                due_date: parseLocalDate(row.due_date),
                 completed: row.completed || false,
                 type: row.type as Task['type'],
                 notes: row.description,
@@ -217,11 +236,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         notes: notes,
         user_id: DEFAULT_USER_ID,
         is_template: true,
-        start_date: start_date ? start_date.toISOString() : null,
-        end_date: end_date ? end_date.toISOString() : null,
+        start_date: start_date ? formatLocalDateStr(start_date) : null,
+        end_date: end_date ? formatLocalDateStr(end_date) : null,
         days_selected: days_selected,
         recurrence_interval: recurrence_interval,
-        due_date: (start_date || due_date).toISOString(),
+        due_date: formatLocalDateStr(start_date || due_date),
         completed: false,
       };
 
@@ -274,7 +293,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.from('tasks').insert({
         id: newTask.id,
         title: newTask.title,
-        due_date: newTask.due_date.toISOString(),
+        due_date: formatLocalDateStr(newTask.due_date),
         completed: newTask.completed,
         type: newTask.type,
         notes: newTask.notes,
@@ -305,8 +324,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     // Check if this is a recurring task instance (has a parent_task_id)
     if (task.is_template === false && task.parent_task_id) {
-      // Extract the date from the instance ID (format: templateId_YYYY-MM-DD)
-      const dateStr = task.due_date.toISOString().split('T')[0];
+      // Extract the date as local YYYY-MM-DD (avoids UTC shift)
+      const dateStr = formatLocalDateStr(task.due_date);
 
       // Get current completed_dates from Supabase
       const { data: templateData, error: fetchError } = await supabase
@@ -379,7 +398,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // Build Supabase update payload
     const supabaseFields: Record<string, any> = {};
     if (fields.title !== undefined) supabaseFields.title = fields.title;
-    if (fields.due_date !== undefined) supabaseFields.due_date = fields.due_date.toISOString();
+    if (fields.due_date !== undefined) supabaseFields.due_date = formatLocalDateStr(fields.due_date);
     if (fields.notes !== undefined) supabaseFields.notes = fields.notes;
 
     const { error } = await supabase
@@ -408,33 +427,35 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const fetchTasksForMonth = useCallback(async (year: number, month: number): Promise<Task[]> => {
     const monthStart = new Date(year, month, 1);
-    const monthEnd = new Date(year, month + 1, 0); // Last day of the month
-    const monthStartISO = monthStart.toISOString();
-    const monthEndISO = new Date(year, month + 1, 0, 23, 59, 59).toISOString();
+    const monthEnd = new Date(year, month + 1, 0, 23, 59, 59, 999); // Last day of month, end of day
+
+    // Use local date strings for Supabase queries (padded by 1 day for safety)
+    const queryStart = formatLocalDateStr(new Date(year, month, 0)); // Day before month start
+    const queryEnd = formatLocalDateStr(new Date(year, month + 1, 1)); // Day after month end
 
     try {
-      // Fetch regular (non-template) tasks with due_date in this month
+      // Fetch regular (non-template) tasks with due_date in this month (padded)
       const { data: regularData, error: regularError } = await supabase
         .from('tasks')
         .select('*')
         .eq('user_id', DEFAULT_USER_ID)
         .eq('is_template', false)
-        .gte('due_date', monthStartISO)
-        .lte('due_date', monthEndISO);
+        .gte('due_date', queryStart)
+        .lte('due_date', queryEnd);
 
       if (regularError) {
         console.error('Error fetching regular tasks for month:', regularError);
         return [];
       }
 
-      // Fetch recurring templates whose date range overlaps with this month
+      // Fetch recurring templates whose date range overlaps with this month (padded)
       const { data: templateData, error: templateError } = await supabase
         .from('tasks')
         .select('*')
         .eq('user_id', DEFAULT_USER_ID)
         .eq('is_template', true)
-        .lte('start_date', monthEndISO)
-        .gte('end_date', monthStartISO);
+        .lte('start_date', queryEnd)
+        .gte('end_date', queryStart);
 
       if (templateError) {
         console.error('Error fetching templates for month:', templateError);
@@ -443,21 +464,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       const result: Task[] = [];
 
-      // Map regular tasks
+      // Map regular tasks, parsing dates as local and filtering precisely
       (regularData || []).forEach((row: any) => {
-        result.push({
-          id: row.id,
-          title: row.title,
-          user_id: row.user_id,
-          created_at: new Date(row.created_at),
-          updated_at: new Date(row.updated_at),
-          due_date: new Date(row.due_date),
-          completed: row.completed || false,
-          type: row.type as Task['type'],
-          notes: row.description,
-          is_template: false,
-          parent_task_id: row.parent_task_id,
-        });
+        const dueDate = parseLocalDate(row.due_date);
+        if (dueDate >= monthStart && dueDate <= monthEnd) {
+          result.push({
+            id: row.id,
+            title: row.title,
+            user_id: row.user_id,
+            created_at: new Date(row.created_at),
+            updated_at: new Date(row.updated_at),
+            due_date: dueDate,
+            completed: row.completed || false,
+            type: row.type as Task['type'],
+            notes: row.description,
+            is_template: false,
+            parent_task_id: row.parent_task_id,
+          });
+        }
       });
 
       // Generate instances from templates, filtered to this month
