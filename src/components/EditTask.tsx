@@ -6,6 +6,7 @@ import { Task, toLocalDateString } from "../types";
 import { getTaskTypeColor, getEnhancedTaskTypeColor } from "./taskColors";
 import TitleInput from "./TitleInput";
 import NoteInput from "./NoteInput";
+import { confirm } from "./Confirmation";
 
 export interface EditTaskProps {
   isOpen: boolean;
@@ -101,7 +102,12 @@ export default function EditTask({
               <View style={styles.buttonRow}>
                 <View style={styles.leftButtons}>
                   <TouchableOpacity
-                    onPress={handleDelete}
+                    onPress= {async () => {
+                      const confirmed = await confirm("Are you sure you want to delete this task?");
+                      if (confirmed) {
+                        handleDelete();
+                      }
+                    }}
                     style={[styles.button, styles.deleteButton]}
                   >
                     <Trash2 size={16} color="#ffffff" />
