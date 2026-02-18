@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, Modal, TouchableOpacity, StyleSheet, ScrollView, TextInput } from "react-native";
 import { X, Trash2, CheckCircle2, Link as LinkIcon } from "lucide-react-native";
 import { Calendar } from "react-native-calendars";
@@ -47,12 +47,47 @@ export default function EditTask({
   const [editedEndDate, setEditedEndDate] = useState(task.end_date);
   const [editedInterval, setEditedInterval] = useState(task.recurrence_interval);
   const [editedParentId, setEditedParentId] = useState(task.parent_task_id);
-  const [editiedNotes, setEditedNotes] = useState(task.notes || "");
+  const [editedNotes, setEditedNotes] = useState(task.notes || "");
   const [editedDaysSelected, setEditedDaysSelected] = useState<Weekday[]>(task.days_selected || []);
+
+  // Reset state when modal opens to reflect latest task values
+  useEffect(() => {
+    if (isOpen) {
+      setEditedTitle(task.title);
+      setEditedDate(task.due_date);
+      setEditedStartDate(task.start_date);
+      setEditedEndDate(task.end_date);
+      setEditedInterval(task.recurrence_interval);
+      setEditedParentId(task.parent_task_id);
+      setEditedNotes(task.notes || "");
+      setEditedDaysSelected(task.days_selected || []);
+    }
+  }, [isOpen]);
 
   const handleSave = () => {
     if (editedTitle.trim()) {
-      onSave(task.id, { title: editedTitle.trim(), due_date: editedDate, notes: editiedNotes, start_date: editedStartDate, end_date: editedEndDate, recurrence_interval: editedInterval, parent_id: editedParentId, days_selected: editedDaysSelected });
+      const fields: Parameters<typeof onSave>[1] = {
+        title: editedTitle.trim(),
+        due_date: editedDate,
+        notes: editedNotes,
+      };
+
+      if (task.type === "related") {
+        fields.parent_id = editedParentId;
+      }
+
+      if (task.is_template) {
+        fields.start_date = editedStartDate;
+        fields.end_date = editedEndDate;
+        if (task.type === "routine") {
+          fields.days_selected = editedDaysSelected;
+        }
+        if (task.type === "long_interval") {
+          fields.recurrence_interval = editedInterval;
+        }
+      }
+
+      onSave(task.id, fields);
       onClose();
     }
   };
@@ -106,7 +141,7 @@ export default function EditTask({
               {/* Content */}
               <View style={styles.section}>
                 <TitleInput value={editedTitle} onChange={setEditedTitle} />
-                <NoteInput value = {editiedNotes} onChange={setEditedNotes} />
+                <NoteInput value = {editedNotes} onChange={setEditedNotes} />
                 {task.type === "related" ? (
                     <RelatedTaskInput
                       tasks={tasks}

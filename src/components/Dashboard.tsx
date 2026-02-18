@@ -611,7 +611,6 @@ export function Dashboard({
                     onUpdate={onEditTask}
                     onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
-                    showDate={true}
                   />
                 ))}
               </View>
