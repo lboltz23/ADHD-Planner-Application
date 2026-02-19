@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, Modal, TouchableOpacity, StyleSheet, ScrollView, TextInput } from "react-native";
-import { X, Trash2, CheckCircle2, Link as LinkIcon } from "lucide-react-native";
+import { X, Trash2, CheckCircle2, Link as LinkIcon, Save } from "lucide-react-native";
 import { Calendar } from "react-native-calendars";
 import { Task, toLocalDateString, Weekday } from "../types";
 import { getTaskTypeColor, getEnhancedTaskTypeColor } from "./taskColors";
@@ -258,7 +258,7 @@ export default function EditTask({
                     onPress={handleToggleComplete}
                     style={[styles.button, task.completed ? styles.completeButtonActive : styles.completeButton]}
                   >
-                    <CheckCircle2 size={16} color={task.completed ? "#ffffff" : "#b4e7ce"} />
+                    <CheckCircle2 size={16} color={task.completed ? "#ffffff" : "#3bdc29"} />
                     <Text style={task.completed ? styles.completeTextActive : styles.completeText}>
                       {task.completed ? "Completed" : "Complete"}
                     </Text>
@@ -270,6 +270,7 @@ export default function EditTask({
                     onPress={handleSave}
                     style={[styles.button, styles.saveButton, { backgroundColor: getEnhancedTaskTypeColor(task.type, colorBlindMode) }]}
                   >
+                    <Save size={16} color="#ffffff" />
                     <Text style={styles.saveText}>Save</Text>
                   </TouchableOpacity>
                 </View>
@@ -359,11 +360,11 @@ const styles = StyleSheet.create({
   leftButtons: {
     flexDirection: "row",
     flex: 1,
-    gap: 12,
+    gap: 6,
   },
   rightButtons: {
     flexDirection: "row",
-    gap: 12,
+    gap: 8,
     flex: 1,
     justifyContent: "flex-end",
   },
@@ -374,7 +375,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
-    gap: 6,
+    gap: 2,
   },
   deleteButton: {
     backgroundColor: "#f85e5e",
@@ -386,14 +387,14 @@ const styles = StyleSheet.create({
   },
   completeButton: {
     borderWidth: 1,
-    borderColor: "#51da8c",
-    backgroundColor: "#ffffff",
+    borderColor: "#3bdc29",
+    backgroundColor: "#e6f9e6",
   },
   completeButtonActive: {
-    backgroundColor: "#51da8c",
+    backgroundColor: "#3bdc29",
   },
   completeText: {
-    color: "#51da8c",
+    color: "#3bdc29",
     fontWeight: "600",
     fontSize: 14,
   },
@@ -409,13 +410,14 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "600",
     fontSize: 14,
+    marginLeft: 4,
   },
   parentTaskRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 6,
     marginTop: 8,
-    padding: 10,
+    padding: 8,
     backgroundColor: "#fef9fc",
     borderWidth: 1,
     borderColor: "#ffc9d4",
