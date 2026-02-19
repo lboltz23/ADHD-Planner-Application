@@ -168,15 +168,15 @@ export default function EditTask({
                       markedDates={{
                         [getDateString(editedDate)]: {
                           selected: true,
-                          selectedColor: "#b8a4d9",
+                          selectedColor: colorBlindMode ? "#33BBEE" : "#b8a4d9",
                         }
                       }}
                       minDate={toLocalDateString(new Date())}
                       theme={{
-                        todayTextColor: "#a8d8ea",
-                        arrowColor: "#a8d8ea",
+                        todayTextColor: colorBlindMode ? "#33BBEE" : "#a8d8ea",
+                        arrowColor: colorBlindMode ? "#33BBEE" : "#a8d8ea",
                       }}
-                      style={styles.calendar}
+                      style={[styles.calendar, { borderColor: getAppColors(colorBlindMode).border }]}
                     />
                   </>
                 ) : null}
