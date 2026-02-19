@@ -93,14 +93,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 12,
-    marginBottom: 12,
+    marginBottom: 28,
   },
   dateInputContainer: {
     flex: 1,
     minWidth: 120,
   },
   label: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "600",
     marginBottom: 8,
   },

@@ -19,6 +19,7 @@ import InfoPopup from './Info';
 import { AppThemeColors, resolveThemePreference } from '../constants/theme';
 import { useColorScheme } from '../hooks/use-color-scheme';
 import { useFocusEffect } from 'expo-router';
+import { getAppColors } from '../constants/theme';
 
 // Dashboard Props
 interface DashboardProps {
@@ -252,14 +253,14 @@ export function Dashboard({
       alignItems: 'center',
     },
     iconButton: {
-      backgroundColor: colors.surfaceMuted,
+      backgroundColor: settings.colorBlindMode ? "#EBEBEB":'#f2ecfa',
       padding: 10,
       borderRadius: 8,
     },
     mainButton: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: colors.accent,
+      backgroundColor: settings.colorBlindMode ? '#EE3377' : '#b8a4d9',
       paddingVertical: 10,
       paddingHorizontal: 14,
       borderRadius: 8,
@@ -300,27 +301,27 @@ export function Dashboard({
       padding: 16,
       marginBottom: 20,
       borderWidth: 1,
-      borderColor: colors.border,
+      borderColor: getAppColors(settings.colorBlindMode).border,
     },
     progressLabel: {
       fontSize: 16,
       fontWeight: '600',
-      color: colors.heading,
+      color: settings.colorBlindMode ? '#3D3D3D' : '#6b5b7f',
       marginBottom: 4,
     },
     progressSub: {
       fontSize: 13,
-      color: colors.textMuted,
+      color: settings.colorBlindMode ? '#3D3D3D' :'#8e7fb2',
       marginBottom: 12,
     },
     progressBarBackground: {
-      backgroundColor: isDark ? '#2f374a' : '#e0d7f5',
+      backgroundColor: settings.colorBlindMode ? '#88CCEE' : '#e0d7f5',
       height: 8,
       borderRadius: 4,
       overflow: 'hidden',
     },
     progressBarFill: {
-      backgroundColor: colors.accent,
+      backgroundColor: settings.colorBlindMode ? '#33BBEE' : '#b8a4d9',
       height: '100%',
     },
     addTaskCard: {
@@ -336,7 +337,7 @@ export function Dashboard({
       flex: 1,
       backgroundColor: colors.inputBackground,
       borderWidth: 1,
-      borderColor: colors.border,
+      borderColor: getAppColors(settings.colorBlindMode).border,
       borderRadius: 8,
       paddingHorizontal: 12,
       paddingVertical: 8,
@@ -344,7 +345,7 @@ export function Dashboard({
       color: colors.text,
     },
     addButton: {
-      backgroundColor: colors.accentSoft,
+      backgroundColor: settings.colorBlindMode ? "#757575" : "#96d7efff",
       borderRadius: 6,
       padding: 8,
       justifyContent: 'center',
@@ -359,12 +360,12 @@ export function Dashboard({
     sectionTitle: {
       fontSize: 18,
       fontWeight: '600',
-      color: colors.heading,
+      color: getAppColors(settings.colorBlindMode).primary,
       marginBottom: 12,
     },
     noTasksMessage: {
       textAlign: 'center',
-      color: colors.textMuted,
+      color: getAppColors(settings.colorBlindMode).placeholder,
       fontSize: 14,
       paddingVertical: 16,
     },
@@ -375,7 +376,7 @@ export function Dashboard({
       backgroundColor: colors.surface,
       borderRadius: 8,
       borderWidth: 1,
-      borderColor: colors.border,
+      borderColor: getAppColors(settings.colorBlindMode).border,
       padding: 10,
       marginBottom: 20,
     },
@@ -443,7 +444,7 @@ export function Dashboard({
                 style={styles.iconButton}
                 onPress={onNavigateToSettings}
               >
-                <Settings size={22} color={colors.accent} />
+                <Settings size={22} color= {settings.colorBlindMode? "#757575" : {colors.accent}} />
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.mainButton}

@@ -62,10 +62,10 @@ export default function RelatedTaskInput({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 12,
+    marginBottom: 18,
   },
   label: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "600",
     marginBottom: 8,
   },

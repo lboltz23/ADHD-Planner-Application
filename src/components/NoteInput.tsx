@@ -42,13 +42,7 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: AppColors.inputBackground,
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderColor: AppColors.border,
-    borderWidth: 1,
-    paddingBottom: 4,
+    marginBottom: 16,
   },
   label: {
     fontSize: 18,

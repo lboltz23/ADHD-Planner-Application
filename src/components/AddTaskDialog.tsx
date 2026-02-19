@@ -181,7 +181,7 @@ export default function AddTaskDialog({
               </TouchableOpacity>
             </View>
             {initialTaskType === "basic" && (
-              <View style={[styles.section, { backgroundColor: getAppColors(colorBlindMode).sectionBorder }]}>
+              <View style={[styles.section, { borderColor: getAppColors(colorBlindMode).sectionBorder }]}>
                 <TitleInput value={taskTitle} onChange={handleInputChange} colorBlindMode={colorBlindMode} />
                 <NoteInput value={notes} onChange={setNotes} colorBlindMode={colorBlindMode} />
                 <TimePicker time = {editedTime} onTimeChange={setEditedTime}/>
@@ -253,7 +253,7 @@ export default function AddTaskDialog({
                   onSelect={setParentTaskId}
                   colorBlindMode={colorBlindMode}
                 />
-                <Text style={styles.label}>Select Date: </Text>
+                <Text style={[styles.label, { color: getAppColors(colorBlindMode).primary }]}>Select Date *</Text>
                 <Calendar
                   onDayPress={(day) => setSelectedDate(day.dateString)}
                   markedDates={
@@ -281,16 +281,17 @@ export default function AddTaskDialog({
                   endDate={endDate}
                   onStartDateChange={setStartDate}
                   onEndDateChange={setEndDate}
+                  colorBlindMode={colorBlindMode}
                 />
 
                 <View style={styles.inputRow}>
-                  <Text style={styles.label}>Interval(months): </Text>
+                  <Text style={[styles.label, { color: getAppColors(colorBlindMode).primary }]}>Interval (months):</Text>
                   <TextInput
-                    style={styles.dateInput}
+                    style={[styles.dateInput, { backgroundColor: getAppColors(colorBlindMode).inputBackground, borderColor: getAppColors(colorBlindMode).border, color: getAppColors(colorBlindMode).primary }]}
                     value={intervalMonths}
                     onChangeText={setIntervalMonths}
                     placeholder="e.g., 3"
-                    placeholderTextColor="#999"
+                    placeholderTextColor={getAppColors(colorBlindMode).placeholder}
                     keyboardType="numeric"
                   />
                 </View>
@@ -298,8 +299,8 @@ export default function AddTaskDialog({
             )}
             {/* Action Buttons */}
             <View style={styles.buttonRow}>
-              <TouchableOpacity onPress={handleClose} style={[styles.button, styles.cancelButton]}>
-                <Text style={styles.cancelText}>Cancel</Text>
+              <TouchableOpacity onPress={handleClose} style={[styles.button, styles.cancelButton, { backgroundColor: getAppColors(colorBlindMode).inputBackground, borderColor: getAppColors(colorBlindMode).border }]}>
+                <Text style={[styles.cancelText, {color: getAppColors(colorBlindMode).primary}]}>Cancel</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -344,7 +345,7 @@ const styles = StyleSheet.create({
   calendar: {
     borderRadius: 8,
     borderWidth: 1,
-    marginBottom: 16,
+    marginBottom: 6,
   },
   header: {
     flexDirection: "row",
@@ -371,11 +372,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 3,
     borderRadius: 8,
-    borderColor: "#e5d9f2",
     padding: 12,
   },
   label: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "600",
     marginBottom: 8,
   },
@@ -385,14 +385,12 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   dateInput: {
-    backgroundColor: "#f8f6fb",
     borderWidth: 1,
-    borderColor: "#e5d9f2",
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 14,
-    color: "#6b5b7f",
+    marginLeft: 8,
   },
   frequencyRow: {
     flexDirection: "row",
@@ -408,21 +406,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#e5d9f2",
-    backgroundColor: "#f8f6fb",
     alignItems: "center",
   },
   frequencyButtonActive: {
-    backgroundColor: "#b8a4d9",
-    borderColor: "#b8a4d9",
+    // backgroundColor set dynamically based on colorBlindMode,
   },
   frequencyText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#6b5b7f",
   },
   frequencyTextActive: {
-    color: "#ffffff",
+    // color set dynamically based on colorBlindMode
   },
   buttonRow: {
     flexDirection: "row",
@@ -437,11 +431,8 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     borderWidth: 1,
-    borderColor: "#e5d9f2",
-    backgroundColor: "#f8f6fb",
   },
   cancelText: {
-    color: "#6b5b7f",
     fontWeight: "600",
     fontSize: 14,
   },
