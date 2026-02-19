@@ -82,13 +82,6 @@ export const AppColors = {
   sectionBorder: "#e5d9f2",
 } as const;
 
-export const  AppColorsColorBlind = {
-  primary: "#3D3D3D",
-  border: "#A0A0A0",
-  inputBackground: "#FAFAFA",
-  placeholder: "#757575",
-  sectionBorder: "#D6D6D6",
-} as const;
 
 export const AppColorsDark = {
   primary: "#e6e9f2",
@@ -102,8 +95,9 @@ export const AppColorsDark = {
 export const  AppColorsColorBlind = {
   primary: "#3D3D3D",
   border: "#A0A0A0",
-  inputBackground: "#F5F5F5",
+  inputBackground: "#FAFAFA",
   placeholder: "#757575",
+  sectionBorder: "#D6D6D6",
 } as const;
 
 export function getAppColors(colorBlindMode: boolean, isDarkMode: boolean) {
