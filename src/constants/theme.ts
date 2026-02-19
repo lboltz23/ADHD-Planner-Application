@@ -81,6 +81,18 @@ export const AppColors = {
   placeholder: "#999",
 } as const;
 
+
+export const  AppColorsColorBlind = {
+  primary: "#3D3D3D",
+  border: "#A0A0A0",
+  inputBackground: "#F5F5F5",
+  placeholder: "#757575",
+} as const;
+
+export function getAppColors(colorBlindMode: boolean) {
+  return colorBlindMode ? AppColorsColorBlind : AppColors;
+}
+
 export const Fonts = Platform.select({
   ios: {
     /** iOS `UIFontDescriptorSystemDesignDefault` */

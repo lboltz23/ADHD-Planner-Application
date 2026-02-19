@@ -2,17 +2,20 @@ import React from "react";
 import { View, Text, TextInput, StyleSheet } from "react-native";
 import { Pencil } from "lucide-react-native";
 import { AppColors } from "../constants/theme";
+import { getAppColors } from "../constants/theme";
 
 interface NoteInputProps {
   value: string;
   onChange: (text: string) => void;
   placeholder?: string;
+  colorBlindMode?: boolean;
 }
 
 export default function NoteInput({
   value,
   onChange,
   placeholder = "Enter notes here...",
+  colorBlindMode = false,
 }: NoteInputProps) {
   return (
     <View style={styles.container}>
@@ -21,13 +24,13 @@ export default function NoteInput({
       <Pencil size={16} color={AppColors.primary} style={styles.icon} />
 
       <TextInput
-        style={styles.input}
+        style={[styles.input, { backgroundColor: getAppColors(colorBlindMode).inputBackground, borderColor: getAppColors(colorBlindMode).border, color: getAppColors(colorBlindMode).primary }]}
         onChangeText={onChange}
         value={value}
         placeholder={placeholder}
-        placeholderTextColor={AppColors.placeholder}
+        placeholderTextColor={getAppColors(colorBlindMode).placeholder}
       />
-    </View>
+      <Pencil size={16} color={getAppColors(colorBlindMode).primary} style={styles.icon} />
     </View>
   );
 }
@@ -56,9 +59,11 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontSize: 16,
-    color: AppColors.primary,
-    paddingVertical: 6,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
   },
   icon: {
     marginRight: 6,

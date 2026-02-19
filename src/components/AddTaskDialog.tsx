@@ -10,6 +10,7 @@ import DateRangePicker from "./DateRangePicker";
 import RelatedTaskInput from "./RelatedTask";
 import NoteInput from "./NoteInput";
 import TimePicker from "./TimeInput";
+import { getAppColors } from "../constants/theme";
 
 const ALL_WEEKDAYS: Weekday[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const WEEKDAY_ABBREVIATIONS: Record<Weekday, string> = {
@@ -38,8 +39,8 @@ export default function AddTaskDialog({
   onAddTask,
   initialTaskType,
   initialTitle = "",
-  colorBlindMode = false,
   tasks = [],
+  colorBlindMode = false,
 }: AddTaskDialogProps) {
   const [taskTitle, setTaskTitle] = useState(initialTitle);
   const [selectedDate, setSelectedDate] = useState("");
@@ -174,31 +175,31 @@ export default function AddTaskDialog({
               >
                 <Plus color="white" size={20} />
               </LinearGradient>
-              <Text style={styles.title}>Create New Task</Text>
+              <Text style={[styles.title, { color: getAppColors(colorBlindMode).primary }]}>Create New Task</Text>
               <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-                <X size={24} color="#6b5b7f" />
+                <X size={24} color={getAppColors(colorBlindMode).primary} />
               </TouchableOpacity>
             </View>
             {initialTaskType === "basic" && (
               <View style={styles.section}>
-                <TitleInput value={taskTitle} onChange={handleInputChange} />
-                <NoteInput value={notes} onChange={setNotes} />
+                <TitleInput value={taskTitle} onChange={handleInputChange} colorBlindMode={colorBlindMode} />
+                <NoteInput value={notes} onChange={setNotes} colorBlindMode={colorBlindMode} />
                 <TimePicker time = {editedTime} onTimeChange={setEditedTime}/>
-                <Text style={styles.label}>Select Date: </Text>
+                <Text style={[styles.label, { color: getAppColors(colorBlindMode).primary }]}>Select Date: </Text>
                 {/* Calendar */}
                 <Calendar
                   onDayPress={(day) => setSelectedDate(day.dateString)}
                   markedDates={
                     selectedDate
-                      ? { [selectedDate]: { selected: true, selectedColor: "#b8a4d9" } }
+                      ? { [selectedDate]: { selected: true, selectedColor: colorBlindMode ? "#33BBEE" : "#b8a4d9" } }
                       : {}
                   }
                   minDate={toLocalDateString(new Date())}
                   theme={{
-                    todayTextColor: "#a8d8ea",
-                    arrowColor: "#a8d8ea",
+                    todayTextColor: colorBlindMode ? "#33BBEE" : "#a8d8ea",
+                    arrowColor: colorBlindMode ? "#33BBEE" :"#a8d8ea",
                   }}
-                  style={styles.calendar}
+                  style={[styles.calendar, { borderColor: getAppColors(colorBlindMode).border }]}
                 />
               </View>
             )}
