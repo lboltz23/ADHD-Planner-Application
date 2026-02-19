@@ -6,6 +6,7 @@ import { Task, toLocalDateString } from "../types";
 import { getTaskTypeColor, getEnhancedTaskTypeColor } from "./taskColors";
 import TitleInput from "./TitleInput";
 import NoteInput from "./NoteInput";
+import { getAppColors } from "../constants/theme";
 
 export interface EditTaskProps {
   isOpen: boolean;
@@ -70,31 +71,31 @@ export default function EditTask({
               {/* Header */}
               <View style={styles.header}>
                 <View style={[styles.typeIndicator, { backgroundColor: typeColor }]} />
-                <Text style={styles.title}>Edit Task</Text>
+                <Text style={[styles.title, { color: getAppColors(colorBlindMode).primary }]}>Edit Task</Text>
                 <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                  <X size={24} color="#6b5b7f" />
+                  <X size={24} color={getAppColors(colorBlindMode).primary} />
                 </TouchableOpacity>
               </View>
 
               {/* Content */}
-              <View style={styles.section}>
-                <TitleInput value={editedTitle} onChange={setEditedTitle} />
-                <NoteInput value = {editiedNotes} onChange={setEditedNotes} />
-                <Text style={styles.label}>Due Date</Text>
+              <View style={[styles.section, { borderColor: getAppColors(colorBlindMode).sectionBorder }]}>
+                <TitleInput value={editedTitle} onChange={setEditedTitle} colorBlindMode={colorBlindMode} />
+                <NoteInput value = {editiedNotes} onChange={setEditedNotes} colorBlindMode={colorBlindMode} />
+                <Text style={[styles.label, { color: getAppColors(colorBlindMode).primary }]}>Due Date</Text>
                 <Calendar
                   onDayPress={handleDateSelect}
                   markedDates={{
                     [getDateString(editedDate)]: {
                       selected: true,
-                      selectedColor: "#b8a4d9",
+                      selectedColor: colorBlindMode ? "#33BBEE" : "#b8a4d9",
                     }
                   }}
                   minDate={toLocalDateString(new Date())}
                   theme={{
-                    todayTextColor: "#a8d8ea",
-                    arrowColor: "#a8d8ea",
+                    todayTextColor: colorBlindMode ? "#33BBEE" : "#a8d8ea",
+                    arrowColor: colorBlindMode ? "#33BBEE" : "#a8d8ea",
                   }}
-                  style={styles.calendar}
+                  style={[styles.calendar, { borderColor: getAppColors(colorBlindMode).border }]}
                 />
                 </View>
               {/* Action Buttons */}
@@ -184,9 +185,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   label: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "600",
-    color: "#6b5b7f",
     marginBottom: 8,
     marginTop: 12,
   },
@@ -242,14 +242,14 @@ const styles = StyleSheet.create({
   },
   completeButton: {
     borderWidth: 1,
-    borderColor: "#b4e7ce",
+    borderColor: "#51da8c",
     backgroundColor: "#ffffff",
   },
   completeButtonActive: {
-    backgroundColor: "#74f2ab",
+    backgroundColor: "#51da8c",
   },
   completeText: {
-    color: "#4a9d7a",
+    color: "#51da8c",
     fontWeight: "600",
     fontSize: 14,
   },
