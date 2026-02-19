@@ -1,30 +1,33 @@
 import React from "react";
 import { View, Text, TextInput, StyleSheet } from "react-native";
 import { Pencil } from "lucide-react-native";
-import { AppColors } from "../constants/theme";
+import { getAppColors } from "../constants/theme";
+
 
 interface TitleInputProps {
   value: string;
   onChange: (text: string) => void;
   placeholder?: string;
+  colorBlindMode?: boolean;
 }
 
 export default function TitleInput({
   value,
   onChange,
+  colorBlindMode = false,
   placeholder = "Enter task title",
 }: TitleInputProps) {
   return (
     <View style={styles.inputRow}>
-      <Text style={styles.label}>Title: *</Text>
+      <Text style={[styles.label, { color: getAppColors(colorBlindMode).primary }]}>Title: *</Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, { backgroundColor: getAppColors(colorBlindMode).inputBackground, borderColor: getAppColors(colorBlindMode).border, color: getAppColors(colorBlindMode).primary }]}
         onChangeText={onChange}
         value={value}
         placeholder={placeholder}
-        placeholderTextColor={AppColors.placeholder}
+        placeholderTextColor={getAppColors(colorBlindMode).placeholder}
       />
-      <Pencil size={16} color={AppColors.primary} style={styles.icon} />
+      <Pencil size={16} color={getAppColors(colorBlindMode).primary} style={styles.icon} />
     </View>
   );
 }
@@ -38,21 +41,17 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 20,
     fontWeight: "600",
-    color: AppColors.primary,
     marginBottom: 4,
     textAlign: "left",
     marginRight: 8,
   },
   input: {
     flex: 1,
-    backgroundColor: AppColors.inputBackground,
     borderWidth: 1,
-    borderColor: AppColors.border,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 14,
-    color: AppColors.primary,
   },
   icon: {
     marginLeft: 8,

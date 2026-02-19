@@ -156,7 +156,7 @@ export function TaskCard({
           >
             <CheckCircle2
               size={20}
-              color={task.completed ? "#b4e7ce" : "#e5d9f2"}
+              color={task.completed ? "#228833" : "#A0A0A0"}
             />
           </TouchableOpacity>
 
