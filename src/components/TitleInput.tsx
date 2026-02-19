@@ -25,14 +25,14 @@ export default function TitleInput({
       <View style={[styles.inputRow, { backgroundColor: getAppColors(colorBlindMode, isDarkMode).inputBackground, borderColor: getAppColors(colorBlindMode, isDarkMode).border }]}>
       <Pencil size={16} color={getAppColors(colorBlindMode, isDarkMode).primary} style={styles.icon} />
       <TextInput
-        style={[styles.input, {  color: getAppColors(colorBlindMode, isDarkMode).primary }]}
+        style={[[styles.input, {  color: getAppColors(colorBlindMode, isDarkMode).primary }], { backgroundColor: getAppColors(colorBlindMode, isDarkMode).inputBackground, borderColor: getAppColors(colorBlindMode).border, color: getAppColors(colorBlindMode).primary }]}
         onChangeText={onChange}
         value={value}
         placeholder={placeholder}
         placeholderTextColor={getAppColors(colorBlindMode, isDarkMode).placeholder}
         underlineColorAndroid="transparent"
       />
-    </View>
+      <Pencil size={16} color={getAppColors(colorBlindMode, isDarkMode).primary} style={styles.icon} />
     </View>
   );
 }
@@ -52,12 +52,17 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 18,
     fontWeight: "600",
-    marginBottom: 6,
+    marginBottom: 4,
+    textAlign: "left",
+    marginRight: 8,
   },
   input: {
     flex: 1,
-    fontSize: 16,
-    paddingVertical: 6,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
   },
   icon: {
     marginRight: 6,
