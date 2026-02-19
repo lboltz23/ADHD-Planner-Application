@@ -1,7 +1,6 @@
 import React from "react";
 import { View, Text, TextInput, StyleSheet } from "react-native";
 import { Pencil } from "lucide-react-native";
-import { AppColors } from "../constants/theme";
 import { getAppColors } from "../constants/theme";
 
 interface NoteInputProps {

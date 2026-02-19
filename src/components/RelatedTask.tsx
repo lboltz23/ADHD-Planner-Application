@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { AppColors } from "../constants/theme";
+import { getAppColors } from "../constants/theme";
 import { Dropdown } from "react-native-element-dropdown";
 import { Task } from "../types";
 
@@ -8,12 +8,14 @@ interface RelatedTaskInputProps {
   tasks: Task[];
   selectedTaskId: string;
   onSelect: (taskId: string) => void;
+  colorBlindMode?: boolean;
 }
 
 export default function RelatedTaskInput({
   tasks,
   selectedTaskId,
   onSelect,
+  colorBlindMode = false,
 }: RelatedTaskInputProps) {
   const selectableTasks = tasks.filter((task) => {
     // Hide completed tasks
@@ -30,9 +32,9 @@ export default function RelatedTaskInput({
   if (selectableTasks.length === 0) {
     return (
       <View style={styles.container}>
-        <Text style={styles.label}>Related To:</Text>
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyText}>
+        <Text style={[styles.label, { color: getAppColors(colorBlindMode).primary }]}>Related To:</Text>
+        <View style={[styles.emptyState, { backgroundColor: getAppColors(colorBlindMode).inputBackground, borderColor: getAppColors(colorBlindMode).border }]}>
+          <Text style={[styles.emptyText, { color: getAppColors(colorBlindMode).placeholder }]}>
             No tasks available. Create a task first to link to.
           </Text>
         </View>
@@ -44,9 +46,9 @@ export default function RelatedTaskInput({
     <View style={styles.container}>
       <Text style={styles.label}>Related To:</Text>
       <Dropdown
-        style={styles.dropdown}
-        placeholderStyle={styles.placeholderText}
-        selectedTextStyle={styles.selectedText}
+        style={[styles.dropdown, { backgroundColor: getAppColors(colorBlindMode).inputBackground, borderColor: getAppColors(colorBlindMode).border }]}
+        placeholderStyle={[styles.placeholderText, { color: getAppColors(colorBlindMode).placeholder }]}
+        selectedTextStyle={[styles.selectedText, { color: getAppColors(colorBlindMode).primary }]}
         data={selectableTasks}
         labelField="title"
         valueField="id"
@@ -65,35 +67,27 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: "600",
-    color: AppColors.primary,
     marginBottom: 8,
   },
   dropdown: {
-    backgroundColor: AppColors.inputBackground,
     borderWidth: 1,
-    borderColor: AppColors.border,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
   placeholderText: {
     fontSize: 14,
-    color: AppColors.placeholder,
   },
   selectedText: {
     fontSize: 14,
-    color: AppColors.primary,
   },
   emptyState: {
-    backgroundColor: AppColors.inputBackground,
     borderWidth: 1,
-    borderColor: AppColors.border,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 14,
   },
   emptyText: {
     fontSize: 14,
-    color: AppColors.placeholder,
   },
 });

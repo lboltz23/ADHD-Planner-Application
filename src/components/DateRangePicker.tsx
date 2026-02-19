@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-import { AppColors } from "../constants/theme";
+import { getAppColors } from "../constants/theme";
 
 interface DateRangePickerProps {
   startDate: Date | null;
@@ -10,6 +10,7 @@ interface DateRangePickerProps {
   onEndDateChange: (date: Date) => void;
   startLabel?: string;
   endLabel?: string;
+  colorBlindMode?: boolean;
 }
 
 export default function DateRangePicker({
@@ -19,6 +20,7 @@ export default function DateRangePicker({
   onEndDateChange,
   startLabel = "Start Date: ",
   endLabel = "End Date: ",
+  colorBlindMode = false,
 }: DateRangePickerProps) {
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
@@ -35,12 +37,12 @@ export default function DateRangePicker({
   return (
     <View style={styles.dateInputRow}>
       <View style={styles.dateInputContainer}>
-        <Text style={styles.label}>{startLabel}</Text>
+        <Text style={[styles.label, { color: getAppColors(colorBlindMode).primary }]}>{startLabel}</Text>
         <TouchableOpacity
-          style={styles.dateInput}
+          style={[styles.dateInput, {backgroundColor: getAppColors(colorBlindMode).inputBackground, borderColor: getAppColors(colorBlindMode).border }]}
           onPress={() => setShowStartPicker(true)}
         >
-          <Text style={startDate ? styles.dateText : styles.datePlaceholder}>
+          <Text style={startDate ? [styles.dateText, { color: getAppColors(colorBlindMode).primary }] : [styles.datePlaceholder, {color: getAppColors(colorBlindMode).placeholder }]}>
             {formatDate(startDate)}
           </Text>
         </TouchableOpacity>
@@ -59,12 +61,12 @@ export default function DateRangePicker({
         />
       </View>
       <View style={styles.dateInputContainer}>
-        <Text style={styles.label}>{endLabel}</Text>
+        <Text style={[styles.label, { color: getAppColors(colorBlindMode).primary }]}>{endLabel}</Text>
         <TouchableOpacity
-          style={styles.dateInput}
+          style={[styles.dateInput, {backgroundColor: getAppColors(colorBlindMode).inputBackground, borderColor: getAppColors(colorBlindMode).border }]}
           onPress={() => setShowEndPicker(true)}
         >
-          <Text style={endDate ? styles.dateText : styles.datePlaceholder}>
+          <Text style={endDate ? [styles.dateText, { color: getAppColors(colorBlindMode).primary }] : [styles.datePlaceholder, {color: getAppColors(colorBlindMode).placeholder }]}>
             {formatDate(endDate)}
           </Text>
         </TouchableOpacity>
@@ -100,23 +102,18 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: "600",
-    color: AppColors.primary,
     marginBottom: 8,
   },
   dateInput: {
-    backgroundColor: AppColors.inputBackground,
     borderWidth: 1,
-    borderColor: AppColors.border,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
   dateText: {
     fontSize: 14,
-    color: AppColors.primary,
   },
   datePlaceholder: {
     fontSize: 14,
-    color: AppColors.placeholder,
   },
 });
