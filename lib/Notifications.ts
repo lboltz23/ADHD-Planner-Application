@@ -5,25 +5,14 @@ export async function requestNotificationPermission() {
   return status === "granted";
 }
 
-export async function scheduleTestNotification() {
-  await Notifications.scheduleNotificationAsync({
-    content: {
-      title: "Task Reminder",
-      body: "Time to complete your task!",
-    },
-    trigger: {
-      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-      seconds: 5,
-      repeats: false,
-    },
-  });
-}
 
-export async function scheduleTimedNotification(title:string,body:string,seconds:number) {
+// Local Notifications
+export async function scheduleTimedNotification(title:string,body:string,seconds:number,sound:boolean) {
   await Notifications.scheduleNotificationAsync({
     content: {
       title: title,
       body: body,
+      sound: sound
     },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
@@ -32,6 +21,7 @@ export async function scheduleTimedNotification(title:string,body:string,seconds
     },
   });
 }
+
 
 export async function disableNotifications() {
   await Notifications.cancelAllScheduledNotificationsAsync();

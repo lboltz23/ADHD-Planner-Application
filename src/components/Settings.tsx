@@ -18,7 +18,7 @@ import {
 } from 'lucide-react-native';
 import Slider  from '@react-native-community/slider';
 import * as Notifications from "expo-notifications";
-import { disableNotifications, requestNotificationPermission,scheduleTestNotification } from '@/lib/Notifications';
+import { disableNotifications, requestNotificationPermission,scheduleTimedNotification} from '@/lib/Notifications';
 
 export interface SettingsData {
   defaultTimerMinutes: number;
@@ -393,7 +393,7 @@ export function Settings({
               value={settings.notifications}
               onValueChange={(checked) =>
                 {
-                  scheduleTestNotification()
+                  scheduleTimedNotification("Test", "Testing Notifications",1,settings.soundEnabled);
                 }
               }
               trackColor={{ false: '#e5d9f2', true: '#ffc9d4' }}
