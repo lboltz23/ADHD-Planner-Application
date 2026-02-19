@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
   calendar: {
     borderRadius: 8,
     borderWidth: 1,
-    marginBottom: 16,
+    marginBottom: 6,
   },
   header: {
     flexDirection: "row",
