@@ -34,6 +34,7 @@ export interface EditTaskProps {
   onToggle: (id: string) => void;
   colorBlindMode?: boolean;
   isDarkMode?: boolean;
+  isDarkMode?: boolean;
 }
 
 export default function EditTask({
