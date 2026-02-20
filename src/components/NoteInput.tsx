@@ -8,6 +8,7 @@ interface NoteInputProps {
   onChange: (text: string) => void;
   placeholder?: string;
   colorBlindMode?: boolean;
+  isDarkMode?: boolean;
 }
 
 export default function NoteInput({
@@ -15,18 +16,19 @@ export default function NoteInput({
   onChange,
   placeholder = "Enter notes here...",
   colorBlindMode = false,
+  isDarkMode = false,
 }: NoteInputProps) {
   return (
     <View style={styles.inputRow}>
-      <Text style={[styles.label, { color: getAppColors(colorBlindMode).primary }]}>Notes: </Text>
+      <Text style={[styles.label, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Notes: </Text>
       <TextInput
-        style={[styles.input, { backgroundColor: getAppColors(colorBlindMode).inputBackground, borderColor: getAppColors(colorBlindMode).border, color: getAppColors(colorBlindMode).primary }]}
+        style={[styles.input, { backgroundColor: getAppColors(colorBlindMode, isDarkMode).inputBackground, borderColor: getAppColors(colorBlindMode, isDarkMode).border, color: getAppColors(colorBlindMode, isDarkMode).primary }]}
         onChangeText={onChange}
         value={value}
         placeholder={placeholder}
-        placeholderTextColor={getAppColors(colorBlindMode).placeholder}
+        placeholderTextColor={getAppColors(colorBlindMode, isDarkMode).placeholder}
       />
-      <Pencil size={16} color={getAppColors(colorBlindMode).primary} style={styles.icon} />
+      <Pencil size={16} color={getAppColors(colorBlindMode, isDarkMode).primary} style={styles.icon} />
     </View>
   );
 }

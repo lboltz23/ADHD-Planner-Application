@@ -276,6 +276,7 @@ export function WeeklyView({ tasks, onToggleTask, onEditTask, onDeleteTask, colo
                         onUpdate={onEditTask}
                         onDelete={onDeleteTask}
                         colorBlindMode={!!colorBlindMode}
+                        isDarkMode={isDark}
                       />
                     ))
                   )}
