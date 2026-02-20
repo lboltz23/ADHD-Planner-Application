@@ -317,9 +317,13 @@ const styles = StyleSheet.create({
   },
   section: {
     marginBottom: 16,
+    borderWidth: 3,
+    borderRadius: 8,
+    borderColor: "#e5d9f2",
+    padding: 12,
   },
   label: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "600",
     color: "#6b5b7f",
     marginBottom: 8,

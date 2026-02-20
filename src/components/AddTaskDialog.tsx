@@ -178,7 +178,7 @@ export default function AddTaskDialog({
               <View style={styles.section}>
                 <TitleInput value={taskTitle} onChange={handleInputChange} />
                 <NoteInput value={notes} onChange={setNotes} />
-                <Text style={styles.label}>Select Date *</Text>
+                <Text style={styles.label}>Select Date: </Text>
                 {/* Calendar */}
                 <Calendar
                   onDayPress={(day) => setSelectedDate(day.dateString)}
@@ -208,7 +208,7 @@ export default function AddTaskDialog({
                   onEndDateChange={setEndDate}
                 />
 
-                <Text style={styles.label}>Repeat On (select days) *</Text>
+                <Text style={styles.label}>Repeat On (select days): </Text>
                 <View style={styles.frequencyRow}>
                   {ALL_WEEKDAYS.map((day) => (
                     <TouchableOpacity
@@ -242,7 +242,7 @@ export default function AddTaskDialog({
                   selectedTaskId={parentTaskId}
                   onSelect={setParentTaskId}
                 />
-                <Text style={styles.label}>Select Date *</Text>
+                <Text style={styles.label}>Select Date: </Text>
                 <Calendar
                   onDayPress={(day) => setSelectedDate(day.dateString)}
                   markedDates={
@@ -272,7 +272,7 @@ export default function AddTaskDialog({
                 />
 
                 <View style={styles.inputRow}>
-                  <Text style={styles.label}>Interval (months):</Text>
+                  <Text style={styles.label}>Interval(months): </Text>
                   <TextInput
                     style={styles.dateInput}
                     value={intervalMonths}
@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
   dialog: {
     backgroundColor: "white",
     borderRadius: 16,
-    padding: 20,
+    padding: 18,
     width: "100%",
     maxWidth: 400,
     minHeight: 350,
@@ -437,7 +437,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   createButton: {
-    // backgroundColor set dynamically based on task type
+    // backgroundColor is set dynamically based on task type
   },
   createText: {
     color: "white",
