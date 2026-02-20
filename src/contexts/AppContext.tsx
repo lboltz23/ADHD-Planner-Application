@@ -138,7 +138,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
               if (!overridesByTemplate.has(row.parent_task_id)) {
                 overridesByTemplate.set(row.parent_task_id, new Map());
               }
-              const dateStr = row.due_date ? toLocalDateString(new Date(row.due_date)) : '';
+              const dateStr = row.due_date ? toLocalDateString(parseLocalDate(row.due_date)) : '';
               overridesByTemplate.get(row.parent_task_id)!.set(dateStr, row);
             }
           });
@@ -182,7 +182,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                     user_id: override.user_id,
                     created_at: new Date(override.created_at),
                     updated_at: new Date(override.updated_at),
-                    due_date: new Date(override.due_date),
+                    due_date: parseLocalDate(override.due_date),
                     completed: override.completed || false,
                     type: override.type as Task['type'],
                     notes: override.notes,

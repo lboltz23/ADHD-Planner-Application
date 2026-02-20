@@ -40,25 +40,22 @@ export function WeeklyView({ onToggleTask, onEditTask, onDeleteTask, colorBlindM
   const [daysToShow, setDaysToShow] = useState(7);
   const [showMonthDropdown, setShowMonthDropdown] = useState(false);
 
-  
-  const { fetchTasksForMonth, tasks } = useApp();
-  const [monthTasks, setMonthTasks] = useState<Task[]>([]);
 
-  // Fetch tasks when month changes or when global tasks change (toggle/edit/delete)
-  useEffect(() => {
-    const loadMonthTasks = async () => {
-      try {
-        const fetchedTasks = await fetchTasksForMonth(
-          selectedMonth.year,
-          selectedMonth.month
-        );
-        setMonthTasks(fetchedTasks);
-      } catch (error) {
-        console.error('Error loading month tasks:', error);
-      }
-    };
-    loadMonthTasks();
-  }, [selectedMonth.year, selectedMonth.month, fetchTasksForMonth, tasks]);
+  const { tasks } = useApp();
+
+  // Derive monthTasks from global tasks state (same pattern as Dashboard)
+  const monthTasks = useMemo(() => {
+    const monthStart = new Date(selectedMonth.year, selectedMonth.month, 1);
+    monthStart.setHours(0, 0, 0, 0);
+    const monthEnd = new Date(selectedMonth.year, selectedMonth.month + 1, 0);
+    monthEnd.setHours(23, 59, 59, 999);
+    return tasks.filter(task => {
+      if (task.is_template) return false;
+      const taskDate = new Date(task.due_date);
+      taskDate.setHours(0, 0, 0, 0);
+      return taskDate >= monthStart && taskDate <= monthEnd;
+    });
+  }, [tasks, selectedMonth.year, selectedMonth.month]);
   
   useEffect(() => {
     setTimeout(() => {
@@ -69,7 +66,7 @@ export function WeeklyView({ onToggleTask, onEditTask, onDeleteTask, colorBlindM
   const tasksByDate = useMemo(() => {
     const map: { [key: string]: Task[] } = {};
     monthTasks.forEach(task => {
-      const key = task.due_date.toDateString();
+      const key = new Date(task.due_date).toDateString();
       if (!map[key]) map[key] = [];
       map[key].push(task);
     });
@@ -148,7 +145,8 @@ export function WeeklyView({ onToggleTask, onEditTask, onDeleteTask, colorBlindM
   const todayTasks = monthTasks.filter((task) => {
     if (task.is_template) return false;
     const today = new Date();
-    return task.due_date.toDateString() === today.toDateString();
+    const taskDate = new Date(task.due_date);
+    return taskDate.toDateString() === today.toDateString();
   });
   
   const completedTodayTasks = todayTasks.filter((task) => task.completed)
