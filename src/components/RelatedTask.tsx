@@ -9,6 +9,7 @@ interface RelatedTaskInputProps {
   selectedTaskId: string;
   onSelect: (taskId: string) => void;
   colorBlindMode?: boolean;
+  isDarkMode?: boolean;
 }
 
 export default function RelatedTaskInput({
@@ -16,6 +17,7 @@ export default function RelatedTaskInput({
   selectedTaskId,
   onSelect,
   colorBlindMode = false,
+  isDarkMode = false,
 }: RelatedTaskInputProps) {
   const selectableTasks = tasks.filter((task) => {
     // Hide completed tasks
@@ -32,9 +34,9 @@ export default function RelatedTaskInput({
   if (selectableTasks.length === 0) {
     return (
       <View style={styles.container}>
-        <Text style={[styles.label, { color: getAppColors(colorBlindMode).primary }]}>Related To:</Text>
-        <View style={[styles.emptyState, { backgroundColor: getAppColors(colorBlindMode).inputBackground, borderColor: getAppColors(colorBlindMode).border }]}>
-          <Text style={[styles.emptyText, { color: getAppColors(colorBlindMode).placeholder }]}>
+        <Text style={[styles.label, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Related To:</Text>
+        <View style={[styles.emptyState, { backgroundColor: getAppColors(colorBlindMode, isDarkMode).inputBackground, borderColor: getAppColors(colorBlindMode, isDarkMode).border }]}>
+          <Text style={[styles.emptyText, { color: getAppColors(colorBlindMode, isDarkMode).placeholder }]}>
             No tasks available. Create a task first to link to.
           </Text>
         </View>
@@ -44,11 +46,11 @@ export default function RelatedTaskInput({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Related To:</Text>
+      <Text style={[styles.label, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Related To:</Text>
       <Dropdown
-        style={[styles.dropdown, { backgroundColor: getAppColors(colorBlindMode).inputBackground, borderColor: getAppColors(colorBlindMode).border }]}
-        placeholderStyle={[styles.placeholderText, { color: getAppColors(colorBlindMode).placeholder }]}
-        selectedTextStyle={[styles.selectedText, { color: getAppColors(colorBlindMode).primary }]}
+        style={[styles.dropdown, { backgroundColor: getAppColors(colorBlindMode, isDarkMode).inputBackground, borderColor: getAppColors(colorBlindMode, isDarkMode).border }]}
+        placeholderStyle={[styles.placeholderText, { color: getAppColors(colorBlindMode, isDarkMode).placeholder }]}
+        selectedTextStyle={[styles.selectedText, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}
         data={selectableTasks}
         labelField="title"
         valueField="id"

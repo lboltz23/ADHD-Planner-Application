@@ -32,6 +32,7 @@ export interface EditTaskProps {
   onDelete: (id: string) => void;
   onToggle: (id: string) => void;
   colorBlindMode?: boolean;
+  isDarkMode?: boolean;
 }
 
 export default function EditTask({
@@ -43,6 +44,7 @@ export default function EditTask({
   onDelete,
   onToggle,
   colorBlindMode = false,
+  isDarkMode = false,
 }: EditTaskProps) {
   const [editedTitle, setEditedTitle] = useState(task.title);
   const [editedDate, setEditedDate] = useState(task.due_date);
@@ -134,20 +136,20 @@ export default function EditTask({
       <Modal visible={isOpen} transparent animationType="fade">
         <View style={styles.overlay}>
           <ScrollView contentContainerStyle={styles.scrollContainer}>
-            <View style={styles.dialog}>
+            <View style={[styles.dialog, { backgroundColor: isDarkMode ? '#1b2133' : 'white' }]}>
               {/* Header */}
               <View style={styles.header}>
                 <View style={[styles.typeIndicator, { backgroundColor: typeColor }]} />
-                <Text style={[styles.title, { color: getAppColors(colorBlindMode).primary }]}>Edit Task</Text>
+                <Text style={[styles.title, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Edit Task</Text>
                 <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                  <X size={24} color={getAppColors(colorBlindMode).primary} />
+                  <X size={24} color={getAppColors(colorBlindMode, isDarkMode).primary} />
                 </TouchableOpacity>
               </View>
 
               {/* Content */}
-              <View style={[styles.section, { borderColor: getAppColors(colorBlindMode).sectionBorder }]}>
-                <TitleInput value={editedTitle} onChange={setEditedTitle} colorBlindMode={colorBlindMode} />
-                <NoteInput value = {editedNotes} onChange={setEditedNotes} colorBlindMode={colorBlindMode} />
+              <View style={[styles.section, { borderColor: getAppColors(colorBlindMode, isDarkMode).sectionBorder }]}>
+                <TitleInput value={editedTitle} onChange={setEditedTitle} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode} />
+                <NoteInput value = {editedNotes} onChange={setEditedNotes} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode} />
                 <TimePicker time = {editedTime || new Date()} onTimeChange={setEditedTime}/>
                 {task.type === "related" ? (
                     <RelatedTaskInput
@@ -158,7 +160,7 @@ export default function EditTask({
                 ) : null}
                 {task.type === "basic" || task.type === "related" || task.is_template === false ? (
                   <>
-                    <Text style={[styles.label, { color: getAppColors(colorBlindMode).primary }]}>Due Date</Text>
+                    <Text style={[styles.label, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Due Date</Text>
                     <Calendar
                       onDayPress={handleDateSelect}
                       markedDates={{
@@ -172,7 +174,7 @@ export default function EditTask({
                         todayTextColor: colorBlindMode ? "#33BBEE" : "#a8d8ea",
                         arrowColor: colorBlindMode ? "#33BBEE" : "#a8d8ea",
                       }}
-                      style={[styles.calendar, { borderColor: getAppColors(colorBlindMode).border }]}
+                      style={[styles.calendar, { borderColor: getAppColors(colorBlindMode, isDarkMode).border }]}
                     />
                   </>
                 ) : null}

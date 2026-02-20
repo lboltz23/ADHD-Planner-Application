@@ -608,6 +608,7 @@ export function Dashboard({
                     onUpdate={onEditTask}
                     onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
+                    isDarkMode={isDark}
                     showTime={true}
                   />
                 ))}
@@ -631,6 +632,7 @@ export function Dashboard({
                     onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
                     showDate={true}
+                    isDarkMode={isDark}
                     showTime={true}
                   />
                 ))}
@@ -653,6 +655,7 @@ export function Dashboard({
                     onUpdate={onEditTask}
                     onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
+                    isDarkMode={isDark}
                   />
                 ))}
               </View>
@@ -674,6 +677,8 @@ export function Dashboard({
                     onUpdate={onEditTask}
                     onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
+                    showDate={true}
+                    isDarkMode={isDark}
                   />
                 ))}
               </View>
@@ -693,6 +698,7 @@ export function Dashboard({
           initialTitle={newTaskTitle}
           colorBlindMode={settings.colorBlindMode}
           tasks={tasks}
+          isDarkMode={isDark}
         />
 
 
