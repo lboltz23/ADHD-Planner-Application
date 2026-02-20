@@ -8,7 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Task } from '../types';
 import { SettingsData } from './Settings';
 import { ProgressCircle } from './ProgressCircle';
-import { AppThemeColors, resolveThemePreference } from '../constants/theme';
+import { AppThemeColors, resolveThemePreference, ThemeColors } from '../constants/theme';
 import { useColorScheme } from '../hooks/use-color-scheme';
 // import { useApp } from '../contexts/AppContext'; // Uncomment when enabling Supabase
 
@@ -305,7 +305,7 @@ export function WeeklyView({ tasks, onToggleTask, onEditTask, onDeleteTask, colo
   );
 }
 
-function getStyles(colors: typeof AppThemeColors.light) {
+function getStyles(colors: ThemeColors) {
   return StyleSheet.create({
   container: {
     flex: 1,

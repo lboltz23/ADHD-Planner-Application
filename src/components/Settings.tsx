@@ -17,7 +17,7 @@ import {
   Eye,
 } from 'lucide-react-native';
 import Slider  from '@react-native-community/slider';
-import { AppThemeColors, resolveThemePreference } from '../constants/theme';
+import { AppThemeColors, resolveThemePreference, ThemeColors } from '../constants/theme';
 import { useColorScheme } from '../hooks/use-color-scheme';
 
 export interface SettingsData {
@@ -40,7 +40,7 @@ interface SettingsSectionProps {
   title: string;
   subtitle: string;
   iconColor: string;
-  themeColors: typeof AppThemeColors.light;
+  themeColors: ThemeColors;
   children: React.ReactNode;
 }
 

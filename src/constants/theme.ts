@@ -63,6 +63,8 @@ export const AppThemeColors = {
   },
 } as const;
 
+export type ThemeColors = (typeof AppThemeColors)[keyof typeof AppThemeColors];
+
 export function resolveThemePreference(
   preference: ThemePreference,
   systemScheme: string | null | undefined
