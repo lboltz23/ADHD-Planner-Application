@@ -1,12 +1,12 @@
 // src/contexts/AppContext.tsx
 import React, { createContext, useContext, useState, useCallback, useMemo, useEffect, ReactNode } from 'react';
-import { Task, CreateTaskParams, Weekday, UpdateTaskParams } from '../types';
+import { Task, CreateTaskParams, Weekday, UpdateTaskParams, toLocalDateString } from '../types';
 import { SettingsData } from '../components/Settings';
 import { supabase } from '@/lib/supabaseClient';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
+import { preventAutoHideAsync } from 'expo-router/build/utils/splash';
 
-// Map JavaScript day numbers (0=Sunday) to Weekday names
 const DAY_NUMBER_TO_WEEKDAY: Record<number, Weekday> = {
   0: "Sunday",
   1: "Monday",
@@ -22,8 +22,7 @@ interface AppContextType {
   settings: SettingsData;
   addTask: (params: CreateTaskParams) => void;
   toggleTask: (id: string) => void;
-  rescheduleTask: (id: string, newDate: Date) => void;
-  updateTask: (id: string, newTitle: string, newDate: Date) => void;
+  updateTask: (id: string, fields: { title?: string; due_date?: Date; notes?: string; parent_id?: string; start_date?: Date; end_date?: Date; recurrence_interval?: number; days_selected?: Weekday[] }) => void;
   deleteTask: (id: string) => void;
   updateSettings: (newSettings: SettingsData) => void;
   streakCount: number;
@@ -56,18 +55,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Helper function to generate task instances from a recurring template
   const generateTaskInstancesFromTemplate = (template: any): Task[] => {
+    if (!template.start_date) return [];
     const startDate = new Date(template.start_date);
-    const endDate = new Date(template.end_date);
+    // If no end date, generate a rolling 3-month window from today
+    const endDate = template.end_date
+      ? new Date(template.end_date)
+      : new Date(new Date().getFullYear(), new Date().getMonth() + 3, new Date().getDate());
     const daysSelected = template.days_selected as Weekday[] | undefined;
     const intervalMonths = template.recurrence_interval as number | undefined;
     const createdAt = new Date(template.created_at);
     const updatedAt = new Date(template.updated_at);
     const completedDates: string[] = template.completed_dates || [];
+    const excludedDates: string[] = template.excluded_dates || [];
 
     const scheduledDays = generateScheduledDays(startDate, endDate, daysSelected, intervalMonths);
 
-    return scheduledDays.map((scheduledDate) => {
-      const dateStr = scheduledDate.toISOString().split('T')[0];
+    return scheduledDays
+      .filter((scheduledDate) => !excludedDates.includes(toLocalDateString(scheduledDate)))
+      .map((scheduledDate) => {
+      const dateStr = toLocalDateString(scheduledDate);
       const isCompleted = completedDates.includes(dateStr);
 
       return {
@@ -77,7 +83,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         due_date: scheduledDate,
         completed: isCompleted,
         type: template.type as Task['type'],
-        notes: template.description,
+        notes: template.notes,
         created_at: createdAt,
         updated_at: updatedAt,
         is_template: false,
@@ -107,14 +113,73 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (data) {
           const allTasks: Task[] = [];
 
+          // Collect override rows (persisted instance edits) keyed by parent_task_id
+          // Each entry maps a template ID to a set of due_date strings that have overrides
+          const overridesByTemplate = new Map<string, Map<string, any>>();
+
           data.forEach((row: any) => {
+            // Recurring instance overrides have parent_task_id but are NOT "related" type
+            if (!row.is_template && row.parent_task_id && row.type !== 'related') {
+              if (!overridesByTemplate.has(row.parent_task_id)) {
+                overridesByTemplate.set(row.parent_task_id, new Map());
+              }
+              const dateStr = row.due_date ? toLocalDateString(new Date(row.due_date)) : '';
+              overridesByTemplate.get(row.parent_task_id)!.set(dateStr, row);
+            }
+          });
+
+          data.forEach((row: any) => {
+            // Skip recurring override rows — they're handled during instance generation
+            if (!row.is_template && row.parent_task_id && row.type !== 'related') return;
+
             // Check if this is a recurring template
             if (row.is_template && row.start_date && row.end_date) {
-              // Generate instances from the template
+              // Add the template itself for the Repeating view
+              allTasks.push({
+                id: row.id,
+                title: row.title,
+                user_id: row.user_id,
+                created_at: new Date(row.created_at),
+                updated_at: new Date(row.updated_at),
+                due_date: new Date(row.due_date),
+                completed: false,
+                type: row.type as Task['type'],
+                notes: row.notes,
+                is_template: true,
+                days_selected: row.days_selected,
+                recurrence_interval: row.recurrence_interval,
+                start_date: new Date(row.start_date),
+                end_date: new Date(row.end_date),
+              });
+
+              // Generate instances from the template, skipping dates with override rows
               const instances = generateTaskInstancesFromTemplate(row);
-              allTasks.push(...instances);
+              const templateOverrides = overridesByTemplate.get(row.id);
+
+              instances.forEach(instance => {
+                const dateStr = toLocalDateString(instance.due_date);
+                if (templateOverrides?.has(dateStr)) {
+                  // Use the persisted override row instead of the generated instance
+                  const override = templateOverrides.get(dateStr)!;
+                  allTasks.push({
+                    id: override.id,
+                    title: override.title,
+                    user_id: override.user_id,
+                    created_at: new Date(override.created_at),
+                    updated_at: new Date(override.updated_at),
+                    due_date: new Date(override.due_date),
+                    completed: override.completed || false,
+                    type: override.type as Task['type'],
+                    notes: override.notes,
+                    is_template: false,
+                    parent_task_id: override.parent_task_id,
+                  });
+                } else {
+                  allTasks.push(instance);
+                }
+              });
             } else {
-              // Regular non-recurring task
+              // Regular non-recurring task (basic or related)
               allTasks.push({
                 id: row.id,
                 title: row.title,
@@ -124,8 +189,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 due_date: new Date(row.due_date),
                 completed: row.completed || false,
                 type: row.type as Task['type'],
-                notes: row.description,
+                notes: row.notes,
                 is_template: false,
+                parent_task_id: row.parent_task_id || undefined,
               });
             }
           });
@@ -187,20 +253,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const now = new Date();
 
     // Check if this is a recurring task
-    if ((type === "routine" || type === "long_interval") && start_date && end_date) {
+    if (type === "routine" || type === "long_interval") {
       // Store only ONE template task in Supabase with is_template = true
-      const templateTask = {
+      const templateTask: Record<string, any> = {
         id: baseId,
         title,
         type,
         notes: notes,
         user_id: DEFAULT_USER_ID,
         is_template: true,
-        start_date: start_date.toISOString(),
-        end_date: end_date.toISOString(),
+        start_date: start_date ? toLocalDateString(start_date) : null,
+        end_date: end_date ? toLocalDateString(end_date) : null,
         days_selected: days_selected,
         recurrence_interval: recurrence_interval,
-        due_date: start_date.toISOString(), // Use start_date as due_date for template
+        due_date: toLocalDateString(start_date || due_date),
         completed: false,
       };
 
@@ -208,13 +274,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (error) {
         console.error('Error inserting recurring task template:', error);
       } else {
-        // Generate instances locally for display
+        // Add template to local state
+        const templateForState: Task = {
+          id: baseId,
+          user_id: DEFAULT_USER_ID,
+          title,
+          due_date: start_date || due_date,
+          completed: false,
+          type,
+          notes,
+          created_at: now,
+          updated_at: now,
+          is_template: true,
+          days_selected,
+          recurrence_interval,
+          start_date: start_date || undefined,
+          end_date: end_date || undefined,
+        };
+        // Generate instances locally for display (only if both dates exist)
         const instances = generateTaskInstancesFromTemplate({
           ...templateTask,
           created_at: now.toISOString(),
           updated_at: now.toISOString(),
         });
-        setTasks(prev => [...prev, ...instances]);
+        setTasks(prev => [...prev, templateForState, ...instances]);
       }
     } else {
       // Regular non-recurring task (basic or related)
@@ -236,7 +319,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.from('tasks').insert({
         id: newTask.id,
         title: newTask.title,
-        due_date: newTask.due_date.toISOString(),
+        due_date: toLocalDateString(newTask.due_date),
         completed: newTask.completed,
         type: newTask.type,
         notes: newTask.notes,
@@ -265,12 +348,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
       t.id === id ? { ...t, completed: newCompletedState } : t
     ));
 
-    // Check if this is a recurring task instance (has a parent_task_id)
-    if (task.parent_task_id) {
-      // Extract the date from the instance ID (format: templateId_YYYY-MM-DD)
-      const dateStr = task.due_date.toISOString().split('T')[0];
+    // Check if this is a recurring task instance (has a parent_task_id, but not a "related" task)
+    const isRecurringInstance = task.is_template === false && task.parent_task_id && task.type !== 'related';
+    const isInMemoryInstance = isRecurringInstance && id.includes('_') && /\d{4}-\d{2}-\d{2}$/.test(id);
 
-      // Get current completed_dates from Supabase
+    if (isRecurringInstance && !isInMemoryInstance) {
+      // Persisted override row — update its own completed field directly
+      const { error } = await supabase
+        .from('tasks')
+        .update({ completed: newCompletedState })
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error toggling persisted override:', error);
+        setTasks(prev => prev.map(t =>
+          t.id === id ? { ...t, completed: !newCompletedState } : t
+        ));
+      }
+    } else if (isInMemoryInstance) {
+      // In-memory instance — update the template's completed_dates
+      const dateStr = toLocalDateString(task.due_date);
+
       const { data: templateData, error: fetchError } = await supabase
         .from('tasks')
         .select('completed_dates')
@@ -279,7 +377,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       if (fetchError) {
         console.error('Error fetching template:', fetchError);
-        // Revert on error
         setTasks(prev => prev.map(t =>
           t.id === id ? { ...t, completed: !newCompletedState } : t
         ));
@@ -290,18 +387,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
       let updatedCompletedDates: string[];
 
       if (newCompletedState) {
-        // Add date to completed_dates if not already present
         if (!currentCompletedDates.includes(dateStr)) {
           updatedCompletedDates = [...currentCompletedDates, dateStr];
         } else {
           updatedCompletedDates = currentCompletedDates;
         }
       } else {
-        // Remove date from completed_dates
         updatedCompletedDates = currentCompletedDates.filter(d => d !== dateStr);
       }
 
-      // Update the template's completed_dates in Supabase
       const { error: updateError } = await supabase
         .from('tasks')
         .update({ completed_dates: updatedCompletedDates })
@@ -309,7 +403,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       if (updateError) {
         console.error('Error updating completed_dates:', updateError);
-        // Revert on error
         setTasks(prev => prev.map(t =>
           t.id === id ? { ...t, completed: !newCompletedState } : t
         ));
@@ -331,30 +424,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [tasks]);
 
-  const rescheduleTask = useCallback(async (id: string, newDate: Date) => {
-    // Optimistically update UI first
-    setTasks(prev => prev.map(task =>
-      task.id === id ? { ...task, due_date: newDate } : task
-    ));
-
-    // Update in Supabase
-    const { error } = await supabase
-      .from('tasks')
-      .update({ due_date: newDate.toISOString() })
-      .eq('id', id);
-
-    if (error) {
-      console.error('Error rescheduling task:', error);
-      // Revert on error - find original date
-      const originalTask = tasks.find(t => t.id === id);
-      if (originalTask) {
-        setTasks(prev => prev.map(task =>
-          task.id === id ? { ...task, due_date: originalTask.due_date } : task
-        ));
-      }
-    }
-  }, [tasks]);
-
   const updateSettings = useCallback((newSettings: SettingsData) => {
     setSettings(newSettings);
   }, []);
@@ -363,15 +432,313 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setConfettiTrigger(prev => prev + 1);
   }, []);
 
-  const updateTask = (id: string, newTitle: string, newDate: Date) => {
-    setTasks(tasks.map(task =>
-      task.id === id ? { ...task, title: newTitle, due_date: newDate } : task
-    ));
-  };
+  const updateTask = useCallback(async (id: string, fields: { title?: string; due_date?: Date; notes?: string; parent_id?: string; start_date?: Date; end_date?: Date; recurrence_interval?: number; days_selected?: Weekday[] }) => {
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
 
-  const deleteTask = (id: string) => {
-    setTasks(tasks.filter(task => task.id !== id));
-  };
+    const newTitle = fields.title ?? task.title;
+    const newDate = fields.due_date ?? task.due_date;
+    const newNotes = fields.notes ?? task.notes;
+    const newStartDate = fields.start_date ?? task.start_date;
+    const newEndDate = fields.end_date ?? task.end_date;
+    const newInterval = fields.recurrence_interval ?? task.recurrence_interval;
+    const newParentId = fields.parent_id ?? task.parent_task_id;
+    const newDaysSelected = fields.days_selected ?? task.days_selected;
+
+    // Build the Supabase update payload (only changed fields)
+    const supabaseUpdate: Record<string, any> = { updated_at: new Date().toISOString() };
+    if (fields.title !== undefined) supabaseUpdate.title = fields.title;
+    if (fields.due_date !== undefined) supabaseUpdate.due_date = toLocalDateString(fields.due_date);
+    if (fields.notes !== undefined) supabaseUpdate.notes = fields.notes;
+    if (fields.parent_id !== undefined) supabaseUpdate.parent_task_id = fields.parent_id;
+    if (fields.start_date !== undefined) supabaseUpdate.start_date = toLocalDateString(fields.start_date);
+    if (fields.end_date !== undefined) supabaseUpdate.end_date = toLocalDateString(fields.end_date);
+    if (fields.recurrence_interval !== undefined) supabaseUpdate.recurrence_interval = fields.recurrence_interval;
+    if (fields.days_selected !== undefined) supabaseUpdate.days_selected = fields.days_selected;
+
+    // Local state update object
+    const localUpdate: Partial<Task> = { updated_at: new Date() };
+    if (fields.title !== undefined) localUpdate.title = fields.title;
+    if (fields.due_date !== undefined) localUpdate.due_date = fields.due_date;
+    if (fields.notes !== undefined) localUpdate.notes = fields.notes;
+    if (fields.parent_id !== undefined) localUpdate.parent_task_id = fields.parent_id;
+    if (fields.start_date !== undefined) localUpdate.start_date = fields.start_date;
+    if (fields.end_date !== undefined) localUpdate.end_date = fields.end_date;
+    if (fields.recurrence_interval !== undefined) localUpdate.recurrence_interval = fields.recurrence_interval;
+    if (fields.days_selected !== undefined) localUpdate.days_selected = fields.days_selected;
+
+
+    const isRecurringInstance = task.parent_task_id && !task.is_template && task.type !== 'related';
+    const isInMemoryInstance = isRecurringInstance && id.includes('_') && /\d{4}-\d{2}-\d{2}$/.test(id);
+
+    // Optimistically update UI
+    setTasks(prev => prev.map(t =>
+      t.id === id ? { ...t, ...localUpdate } : t
+    ));
+
+    if (isInMemoryInstance) {
+      // In-memory instance — insert a new persisted override row
+      const newId = uuidv4();
+      const now = new Date();
+
+      const overrideRow = {
+        id: newId,
+        title: newTitle,
+        type: task.type,
+        due_date: toLocalDateString(newDate),
+        completed: task.completed,
+        user_id: task.user_id,
+        is_template: false,
+        parent_task_id: task.parent_task_id,
+        notes: newNotes || null,
+        start_date: newStartDate ? toLocalDateString(newStartDate) : null,
+        end_date: newEndDate ? toLocalDateString(newEndDate) : null,
+        recurrence_interval: newInterval || null,
+      };
+
+      const { error } = await supabase.from('tasks').insert(overrideRow);
+
+      if (error) {
+        console.error('Error inserting recurring instance override:', error);
+        // Revert
+        setTasks(prev => prev.map(t =>
+          t.id === id ? { ...t, title: task.title, due_date: task.due_date, notes: task.notes } : t
+        ));
+        return;
+      }
+
+      // Replace the synthetic instance with the persisted one
+      setTasks(prev => prev.map(t =>
+        t.id === id
+          ? { ...t, id: newId, created_at: now, updated_at: now }
+          : t
+      ));
+    } else if (isRecurringInstance) {
+      // Persisted override row — update it
+      const { error } = await supabase
+        .from('tasks')
+        .update(supabaseUpdate)
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error updating recurring instance override:', error);
+        setTasks(prev => prev.map(t =>
+          t.id === id ? { ...t, title: task.title, due_date: task.due_date, notes: task.notes } : t
+        ));
+      }
+    } else if (task.is_template) {
+      // Template — update and propagate title to in-memory instances
+      const { error } = await supabase
+        .from('tasks')
+        .update(supabaseUpdate)
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error updating template:', error);
+        setTasks(prev => prev.map(t =>
+          t.id === id ? { ...t, title: task.title, due_date: task.due_date, notes: task.notes } : t
+        ));
+        return;
+      }
+
+      // Check if any schedule fields changed — if so, regenerate all in-memory instances
+      const scheduleChanged =
+        fields.start_date !== undefined ||
+        fields.end_date !== undefined ||
+        fields.days_selected !== undefined ||
+        fields.recurrence_interval !== undefined;
+
+      if (scheduleChanged) {
+        // Build an updated template object for instance generation
+        const updatedTemplate = {
+          id,
+          user_id: task.user_id,
+          title: newTitle,
+          type: task.type,
+          notes: newNotes,
+          start_date: newStartDate ? toLocalDateString(newStartDate) : null,
+          end_date: newEndDate ? toLocalDateString(newEndDate) : null,
+          days_selected: newDaysSelected,
+          recurrence_interval: newInterval,
+          completed_dates: task.completed_dates || [],
+          excluded_dates: task.excluded_dates || [],
+          created_at: task.created_at.toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+
+        const newInstances = generateTaskInstancesFromTemplate(updatedTemplate);
+
+        // Remove old in-memory instances and add regenerated ones
+        setTasks(prev => {
+          const withoutOldInstances = prev.filter(t => {
+            if (t.parent_task_id === id && t.id.includes('_') && /\d{4}-\d{2}-\d{2}$/.test(t.id)) {
+              return false; // Remove old in-memory instances
+            }
+            return true;
+          });
+          return [...withoutOldInstances, ...newInstances];
+        });
+      } else {
+        // Propagate title change to in-memory instances
+        if (fields.title !== undefined) {
+          setTasks(prev => prev.map(t => {
+            if (t.parent_task_id === id && t.id.includes('_') && /\d{4}-\d{2}-\d{2}$/.test(t.id)) {
+              return { ...t, title: fields.title! };
+            }
+            return t;
+          }));
+        }
+        // Propagate notes change to in-memory instances
+        if (fields.notes !== undefined) {
+          setTasks(prev => prev.map(t => {
+            if (t.parent_task_id === id && t.id.includes('_') && /\d{4}-\d{2}-\d{2}$/.test(t.id)) {
+              return { ...t, notes: fields.notes! };
+            }
+            return t;
+          }));
+        }
+      }
+    } else {
+      // Regular non-recurring task — update directly
+      const { error } = await supabase
+        .from('tasks')
+        .update(supabaseUpdate)
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error updating task:', error);
+        setTasks(prev => prev.map(t =>
+          t.id === id ? { ...t, title: task.title, due_date: task.due_date, notes: task.notes } : t
+        ));
+      }
+    }
+  }, [tasks]);
+
+  const deleteTask = useCallback(async (id: string) => {
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+
+    const isRecurringInstance = task.parent_task_id && !task.is_template && task.type !== 'related';
+    const isInMemoryInstance = isRecurringInstance && id.includes('_') && /\d{4}-\d{2}-\d{2}$/.test(id);
+
+    // Optimistically update UI
+    setTasks(prev => prev.filter(t => {
+      if (t.id === id) return false;
+      // Remove generated instances if deleting a template
+      if (task.is_template && t.parent_task_id === id) return false;
+      return true;
+    }));
+
+    if (isInMemoryInstance) {
+      // In-memory instance — add its date to the template's excluded_dates
+      // so it won't regenerate on next load
+      const dateStr = toLocalDateString(task.due_date);
+
+      const { data: templateData, error: fetchError } = await supabase
+        .from('tasks')
+        .select('excluded_dates')
+        .eq('id', task.parent_task_id)
+        .single();
+
+      if (fetchError) {
+        console.error('Error fetching template for instance deletion:', fetchError);
+        setTasks(prev => [...prev, task]);
+        return;
+      }
+
+      const currentDates: string[] = templateData?.excluded_dates || [];
+      if (!currentDates.includes(dateStr)) {
+        const { error: updateError } = await supabase
+          .from('tasks')
+          .update({ excluded_dates: [...currentDates, dateStr] })
+          .eq('id', task.parent_task_id);
+
+        if (updateError) {
+          console.error('Error excluding instance date:', updateError);
+          setTasks(prev => [...prev, task]);
+        }
+      }
+      return;
+    }
+
+    if (isRecurringInstance) {
+      // Persisted override row — delete it from Supabase and add its date to
+      // the template's excluded_dates so it won't regenerate
+      const dateStr = toLocalDateString(task.due_date);
+
+      const { error: deleteError } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', id);
+
+      if (deleteError) {
+        console.error('Error deleting override row:', deleteError);
+        setTasks(prev => [...prev, task]);
+        return;
+      }
+
+      const { data: templateData } = await supabase
+        .from('tasks')
+        .select('excluded_dates')
+        .eq('id', task.parent_task_id)
+        .single();
+
+      const currentDates: string[] = templateData?.excluded_dates || [];
+      if (!currentDates.includes(dateStr)) {
+        await supabase
+          .from('tasks')
+          .update({ excluded_dates: [...currentDates, dateStr] })
+          .eq('id', task.parent_task_id);
+      }
+      return;
+    }
+
+    // Unlink related tasks that reference this as their parent
+    const relatedChildren = tasks.filter(t => t.parent_task_id === id && t.type === 'related');
+    if (relatedChildren.length > 0) {
+      const { error: unlinkError } = await supabase
+        .from('tasks')
+        .update({ parent_task_id: null })
+        .eq('parent_task_id', id)
+        .eq('type', 'related');
+
+      if (unlinkError) {
+        console.error('Error unlinking related tasks:', unlinkError);
+      }
+
+      // Clear parent_task_id locally for related children
+      setTasks(prev => prev.map(t =>
+        t.parent_task_id === id && t.type === 'related'
+          ? { ...t, parent_task_id: undefined }
+          : t
+      ));
+    }
+
+    // Delete persisted instance overrides if this is a template
+    if (task.is_template) {
+      const { error: overrideError } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('parent_task_id', id)
+        .neq('type', 'related');
+
+      if (overrideError) {
+        console.error('Error deleting instance overrides:', overrideError);
+      }
+    }
+
+    // Delete the task itself from Supabase
+    const { error } = await supabase
+      .from('tasks')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting task:', error);
+      // Revert — add the task back to local state
+      setTasks(prev => [...prev, task]);
+    }
+  }, [tasks]);
 
   const updateStreak = () => {
     const today = new Date();
@@ -402,7 +769,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         settings,
         addTask,
         toggleTask,
-        rescheduleTask,
         updateTask,
         deleteTask,
         updateSettings,

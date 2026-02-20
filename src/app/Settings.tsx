@@ -6,6 +6,9 @@ import { Settings as SettingsComponent } from '../components/Settings';
 import { useApp } from '../contexts/AppContext';
 import { supabase, getProfile } from '@/lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
+import { useSafeBack } from '../hooks/use-Safe-Back';
+import { useAppTheme } from '../hooks/use-app-theme';
+
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -46,11 +49,13 @@ export default function SettingsScreen() {
           setUsername(null);
         }
       },[user])
+  const handleBack = useSafeBack();
+  const { colors } = useAppTheme();
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <SettingsComponent
-        onNavigateBack={() => router.back()}
+        onNavigateBack={handleBack}
         settings={settings}
         onUpdateSettings={updateSettings}
         user={user}
@@ -63,6 +68,5 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
 });

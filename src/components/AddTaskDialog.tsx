@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, Text, Modal, TouchableOpacity, StyleSheet, TextInput, ScrollView } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Plus, X } from "lucide-react-native";
-import { Task, TaskType, CreateTaskParams, Weekday } from "../types";
+import { Task, TaskType, CreateTaskParams, Weekday, toLocalDateString } from "../types";
 import { Calendar } from "react-native-calendars";
 import { getTaskTypeColor, getEnhancedTaskTypeColor } from "./taskColors";
 import TitleInput from "./TitleInput";
@@ -68,13 +68,11 @@ export default function AddTaskDialog({
 
     // Different validation based on task type
     if (initialTaskType === "routine" || initialTaskType === "long_interval") {
-      if (!startDate || !endDate) {
-        alert("Please select both start and end dates");
-        return;
-      }
+      // Default start date to today if not provided
+      const effectiveStartDate = startDate || new Date();
 
-      // Validate end date is after start date
-      if (endDate < startDate) {
+      // Validate end date is after start date if both are provided
+      if (endDate && endDate < effectiveStartDate) {
         alert("End date must be after start date");
         return;
       }
@@ -91,13 +89,13 @@ export default function AddTaskDialog({
       // Use startDate as the primary task date
       onAddTask({
         title: taskTitle,
-        due_date: startDate,
+        due_date: effectiveStartDate,
         type: initialTaskType,
         days_selected: initialTaskType === "routine" ? selectedDays : undefined,
         recurrence_interval: interval,
         notes,
-        start_date: startDate,
-        end_date: endDate,
+        start_date: effectiveStartDate,
+        end_date: endDate || undefined,
       });
     } else {
       // For basic and related types
@@ -180,7 +178,7 @@ export default function AddTaskDialog({
               <View style={styles.section}>
                 <TitleInput value={taskTitle} onChange={handleInputChange} />
                 <NoteInput value={notes} onChange={setNotes} />
-                <Text style={styles.label}>Select Date *</Text>
+                <Text style={styles.label}>Select Date: </Text>
                 {/* Calendar */}
                 <Calendar
                   onDayPress={(day) => setSelectedDate(day.dateString)}
@@ -189,7 +187,7 @@ export default function AddTaskDialog({
                       ? { [selectedDate]: { selected: true, selectedColor: "#b8a4d9" } }
                       : {}
                   }
-                  minDate={new Date().toISOString().split('T')[0]}
+                  minDate={toLocalDateString(new Date())}
                   theme={{
                     todayTextColor: "#a8d8ea",
                     arrowColor: "#a8d8ea",
@@ -210,7 +208,7 @@ export default function AddTaskDialog({
                   onEndDateChange={setEndDate}
                 />
 
-                <Text style={styles.label}>Repeat On (select days) *</Text>
+                <Text style={styles.label}>Repeat On (select days): </Text>
                 <View style={styles.frequencyRow}>
                   {ALL_WEEKDAYS.map((day) => (
                     <TouchableOpacity
@@ -244,7 +242,7 @@ export default function AddTaskDialog({
                   selectedTaskId={parentTaskId}
                   onSelect={setParentTaskId}
                 />
-                <Text style={styles.label}>Select Date *</Text>
+                <Text style={styles.label}>Select Date: </Text>
                 <Calendar
                   onDayPress={(day) => setSelectedDate(day.dateString)}
                   markedDates={
@@ -252,7 +250,7 @@ export default function AddTaskDialog({
                       ? { [selectedDate]: { selected: true, selectedColor: "#b8a4d9" } }
                       : {}
                   }
-                  minDate={new Date().toISOString().split('T')[0]}
+                  minDate={toLocalDateString(new Date())}
                   theme={{
                     todayTextColor: "#a8d8ea",
                     arrowColor: "#a8d8ea",
@@ -274,7 +272,7 @@ export default function AddTaskDialog({
                 />
 
                 <View style={styles.inputRow}>
-                  <Text style={styles.label}>Interval (months):</Text>
+                  <Text style={styles.label}>Interval(months): </Text>
                   <TextInput
                     style={styles.dateInput}
                     value={intervalMonths}
@@ -326,7 +324,7 @@ const styles = StyleSheet.create({
   dialog: {
     backgroundColor: "white",
     borderRadius: 16,
-    padding: 20,
+    padding: 18,
     width: "100%",
     maxWidth: 400,
     minHeight: 350,
@@ -439,7 +437,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   createButton: {
-    // backgroundColor set dynamically based on task type
+    // backgroundColor is set dynamically based on task type
   },
   createText: {
     color: "white",

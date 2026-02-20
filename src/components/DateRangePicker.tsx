@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { AppColors } from "../constants/theme";
 
 interface DateRangePickerProps {
@@ -17,8 +17,8 @@ export default function DateRangePicker({
   endDate,
   onStartDateChange,
   onEndDateChange,
-  startLabel = "Start Date *",
-  endLabel = "End Date *",
+  startLabel = "Start Date: ",
+  endLabel = "End Date: ",
 }: DateRangePickerProps) {
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
@@ -30,20 +30,6 @@ export default function DateRangePicker({
       day: "2-digit",
       year: "numeric",
     });
-  };
-
-  const handleStartChange = (event: any, selectedDate?: Date) => {
-    setShowStartPicker(false);
-    if (selectedDate) {
-      onStartDateChange(selectedDate);
-    }
-  };
-
-  const handleEndChange = (event: any, selectedDate?: Date) => {
-    setShowEndPicker(false);
-    if (selectedDate) {
-      onEndDateChange(selectedDate);
-    }
   };
 
   return (
@@ -58,15 +44,19 @@ export default function DateRangePicker({
             {formatDate(startDate)}
           </Text>
         </TouchableOpacity>
-        {showStartPicker && (
-          <DateTimePicker
-            value={startDate || new Date()}
-            mode="date"
-            display="default"
-            onChange={handleStartChange}
-            minimumDate={new Date()}
-          />
-        )}
+        <DateTimePickerModal
+          isVisible={showStartPicker}
+          mode="date"
+          display="spinner"
+          themeVariant="light"
+          date={startDate || new Date()}
+          minimumDate={new Date()}
+          onConfirm={(date) => {
+            onStartDateChange(date);
+            setShowStartPicker(false);
+          }}
+          onCancel={() => setShowStartPicker(false)}
+        />
       </View>
       <View style={styles.dateInputContainer}>
         <Text style={styles.label}>{endLabel}</Text>
@@ -78,15 +68,19 @@ export default function DateRangePicker({
             {formatDate(endDate)}
           </Text>
         </TouchableOpacity>
-        {showEndPicker && (
-          <DateTimePicker
-            value={endDate || startDate || new Date()}
-            mode="date"
-            display="default"
-            onChange={handleEndChange}
-            minimumDate={startDate || new Date()}
-          />
-        )}
+        <DateTimePickerModal
+          isVisible={showEndPicker}
+          mode="date"
+          display="spinner"
+          themeVariant="light"
+          date={endDate || startDate || new Date()}
+          minimumDate={startDate || new Date()}
+          onConfirm={(date) => {
+            onEndDateChange(date);
+            setShowEndPicker(false);
+          }}
+          onCancel={() => setShowEndPicker(false)}
+        />
       </View>
     </View>
   );
