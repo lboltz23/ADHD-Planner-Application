@@ -5,7 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, Settings, ChevronDown, Plus } from 'lucide-react-native';
 import { TaskCard } from './TaskCard';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Task } from '../types';
+import { Task, Weekday } from '../types';
 import { SettingsData } from './Settings';
 import { ProgressCircle } from './ProgressCircle';
 import { AppThemeColors, resolveThemePreference, ThemeColors } from '../constants/theme';
@@ -15,7 +15,7 @@ import { useColorScheme } from '../hooks/use-color-scheme';
 interface WeeklyViewProps {
   tasks: Task[];
   onToggleTask: (id: string) => void;
-  onEditTask: (id: string, fields: { title?: string; due_date?: Date; notes?: string }) => void;
+  onEditTask: (id: string, fields: { title?: string; due_date?: Date; notes?: string; parent_id?: string; start_date?: Date; end_date?: Date; recurrence_interval?: number; days_selected?: Weekday[] }) => void;
   onDeleteTask: (id: string) => void;
   colorBlindMode?: boolean;
   onNavigateBack: () => void;
@@ -272,6 +272,7 @@ export function WeeklyView({ tasks, onToggleTask, onEditTask, onDeleteTask, colo
                       <TaskCard
                         key={task.id}
                         task={task}
+                        tasks={tasks}
                         onToggle={onToggleTask}
                         onUpdate={onEditTask}
                         onDelete={onDeleteTask}
