@@ -5,15 +5,17 @@ import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, Settings, ChevronDown, Plus } from 'lucide-react-native';
 import { TaskCard } from './TaskCard';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Task } from '../types';
+import { Task, Weekday } from '../types';
 import { SettingsData } from './Settings';
 import { ProgressCircle } from './ProgressCircle';
+import { AppThemeColors, resolveThemePreference, ThemeColors } from '../constants/theme';
+import { useColorScheme } from '../hooks/use-color-scheme';
 // import { useApp } from '../contexts/AppContext'; // Uncomment when enabling Supabase
 
 interface WeeklyViewProps {
   tasks: Task[];
   onToggleTask: (id: string) => void;
-  onEditTask: (id: string, fields: { title?: string; due_date?: Date; notes?: string }) => void;
+  onEditTask: (id: string, fields: { title?: string; due_date?: Date; notes?: string; parent_id?: string; start_date?: Date; end_date?: Date; recurrence_interval?: number; days_selected?: Weekday[] }) => void;
   onDeleteTask: (id: string) => void;
   colorBlindMode?: boolean;
   onNavigateBack: () => void;
@@ -22,7 +24,13 @@ interface WeeklyViewProps {
   onTriggerConfetti?: () => void;
 }
 
-export function WeeklyView({ tasks, onToggleTask, onEditTask, onDeleteTask, colorBlindMode, onNavigateBack, onNavigateSettings }: WeeklyViewProps) {
+export function WeeklyView({ tasks, onToggleTask, onEditTask, onDeleteTask, colorBlindMode, onNavigateBack, onNavigateSettings, settings }: WeeklyViewProps) {
+  const systemScheme = useColorScheme();
+  const resolvedTheme = resolveThemePreference(settings.theme, systemScheme);
+  const colors = AppThemeColors[resolvedTheme];
+  const isDark = resolvedTheme === 'dark';
+  const styles = useMemo(() => getStyles(colors), [colors]);
+
   const screenWidth = Dimensions.get('window').width;
   const scrollViewRef = useRef<ScrollView>(null);
 
@@ -183,15 +191,15 @@ export function WeeklyView({ tasks, onToggleTask, onEditTask, onDeleteTask, colo
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" backgroundColor="#f6f3fb" />
+      <StatusBar style={isDark ? 'light' : 'dark'} backgroundColor={colors.background} />
       <View style={styles.header}>
         <TouchableOpacity onPress={onNavigateBack} style={styles.backButton}>
-          <ArrowLeft size={20} color="#6b5b7f" />
+          <ArrowLeft size={20} color={colors.heading} />
         </TouchableOpacity>
 
         <Text style={styles.headerTitle}>Weekly Tasks</Text>
         <TouchableOpacity onPress={onNavigateSettings} style={styles.settingsButton}>
-          <Settings size={22} color="#b8a4d9" />
+          <Settings size={22} color={colors.accent} />
         </TouchableOpacity>
       </View>
 
@@ -204,7 +212,7 @@ export function WeeklyView({ tasks, onToggleTask, onEditTask, onDeleteTask, colo
           <Text style={styles.monthSelectorText}>
             {new Date(selectedMonth.year, selectedMonth.month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
           </Text>
-          <ChevronDown size={20} color="#6b5b7f" />
+          <ChevronDown size={20} color={colors.heading} />
         </TouchableOpacity>
       </View>
 
@@ -264,6 +272,7 @@ export function WeeklyView({ tasks, onToggleTask, onEditTask, onDeleteTask, colo
                       <TaskCard
                         key={task.id}
                         task={task}
+                        tasks={tasks}
                         onToggle={onToggleTask}
                         onUpdate={onEditTask}
                         onDelete={onDeleteTask}
@@ -297,10 +306,11 @@ export function WeeklyView({ tasks, onToggleTask, onEditTask, onDeleteTask, colo
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f6fb',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -316,12 +326,12 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#6b5b7f',
+    color: colors.heading,
     flex: 1,
     marginLeft: 4,
   },
   settingsButton: {
-    backgroundColor: '#f2ecfa',
+    backgroundColor: colors.surfaceMuted,
     padding: 10,
     borderRadius: 8,
   },
@@ -333,21 +343,21 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   dayCard: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#e5d9f2',
+    borderColor: colors.border,
   },
   dayLabel: {
     fontWeight: '700',
     fontSize: 16,
     marginBottom: 8,
-    color: '#6b5b7f',
+    color: colors.heading,
   },
   noTasks: {
     textAlign: 'center',
-    color: '#999',
+    color: colors.textMuted,
     fontSize: 12,
     paddingVertical: 8,
   },
@@ -359,28 +369,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.surface,
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#e5d9f2',
+    borderColor: colors.border,
     gap: 8,
   },
   monthSelectorText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#6b5b7f',
+    color: colors.heading,
   },
   dropdownContainer: {
     position: 'absolute',
     top: 140,
     left: 16,
     right: 16,
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.surface,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#e5d9f2',
+    borderColor: colors.border,
     zIndex: 1000,
     elevation: 5,
     shadowColor: '#000',
@@ -396,24 +406,24 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0eaf8',
+    borderBottomColor: colors.border,
   },
   dropdownItemSelected: {
-    backgroundColor: '#f2ecfa',
+    backgroundColor: colors.surfaceMuted,
   },
   dropdownItemText: {
     fontSize: 15,
-    color: '#6b5b7f',
+    color: colors.text,
   },
   dropdownItemTextSelected: {
     fontWeight: '600',
-    color: '#b8a4d9',
+    color: colors.accent,
   },
   seeMoreButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#b8a4d9',
+    backgroundColor: colors.accent,
     paddingVertical: 14,
     paddingHorizontal: 20,
     borderRadius: 10,
@@ -425,4 +435,5 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
   },
-});
+  });
+}
