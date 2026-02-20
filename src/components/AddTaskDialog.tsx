@@ -12,7 +12,8 @@ import NoteInput from "./NoteInput";
 import { getAppColors, AppThemeColors, resolveThemePreference } from "../constants/theme";
 import { useColorScheme } from '../hooks/use-color-scheme';
 import TimePicker from "./TimeInput";
-import { getAppColors } from "../constants/theme";
+import { getAppColors, AppThemeColors, resolveThemePreference } from "../constants/theme";
+import { useColorScheme } from '../hooks/use-color-scheme';
 
 const ALL_WEEKDAYS: Weekday[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const WEEKDAY_ABBREVIATIONS: Record<Weekday, string> = {

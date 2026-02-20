@@ -176,7 +176,7 @@ export default function EditTask({
                         todayTextColor: colorBlindMode ? "#33BBEE" : "#a8d8ea",
                         arrowColor: colorBlindMode ? "#33BBEE" : "#a8d8ea",
                       }}
-                      style={[styles.calendar, { borderColor: getAppColors(colorBlindMode).border }]}
+                      style={[styles.calendar, { borderColor: getAppColors(colorBlindMode, isDarkMode).border }]}
                     />
                   </>
                 ) : null}

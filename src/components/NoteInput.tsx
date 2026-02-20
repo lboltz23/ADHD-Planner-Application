@@ -31,7 +31,7 @@ export default function NoteInput({
         placeholder={placeholder}
         placeholderTextColor={getAppColors(colorBlindMode, isDarkMode).placeholder}
       />
-      <Pencil size={16} color={getAppColors(colorBlindMode).primary} style={styles.icon} />
+      <Pencil size={16} color={getAppColors(colorBlindMode, isDarkMode).primary} style={styles.icon} />
     </View>
   );
 }
