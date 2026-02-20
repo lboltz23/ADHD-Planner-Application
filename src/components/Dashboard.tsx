@@ -698,6 +698,7 @@ export function Dashboard({
                     onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
                     isDarkMode={isDark}
+                    showDate={true}
                   />
                 ))}
               </View>

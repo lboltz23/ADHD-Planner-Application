@@ -11,7 +11,7 @@ import RelatedTaskInput from "./RelatedTask";
 import NoteInput from "./NoteInput";
 import TimePicker from "./TimeInput";
 import { useColorScheme } from '../hooks/use-color-scheme'
-import { getAppColors, AppThemeColors, resolveThemePreference } from "../constants/theme";
+import { getAppColors,AppThemeColors, resolveThemePreference } from "../constants/theme";
 
 const ALL_WEEKDAYS: Weekday[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const WEEKDAY_ABBREVIATIONS: Record<Weekday, string> = {
