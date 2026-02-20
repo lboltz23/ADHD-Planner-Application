@@ -148,7 +148,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             if (!row.is_template && row.parent_task_id && row.type !== 'related') return;
 
             // Check if this is a recurring template
-            if (row.is_template && row.start_date && row.end_date) {
+            if (row.is_template && row.start_date) {
               // Add the template itself for the Repeating view
               allTasks.push({
                 id: row.id,
@@ -164,7 +164,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 days_selected: row.days_selected,
                 recurrence_interval: row.recurrence_interval,
                 start_date: parseLocalDate(row.start_date),
-                end_date: parseLocalDate(row.end_date),
+                end_date: row.end_date ? parseLocalDate(row.end_date) : undefined,
               });
 
               // Generate instances from the template, skipping dates with override rows
@@ -252,10 +252,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         current.setMonth(current.getMonth() + intervalMonths);
       }
     } else {
-      // Default to daily if nothing specified
+      // Default to monthly if no repeat days or interval specified
       while (current <= end) {
         scheduledDays.push(new Date(current));
-        current.setDate(current.getDate() + 1);
+        current.setMonth(current.getMonth() + 1);
       }
     }
 
@@ -659,7 +659,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         .eq('user_id', DEFAULT_USER_ID)
         .eq('is_template', true)
         .lte('start_date', queryEnd)
-        .gte('end_date', queryStart);
+        .or(`end_date.gte.${queryStart},end_date.is.null`);
 
       if (templateError) {
         console.error('Error fetching templates for month:', templateError);
@@ -668,8 +668,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       const result: Task[] = [];
 
-      // Map regular tasks, parsing dates as local and filtering precisely
+      // Collect override rows (persisted instance edits) keyed by parent template ID
+      const overridesByTemplate = new Map<string, Map<string, any>>();
+
       (regularData || []).forEach((row: any) => {
+        // Recurring instance overrides have parent_task_id but are NOT "related" type
+        if (row.parent_task_id && row.type !== 'related') {
+          if (!overridesByTemplate.has(row.parent_task_id)) {
+            overridesByTemplate.set(row.parent_task_id, new Map());
+          }
+          const dateStr = row.due_date ? toLocalDateString(parseLocalDate(row.due_date)) : '';
+          overridesByTemplate.get(row.parent_task_id)!.set(dateStr, row);
+        }
+      });
+
+      // Map regular tasks, skipping recurring override rows (handled during instance generation)
+      (regularData || []).forEach((row: any) => {
+        // Skip recurring override rows — they're handled below with template instances
+        if (row.parent_task_id && row.type !== 'related') return;
+
         const dueDate = parseLocalDate(row.due_date);
         if (dueDate >= monthStart && dueDate <= monthEnd) {
           result.push({
@@ -688,14 +705,36 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
       });
 
-      // Generate instances from templates, filtered to this month
+      // Generate instances from templates, using persisted overrides where they exist
       (templateData || []).forEach((row: any) => {
         const instances = generateTaskInstancesFromTemplate(row);
-        const monthInstances = instances.filter(inst => {
-          const d = inst.due_date;
-          return d >= monthStart && d <= monthEnd;
+        const templateOverrides = overridesByTemplate.get(row.id);
+
+        instances.forEach(instance => {
+          const d = instance.due_date;
+          if (d < monthStart || d > monthEnd) return;
+
+          const dateStr = toLocalDateString(d);
+          if (templateOverrides?.has(dateStr)) {
+            // Use the persisted override row instead of the generated instance
+            const override = templateOverrides.get(dateStr)!;
+            result.push({
+              id: override.id,
+              title: override.title,
+              user_id: override.user_id,
+              created_at: new Date(override.created_at),
+              updated_at: new Date(override.updated_at),
+              due_date: parseLocalDate(override.due_date),
+              completed: override.completed || false,
+              type: override.type as Task['type'],
+              notes: override.notes,
+              is_template: false,
+              parent_task_id: override.parent_task_id,
+            });
+          } else {
+            result.push(instance);
+          }
         });
-        result.push(...monthInstances);
       });
 
       return result;

@@ -22,7 +22,7 @@ interface WeeklyViewProps {
   onTriggerConfetti?: () => void;
 }
 
-export function WeeklyView({ tasks, onToggleTask, onEditTask, onDeleteTask, colorBlindMode, onNavigateBack, onNavigateSettings, settings }: WeeklyViewProps) {
+export function WeeklyView({ onToggleTask, onEditTask, onDeleteTask, colorBlindMode, onNavigateBack, onNavigateSettings, settings }: WeeklyViewProps) {
   const systemScheme = useColorScheme();
   const resolvedTheme = resolveThemePreference(settings.theme, systemScheme);
   const colors = AppThemeColors[resolvedTheme];
@@ -60,6 +60,11 @@ export function WeeklyView({ tasks, onToggleTask, onEditTask, onDeleteTask, colo
     loadMonthTasks();
   }, [selectedMonth.year, selectedMonth.month, fetchTasksForMonth, tasks]);
   
+  useEffect(() => {
+    setTimeout(() => {
+      scrollViewRef.current?.flashScrollIndicators();
+    }, 500);
+    }, []);
   
   const tasksByDate = useMemo(() => {
     const map: { [key: string]: Task[] } = {};
@@ -210,7 +215,6 @@ export function WeeklyView({ tasks, onToggleTask, onEditTask, onDeleteTask, colo
           </ScrollView>
         </View>
       )}
-
       <ScrollView
         ref={scrollViewRef}
         horizontal
