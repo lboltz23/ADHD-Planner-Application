@@ -4,7 +4,7 @@
 import { useRouter } from 'expo-router';
 import { ArrowLeft } from 'lucide-react-native';
 import React, { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View, Alert,Keyboard} from 'react-native';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View, Alert,Keyboard,Modal,TouchableWithoutFeedback} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useApp } from '../contexts/AppContext';
 import { supabase,getCurrentUser } from '@/lib/supabaseClient';
@@ -14,25 +14,12 @@ import { DotLoader } from '../components/DotLoader';
 
 export default function CalendarViewScreen() {
   const router = useRouter();
-  const { tasks, settings, addTask, toggleTask, rescheduleTask } = useApp();
   const insets = useSafeAreaInsets();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [user, setUser] = useState<User | null>(null)
-
-  useFocusEffect(
-    useCallback(() => {
-      supabase.auth.getUser().then(({ data: { user } }) => {
-        setUser(user)
-      })
-
-      supabase.auth.onAuthStateChange((_event, session) => {
-        setUser(session?.user ?? null)
-      })
-    }, [])
-  )
-
+  const [user, setUser] = useState<User | null>(null);
+  const [ResetModal, setResetModal] = useState(false);
 
    async function signInWithEmail() {
     setLoading(true)
@@ -41,21 +28,31 @@ export default function CalendarViewScreen() {
       password: password,
     })
     if (error) Alert.alert(error.message)
-    router.back()
+    else{ router.push("/");}
     setLoading(false)
+  }
+
+  async function forgotPassword(){
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: 'planable://ResetPass',
+    })
+    if (error) {Alert.alert(error.message)}
+    else {
+      Alert.alert(`A reset email has been sent to ${email}, make sure to also check your spam folder.`)
+    }
+    setResetModal(false)
   }
 
   // Fix the same sizing problem we had on the sign up page
   return (
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
     <View style={[,styles.container,{paddingTop:insets.top,backgroundColor:'#b8a4d9'}]}>
       <View style={[styles.container,{padding:16}]}>
-        <View style={styles.headerRight}>
-            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-              <ArrowLeft size={20} color="#6b5b7f" />
-            </TouchableOpacity>
-        </View>
         <View style={[{justifyContent:'center',width:"100%"},styles.container]}>
           <View style={styles.section}>
+            <View style={styles.header}>
+              <Text style={styles.headerTitle}>Welcome Back!</Text>
+            </View>
             <View style={styles.header}>
               <Text style={styles.headerTitle}>Login</Text>
             </View>
@@ -64,7 +61,7 @@ export default function CalendarViewScreen() {
               <View style={styles.settingRow}>
                 <Text style={[styles.settingLabelText,{paddingRight:2}]}>Email:</Text>
                 <TextInput 
-                style={{borderColor: '#e5d9f2',borderWidth:1,maxWidth:"90%",borderRadius:5,paddingHorizontal:2, flex:1}}
+                style={styles.settingsTextBox}
                 value={email}
                 onChangeText={setEmail}
                 onSubmitEditing={() => {
@@ -74,7 +71,7 @@ export default function CalendarViewScreen() {
               </View>
               <View style={styles.settingRow}>
                 <Text style={[styles.settingLabelText,{paddingRight:2}]}>Password:</Text>
-                <TextInput style={{borderColor: '#e5d9f2',borderWidth:1,maxWidth:"80%",borderRadius:5,paddingHorizontal:2, flex:1}}
+                <TextInput style={styles.settingsTextBox}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={true}
@@ -84,7 +81,7 @@ export default function CalendarViewScreen() {
               </View>
               <View style={[styles.settingRow,{paddingTop:0}]}>
                 <TouchableOpacity
-                  onPress={() => router.push('/login')}>
+                  onPress={() => setResetModal(true)}>
                   <Text style={{color:'#b8a4d9'}}>Forgot Password?</Text>
                 </TouchableOpacity>
               </View>
@@ -92,13 +89,13 @@ export default function CalendarViewScreen() {
                 <TouchableOpacity
                   style={styles.mainButton}
                   onPress={() => signInWithEmail()}>
-                  <Text style={styles.mainButtonText}>Login In</Text>
+                  <Text style={styles.mainButtonText}>Login</Text>
                 </TouchableOpacity>
               </View>
               <View style={[{alignItems:"center",justifyContent:'center',borderTopWidth:1, borderColor:'#b8a4d9'}]}>
                 <TouchableOpacity
                   style={styles.mainButton}
-                  onPress={() => router.push('/login')}>
+                  onPress={() => router.push('/ResetPass')}>
                   <Text style={styles.mainButtonText}>Use Apple</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -125,11 +122,58 @@ export default function CalendarViewScreen() {
           </View>
         </View>
       </View>
+      <Modal visible={ResetModal} transparent animationType="fade">
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+        <View style={[{justifyContent:'center',width:"100%",padding:16},styles.overlay]}>
+          <View style={styles.section}>
+            <View style={styles.header}>
+              <TouchableOpacity style={styles.backButton} onPress={() => setResetModal(false)}>
+                <ArrowLeft size={20} color="#6b5b7f" />
+              </TouchableOpacity>
+              <Text style={styles.headerTitle}>Reset Password</Text>
+            </View>
+            <View>
+              <View style={styles.settingRow}>
+                <Text style={[styles.settingLabelText]}>A recovery email will be sent to your email, allowing you to reset your password.</Text>
+              </View>
+              <View style={styles.settingRow}>
+                <Text style={[styles.settingLabelText,{paddingRight:2}]}>Email:</Text>
+                <TextInput 
+                style={styles.settingsTextBox}
+                value={email}
+                onChangeText={setEmail}
+                onSubmitEditing={() => {
+                  Keyboard.dismiss();
+                }}
+                />
+              </View>
+              <View style={[{alignItems:"center",justifyContent:'center'}]}>
+                <TouchableOpacity
+                  style={styles.mainButton}
+                  onPress={() => forgotPassword()}>
+                  <Text style={styles.mainButtonText}>Send Email</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </View>
+    </TouchableWithoutFeedback>
   );
 }
 
 const styles = StyleSheet.create({
+    settingsTextBox:{
+      borderColor: '#e5d9f2',
+      borderWidth:1,
+      maxWidth:"90%",
+      borderRadius:5,
+      paddingHorizontal:2,
+      paddingVertical:5,
+      flex:1
+    },
     container: {
       flex: 1,
       backgroundColor: '#fafafa',
@@ -257,4 +301,8 @@ const styles = StyleSheet.create({
       fontSize: 13,
       color: '#999',
     },
+    overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
   });

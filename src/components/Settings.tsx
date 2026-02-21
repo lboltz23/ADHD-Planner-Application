@@ -259,8 +259,8 @@ export function Settings({
   //Add sign in and out stuff
 
   return (
-    <View style={[styles.container,{paddingTop:insets.top,backgroundColor: '#b8a4d9',}]}>
-      <ScrollView style={[styles.scrollContent,{backgroundColor:"white"}]} showsVerticalScrollIndicator={false}>
+    <View style={[styles.container,{paddingTop:insets.top,}]}>
+      <ScrollView style={[styles.scrollContent,]} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={onNavigateBack}>
@@ -271,13 +271,13 @@ export function Settings({
             {!user ?
             <TouchableOpacity
               style={styles.mainButton}
-              onPress={() => router.push('/login')}>
+              onPress={() => router.replace('/login')}>
               <Text style={styles.mainButtonText}>Login In</Text>
             </TouchableOpacity>
             :
              <TouchableOpacity
               style={styles.mainButton}
-              onPress={() => signOut()}>
+              onPress={() => {signOut(); router.replace("/login")}}>
               <Text style={styles.mainButtonText}>Sign Out</Text>
             </TouchableOpacity>
              }

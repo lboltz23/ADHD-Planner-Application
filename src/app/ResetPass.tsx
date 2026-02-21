@@ -43,11 +43,6 @@ export default function CalendarViewScreen() {
 
 const ValidSignUp = () => {
   if (
-    username.length < 3 ||
-    username.length > 20 ||
-    !username ||
-    !validEmail(email) ||
-    !email ||
     !hasNumber(password) ||
     !hasLetter(password) ||
     !hasSpecialChars(password) ||
@@ -63,30 +58,16 @@ const ValidSignUp = () => {
  async function signUpWithEmail() {
     setLoading(true)
     if (!ValidSignUp()){ 
-      Alert.alert("Invalid Sign Up Credentials")
+      Alert.alert("Invalid Password")
     } else {
-      const {
-        data: { session },
-        error,
-      } = await supabase.auth.signUp({
-        email: email,
+      const { error } = await supabase.auth.updateUser({
         password: password,
-        options: {
-          data: {
-            display_name:username
-          }
-        }
       })
-      if (error) {
-        Alert.alert(error.message);
-        console.log(error)
-        setLoading(false);
-        return;
-      }
 
-      if (!session) {
-        Alert.alert("Please check your inbox for email verification! Don't forget to check your spam folder.");
-        router.back();
+      if (error) {
+        alert(error.message)
+      } else {
+        alert('Password updated!')
       }
     }
     setLoading(false)
@@ -106,40 +87,12 @@ const ValidSignUp = () => {
          <View style={[{justifyContent:'center',width:"100%"},styles.container]}>
           <View style={[styles.section]}>
             <View style={styles.header}>
-              <Text style={styles.headerTitle}>Welcome To PlanAble!</Text>
-            </View>
-            <View style={styles.header}>
-              <Text style={styles.headerTitle}>Sign Up</Text>
+              <Text style={styles.headerTitle}>Reset Password</Text>
             </View>
             {!loading ?
             <View>
               <View style={styles.settingRow}>
-                <Text style={[styles.settingLabelText,{paddingRight:2}]}>Username:</Text>
-                <TextInput 
-                style={styles.settingsTextBox}
-                value={username}
-                onChangeText={setUsername}
-                />
-              </View>
-              <View style = {{alignItems:'flex-start'}}>
-                {username.length < 3 && username!="" && username.length > 20 && <Text style = {{color:"red"}}>
-                  Must Be At Least 3 Characters And No Greater Than 20 Characters</Text>}
-
-              </View>
-              <View style={styles.settingRow}>
-                <Text style={[styles.settingLabelText,{paddingRight:2}]}>Email:</Text>
-                <TextInput 
-                style={styles.settingsTextBox}
-                value={email}
-                onChangeText={setEmail}
-                />
-              </View>
-              <View style = {{alignItems:'flex-start'}}>
-                {!validEmail(email) && email !="" && <Text style = {{color:"red"}}>Invalid Email</Text>}
-
-              </View>
-              <View style={styles.settingRow}>
-                <Text style={[styles.settingLabelText,{paddingRight:2}]}>Password:</Text>
+                <Text style={[styles.settingLabelText,{paddingRight:2}]}>New Password:</Text>
                 <TextInput style={styles.settingsTextBox}
                 value={password}
                 secureTextEntry={true}
@@ -153,7 +106,7 @@ const ValidSignUp = () => {
 
               </View>
               <View style={styles.settingRow}>
-                <Text style={[styles.settingLabelText,{paddingRight:2}]}>Confirm Password:</Text>
+                <Text style={[styles.settingLabelText,{paddingRight:2}]}>Confirm New Password:</Text>
                 <TextInput style={styles.settingsTextBox}
                 value={confirmPassword}
                 secureTextEntry={true}
@@ -167,19 +120,7 @@ const ValidSignUp = () => {
                 <TouchableOpacity
                   style={styles.mainButton}
                   onPress={() => signUpWithEmail()}>
-                  <Text style={styles.mainButtonText}>Sign Up</Text>
-                </TouchableOpacity>
-              </View>
-              <View style={[{alignItems:"center",justifyContent:'center',borderTopWidth:1, borderColor:'#b8a4d9'}]}>
-                <TouchableOpacity
-                  style={styles.mainButton}
-                  onPress={() => router.push('/login')}>
-                  <Text style={styles.mainButtonText}>Use Apple</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.mainButton}
-                  onPress={() => router.push('/login')}>
-                  <Text style={styles.mainButtonText}>Use Android</Text>
+                  <Text style={styles.mainButtonText}>Reset Password</Text>
                 </TouchableOpacity>
               </View>
             </View>

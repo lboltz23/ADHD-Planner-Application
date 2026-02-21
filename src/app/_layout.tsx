@@ -26,6 +26,7 @@ function RootLayoutContent() {
         <Stack.Screen name="Settings" />
         <Stack.Screen name="login" />
         <Stack.Screen name="signup" />
+        <Stack.Screen name ="ResetPass"/>
       </Stack>
       <ConfettiOverlay trigger={confettiTrigger} />
     </View>
