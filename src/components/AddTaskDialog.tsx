@@ -9,6 +9,7 @@ import TitleInput from "./TitleInput";
 import DateRangePicker from "./DateRangePicker";
 import RelatedTaskInput from "./RelatedTask";
 import NoteInput from "./NoteInput";
+import TimePicker from "./TimeInput";
 
 const ALL_WEEKDAYS: Weekday[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const WEEKDAY_ABBREVIATIONS: Record<Weekday, string> = {
@@ -42,6 +43,7 @@ export default function AddTaskDialog({
 }: AddTaskDialogProps) {
   const [taskTitle, setTaskTitle] = useState(initialTitle);
   const [selectedDate, setSelectedDate] = useState("");
+  const [editedTime, setEditedTime] = useState<Date | null>(null);
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [selectedDays, setSelectedDays] = useState<Weekday[]>([]);
@@ -90,6 +92,7 @@ export default function AddTaskDialog({
       onAddTask({
         title: taskTitle,
         due_date: effectiveStartDate,
+        time: editedTime || undefined,
         type: initialTaskType,
         days_selected: initialTaskType === "routine" ? selectedDays : undefined,
         recurrence_interval: interval,
@@ -116,6 +119,7 @@ export default function AddTaskDialog({
       onAddTask({
         title: taskTitle,
         due_date: dueDate,
+        time: editedTime || undefined,
         type: initialTaskType,
         parent_task_id: initialTaskType === "related" ? parentTaskId : undefined,
         notes: notes,
@@ -136,6 +140,7 @@ export default function AddTaskDialog({
     setSelectedDate("");
     setStartDate(null);
     setEndDate(null);
+    setEditedTime(null);
     setSelectedDays([]);
     setIntervalMonths("");
     setParentTaskId("");
@@ -178,6 +183,7 @@ export default function AddTaskDialog({
               <View style={styles.section}>
                 <TitleInput value={taskTitle} onChange={handleInputChange} />
                 <NoteInput value={notes} onChange={setNotes} />
+                <TimePicker time = {editedTime} onTimeChange={setEditedTime}/>
                 <Text style={styles.label}>Select Date: </Text>
                 {/* Calendar */}
                 <Calendar
