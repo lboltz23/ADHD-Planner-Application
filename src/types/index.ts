@@ -9,13 +9,14 @@ export interface Task {
   title: string;
   type: TaskType;
   due_date: Date;
+  time?: Date;
   completed: boolean;
   created_at: Date;
   updated_at: Date;
 
   start_date?: Date; // For routine tasks
   end_date?: Date;   // For routine tasks
-  notes?: string;
+  notes?: string; 
   days_selected?: Weekday[]; // For routine tasks
   recurrence_interval?: number; // For long interval tasks
   parent_task_id?: string; // For templates, refers to the template task ID
@@ -28,6 +29,7 @@ export interface CreateTaskParams {
   title: string;
   type: TaskType;
   notes?: string;
+  time?: Date;
 
   due_date: Date;
   days_selected?: Weekday[]; // For routine tasks
