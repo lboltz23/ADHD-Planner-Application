@@ -73,7 +73,29 @@ export default function EditTask({
 
   const handleSave = () => {
     if (editedTitle.trim()) {
-      onSave(task.id, { title: editedTitle.trim(), due_date: editedDate, notes: editiedNotes });
+      const fields: Parameters<typeof onSave>[1] = {
+        title: editedTitle.trim(),
+        due_date: editedDate,
+        notes: editedNotes,
+        time: editedTime
+      };
+
+      if (task.type === "related") {
+        fields.parent_id = editedParentId;
+      }
+
+      if (task.is_template) {
+        fields.start_date = editedStartDate;
+        fields.end_date = editedEndDate;
+        if (task.type === "routine") {
+          fields.days_selected = editedDaysSelected;
+        }
+        if (task.type === "long_interval") {
+          fields.recurrence_interval = editedInterval;
+        }
+      }
+
+      onSave(task.id, fields);
       onClose();
     }
   };
