@@ -28,7 +28,8 @@ export interface EditTaskProps {
   isOpen: boolean;
   onClose: () => void;
   task: Task;
-  onSave: (id: string, fields: { title?: string; due_date?: Date; notes?: string }) => void;
+  tasks: Task[]; // Pass all tasks for related task selection
+  onSave: (id: string, fields: { title?: string; time?:Date; due_date?: Date; notes?: string; parent_id?: string; start_date?: Date; end_date?: Date; recurrence_interval?: number; days_selected?: Weekday[] }) => void;
   onDelete: (id: string) => void;
   onToggle: (id: string) => void;
   colorBlindMode?: boolean;
@@ -48,7 +49,6 @@ export default function EditTask({
   const [editedTitle, setEditedTitle] = useState(task.title);
   const [editedDate, setEditedDate] = useState(task.due_date);
   const [editedTime, setEditedTime] = useState(task.time);
-  const [editedNotes, setEditedNotes] = useState(task.notes || "");
   const [editedStartDate, setEditedStartDate] = useState(task.start_date);
   const [editedEndDate, setEditedEndDate] = useState(task.end_date);
   const [editedInterval, setEditedInterval] = useState(task.recurrence_interval);
@@ -73,6 +73,29 @@ export default function EditTask({
 
   const handleSave = () => {
     if (editedTitle.trim()) {
+      const fields: Parameters<typeof onSave>[1] = {
+        title: editedTitle.trim(),
+        due_date: editedDate,
+        notes: editedNotes,
+        time: editedTime
+      };
+
+      if (task.type === "related") {
+        fields.parent_id = editedParentId;
+      }
+
+      if (task.is_template) {
+        fields.start_date = editedStartDate;
+        fields.end_date = editedEndDate;
+        if (task.type === "routine") {
+          fields.days_selected = editedDaysSelected;
+        }
+        if (task.type === "long_interval") {
+          fields.recurrence_interval = editedInterval;
+        }
+      }
+
+      onSave(task.id, fields);
       onSave(task.id, { title: editedTitle.trim(), due_date: editedDate, notes: editiedNotes });
       onClose();
     }

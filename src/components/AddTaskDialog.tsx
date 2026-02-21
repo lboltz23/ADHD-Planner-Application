@@ -185,8 +185,8 @@ export default function AddTaskDialog({
             </View>
             {initialTaskType === "basic" && (
               <View style={[[styles.section, { borderColor: getAppColors(colorBlindMode, isDarkMode).sectionBorder }], { borderColor: getAppColors(colorBlindMode, isDarkMode).sectionBorder }]}>
-                <TitleInput value={taskTitle} onChange={handleInputChange} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode} />
-                <NoteInput value={notes} onChange={setNotes} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode} />
+                <TitleInput value={taskTitle} onChange={handleInputChange} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode} />
+                <NoteInput value={notes} onChange={setNotes} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode} />
                 <TimePicker time = {editedTime} onTimeChange={setEditedTime}/>
                 <Text style={[[styles.label, { color: getAppColors(colorBlindMode, isDarkMode).primary }], { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Select Date *</Text>
                 {/* Calendar */}
