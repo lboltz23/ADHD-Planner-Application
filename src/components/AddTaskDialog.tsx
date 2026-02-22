@@ -96,7 +96,7 @@ export default function AddTaskDialog({
       onAddTask({
         title: taskTitle,
         due_date: effectiveStartDate,
-        time: editedTime || undefined,
+        time: editedTime || new Date(new Date().setHours(23, 59, 0, 0)),
         type: initialTaskType,
         days_selected: initialTaskType === "routine" ? selectedDays : undefined,
         recurrence_interval: interval,
@@ -123,7 +123,7 @@ export default function AddTaskDialog({
       onAddTask({
         title: taskTitle,
         due_date: dueDate,
-        time: editedTime || undefined,
+        time: editedTime ||new Date(new Date().setHours(23, 59, 0, 0)),
         type: initialTaskType,
         parent_task_id: initialTaskType === "related" ? parentTaskId : undefined,
         notes: notes,
