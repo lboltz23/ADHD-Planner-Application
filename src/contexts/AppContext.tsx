@@ -109,7 +109,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         user_id: template.user_id,
         title: template.title,
         due_date: scheduledDate,
-        time:scheduledDate,
+        time: scheduledDate,
         completed: isCompleted,
         type: template.type as Task['type'],
         notes: template.notes,
