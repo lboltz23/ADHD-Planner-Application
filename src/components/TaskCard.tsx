@@ -24,6 +24,7 @@ interface TaskCardProps {
   onUpdate: (id: string, fields: { title?: string; due_date?: Date; notes?: string; parent_id?: string; start_date?: Date; end_date?: Date; recurrence_interval?: number; days_selected?: Weekday[] }) => void;
   onDelete: (id: string) => void;
   showDate?: boolean;
+  showTime?: boolean;
   colorBlindMode?: boolean;
 }
 
@@ -43,6 +44,7 @@ export function TaskCard({
   onUpdate,
   onDelete,
   showDate,
+  showTime,
   colorBlindMode = false,
 }: TaskCardProps) {
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -119,6 +121,16 @@ export function TaskCard({
     });
   };
 
+  const formatTime = (date: Date | undefined): string => {
+    if (!date) return "Select time";
+    return date.toLocaleTimeString("en-US", {
+      hour:"2-digit",
+      hour12: true,
+      minute:"2-digit",
+      timeZoneName:'short'
+    });
+  };
+
   return (
     <>
       <TouchableOpacity
@@ -172,8 +184,10 @@ export function TaskCard({
             },
           ]}>{task.title}</Text>
         </View>
-
+        <View style={{alignItems:"center"}}>
         {showDate && <Text style={[styles.dateText, { color: colors.textMuted }]}>{formatDate(task.due_date)}</Text>}
+        {showTime && <Text style={[styles.dateText, { color: colors.textMuted }]}>{formatTime(task.time)}</Text>}
+        </View>
       </TouchableOpacity>
 
       {/* Edit Task Dialog */}
