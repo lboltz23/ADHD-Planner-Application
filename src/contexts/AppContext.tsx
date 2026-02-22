@@ -452,7 +452,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [tasks]);
 
 
-  const updateTask = useCallback(async (id: string, fields: { title?: string; due_date?: Date; notes?: string; parent_id?: string; start_date?: Date; end_date?: Date; recurrence_interval?: number; days_selected?: Weekday[] }) => {
+  const updateTask = useCallback(async (id: string, fields: { time?: Date, title?: string; due_date?: Date; notes?: string; parent_id?: string; start_date?: Date; end_date?: Date; recurrence_interval?: number; days_selected?: Weekday[] }) => {
     const task = tasks.find(t => t.id === id);
     if (!task) return;
 
@@ -487,6 +487,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
         localUpdate.time = combined; // 🔥 keep time in sync
     }
     if (fields.notes !== undefined) localUpdate.notes = fields.notes;
+    if (fields.parent_id !== undefined) localUpdate.parent_task_id = fields.parent_id;
+    if (fields.start_date !== undefined) localUpdate.start_date = fields.start_date;
+    if (fields.end_date !== undefined) localUpdate.end_date = fields.end_date;
+    if (fields.recurrence_interval !== undefined) localUpdate.recurrence_interval = fields.recurrence_interval;
+    if (fields.days_selected !== undefined) localUpdate.days_selected = fields.days_selected;
+
 
     const isRecurringInstance = task.parent_task_id && !task.is_template && task.type !== 'related';
     const isInMemoryInstance = isRecurringInstance && id.includes('_') && /\d{4}-\d{2}-\d{2}$/.test(id);
