@@ -206,6 +206,7 @@ export default function AddTaskDialog({
               <View style={styles.section}>
                 <TitleInput value={taskTitle} onChange={handleInputChange} />
                 <NoteInput value={notes} onChange={setNotes} />
+                <TimePicker time = {editedTime} onTimeChange={setEditedTime}/>
 
                 <DateRangePicker
                   startDate={startDate}
@@ -242,6 +243,7 @@ export default function AddTaskDialog({
               <View style={styles.section}>
                 <TitleInput value={taskTitle} onChange={handleInputChange} />
                 <NoteInput value={notes} onChange={setNotes} />
+                <TimePicker time = {editedTime} onTimeChange={setEditedTime}/>
 
                 <RelatedTaskInput
                   tasks={tasks}
@@ -269,6 +271,7 @@ export default function AddTaskDialog({
               <View style={styles.section}>
                 <TitleInput value={taskTitle} onChange={handleInputChange} />
                 <NoteInput value={notes} onChange={setNotes} />
+                <TimePicker time = {editedTime} onTimeChange={setEditedTime}/>
 
                 <DateRangePicker
                   startDate={startDate}
