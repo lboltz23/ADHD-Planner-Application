@@ -70,7 +70,7 @@ export function Dashboard({
     if(!showAddTaskDialog){
       setTaskRefresh(cur=>cur+1)
     }
-  })
+  },[showAddTaskDialog])
   // Filter tasks from props for today
   const todayTasks = useMemo(() => {
     const now = new Date();
@@ -88,7 +88,8 @@ export function Dashboard({
       const isFutureTime = taskDate >= now;
       
       return isSameDay && isFutureTime;
-    }).sort();
+    })  .sort((a, b) => new Date(combineAsDate(a.due_date,a.time || new Date())).getTime() - 
+                      new Date(combineAsDate(b.due_date,b.time || new Date())).getTime());
   }, [tasks,taskRefrsh]);
 
   // Filter tasks from props for upcoming (next 5 tasks after today)
