@@ -210,6 +210,7 @@ export default function AddTaskDialog({
               <View style={[styles.section, { borderColor: getAppColors(colorBlindMode, isDarkMode).sectionBorder }]}>
                 <TitleInput value={taskTitle} onChange={handleInputChange} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode}/>
                 <NoteInput value={notes} onChange={setNotes} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode} />
+                <TimePicker time = {editedTime} onTimeChange={setEditedTime}/>
 
                 <DateRangePicker
                   startDate={startDate}
@@ -248,6 +249,7 @@ export default function AddTaskDialog({
               <View style={[styles.section, { borderColor: getAppColors(colorBlindMode, isDarkMode).sectionBorder }]}>
                 <TitleInput value={taskTitle} onChange={handleInputChange} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode}/>
                 <NoteInput value={notes} onChange={setNotes} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode}/>
+                <TimePicker time = {editedTime} onTimeChange={setEditedTime}/>
 
                 <RelatedTaskInput
                   tasks={tasks}
@@ -277,6 +279,7 @@ export default function AddTaskDialog({
               <View style={[styles.section, { borderColor: getAppColors(colorBlindMode, isDarkMode).sectionBorder }]}>
                 <TitleInput value={taskTitle} onChange={handleInputChange} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode}/>
                 <NoteInput value={notes} onChange={setNotes} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode}/>
+                <TimePicker time = {editedTime} onTimeChange={setEditedTime}/>
 
                 <DateRangePicker
                   startDate={startDate}
