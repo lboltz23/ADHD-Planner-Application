@@ -598,6 +598,7 @@ export function Dashboard({
                     onUpdate={onEditTask}
                     onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
+                    showTime={true}
                   />
                 ))}
               </View>
@@ -620,6 +621,7 @@ export function Dashboard({
                     onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
                     showDate={true}
+                    showTime={true}
                   />
                 ))}
               </View>
@@ -641,6 +643,8 @@ export function Dashboard({
                     onUpdate={onEditTask}
                     onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
+                    showDate={true}
+                    showTime={true}
                   />
                 ))}
               </View>
