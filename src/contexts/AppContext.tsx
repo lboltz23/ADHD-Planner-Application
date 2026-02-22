@@ -190,7 +190,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                     user_id: override.user_id,
                     created_at: new Date(override.created_at),
                     updated_at: new Date(override.updated_at),
-                    due_date: new Date(override.due_date),
+                    due_date: parseLocalDate(override.due_date),
                     time:parseLocalTime(override.due_date),
                     completed: override.completed || false,
                     type: override.type as Task['type'],
@@ -210,7 +210,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 user_id: row.user_id,
                 created_at: new Date(row.created_at),
                 updated_at: new Date(row.updated_at),
-                due_date: new Date(row.due_date),
+                due_date: parseLocalDate(row.due_date),
                 time:parseLocalTime(row.due_date),
                 completed: row.completed || false,
                 type: row.type as Task['type'],
@@ -477,7 +477,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // Local state update object
     const localUpdate: Partial<Task> = { updated_at: new Date() };
     if (fields.title !== undefined) localUpdate.title = fields.title;
-    if (fields.due_date !== undefined || ) localUpdate.due_date = fields.due_date;
+    if (fields.due_date !== undefined || fields.time !== undefined) {
+        const baseDate = fields.due_date ?? task.due_date;
+        const baseTime = fields.time ?? task.time ?? task.due_date;
+
+        const combined = combineAsDate(baseDate, baseTime);
+
+        localUpdate.due_date = combined;
+        localUpdate.time = combined; // 🔥 keep time in sync
+    }
     if (fields.notes !== undefined) localUpdate.notes = fields.notes;
 
     const isRecurringInstance = task.parent_task_id && !task.is_template && task.type !== 'related';
