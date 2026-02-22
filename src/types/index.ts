@@ -48,6 +48,30 @@ export function toLocalDateString(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
+export function toLocalTimeString(date: Date): string {
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+
+  return `T${hours}:${minutes}:${seconds}`;
+}
+
+export function combineAsDate(
+  datePart: Date,
+  timePart: Date
+): Date {
+  const combined = new Date(datePart);
+
+  combined.setHours(
+    timePart.getHours(),
+    timePart.getMinutes(),
+    timePart.getSeconds(),
+    0
+  );
+
+  return combined;
+}
+
 export interface UpdateTaskParams {
   title?: string;
   type?: TaskType;
