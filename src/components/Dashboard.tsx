@@ -376,14 +376,6 @@ export function Dashboard({
       fontWeight: '600',
       color: isDark ? '#ffd089' : '#ff9500',
     },
-    addTaskBorder: {
-      backgroundColor: '#ffffff',
-      borderRadius: 8,
-      borderWidth: 1,
-      borderColor: '#e5d9f2',
-      padding: 10,
-      marginBottom: 20,
-    },
   });
 
   return (
