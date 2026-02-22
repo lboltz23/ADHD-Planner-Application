@@ -325,7 +325,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const { title,time, due_date, type, days_selected, recurrence_interval, notes, start_date, end_date, parent_task_id } = params;
     const baseId = uuidv4();
     const now = new Date();
-    console.log(user?.id)
     if (!user){ throw new Error("Authentication required. Please create an account.");}
 
     // Check if this is a recurring task
@@ -412,7 +411,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setTasks(prev => [...prev, newTask]);
       }
     }
-  }, []);
+  }, [user,tasks]);
 
   const toggleTask = useCallback(async (id: string) => {
     // Find the task to determine if it's a recurring instance
@@ -500,7 +499,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         ));
       }
     }
-  }, [tasks]);
+  }, [user,tasks]);
 
 
   const updateTask = useCallback(async (id: string, fields: { title?: string; due_date?: Date; notes?: string;time?: Date; parent_id?: string; start_date?: Date; end_date?: Date; recurrence_interval?: number; days_selected?: Weekday[] }) => {
@@ -699,7 +698,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         ));
       }
     }
-  }, [tasks]);
+  }, [user,tasks]);
 
   const updateSettings = useCallback((newSettings: SettingsData) => {
     setSettings(newSettings);
