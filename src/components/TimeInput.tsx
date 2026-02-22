@@ -50,7 +50,6 @@ export default function TimePicker({
           display="spinner"
           themeVariant="light"
           date={time || new Date()}
-          minimumDate={new Date()}
           onConfirm={(date) => {
             onTimeChange(date);
             setShowTime(false);
