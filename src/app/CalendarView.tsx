@@ -8,7 +8,7 @@ import { useSafeBack } from '../hooks/use-Safe-Back';
 
 export default function CalendarViewScreen() {
   const router = useRouter();
-  const { tasks, settings, addTask, toggleTask, updateTask, deleteTask, triggerConfetti } = useApp();
+  const { settings, toggleTask, updateTask, deleteTask, triggerConfetti } = useApp();
   const handleBack = useSafeBack();
 
   return (
@@ -16,7 +16,6 @@ export default function CalendarViewScreen() {
       <CalendarComponent
         onNavigateBack={handleBack}
         onNavigateSettings={() => router.push('/Settings')}
-        tasks={tasks}
         onToggleTask={toggleTask}
         colorBlindMode={settings.colorBlindMode}
         onEditTask={updateTask}
