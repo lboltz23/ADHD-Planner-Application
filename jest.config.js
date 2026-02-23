@@ -26,12 +26,9 @@ module.exports = {
   ],
 
   collectCoverageFrom: [
-    'src/constants/theme.ts',
-    'src/components/taskColors.ts',
-    'src/components/Confirmation.tsx',
-    'src/components/TitleInput.tsx',
-    'src/hooks/use-Safe-Back.ts',
-    'src/types/index.ts',
+    '<rootDir>/src/**/*.{ts,tsx}',
+    '<rootDir>/lib/**/*.ts',
+    '!**/*.d.ts',
   ],
 
   coverageThreshold: {

@@ -10,11 +10,12 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "test": "jest",
-    "test:unit": "jest testing/unit --coverage",
-    "test:integration": "jest testing/integration",
-    "test:watch": "jest --watch",
-    "test:ci": "jest --ci --coverage"
+    
+    "test": "node ./scripts/run-jest-with-evidence.js --coverage --coverageReporters=text --coverageReporters=text-summary --coverageReporters=json-summary --logHeapUsage",
+    "test:unit": "node ./scripts/run-jest-with-evidence.js testing/unit --coverage --coverageReporters=text --coverageReporters=text-summary --coverageReporters=json-summary --logHeapUsage",
+    "test:integration": "node ./scripts/run-jest-with-evidence.js testing/integration",
+    "test:watch": "node ./scripts/run-jest-with-evidence.js --watch",
+    "test:ci": "node ./scripts/run-jest-with-evidence.js --ci --coverage"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
