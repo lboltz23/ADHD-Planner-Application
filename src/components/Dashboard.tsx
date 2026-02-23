@@ -13,8 +13,9 @@ import { SettingsData } from './Settings';
 import { TaskCard } from './TaskCard';
 import AddTaskDialog from './AddTaskDialog';
 import { TaskTypeSelector } from './TaskTypeSelector';
-import { Calendar, Settings, Zap } from 'lucide-react-native';
+import { Calendar, Settings, Zap, Info } from 'lucide-react-native';
 import { getFilterColor } from './taskColors';
+import InfoPopup from './Info';
 import { AppThemeColors, resolveThemePreference } from '../constants/theme';
 import { useColorScheme } from '../hooks/use-color-scheme';
 
@@ -53,6 +54,7 @@ export function Dashboard({
   const [selectedType, setSelectedType] = useState<TaskType>('basic');
   const [taskView, setTaskView] = useState<'today' | 'upcoming' | 'repeating' | 'open'>('today');
   const [showAddTaskDialog, setShowAddTaskDialog] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
   // Ref to track previous progress for confetti trigger
   const previousProgressRef = useRef(0);
 
@@ -398,6 +400,12 @@ export function Dashboard({
             <View style={styles.headerButtons}>
               <TouchableOpacity
                 style={styles.iconButton}
+                onPress={() => setShowInfo(true)}
+              >
+                <Info size={22} color={colors.accent} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.iconButton}
                 onPress={onNavigateToSettings}
               >
                 <Settings size={22} color={colors.accent} />
@@ -634,6 +642,11 @@ export function Dashboard({
             )}
           </View>
         )}
+        <InfoPopup
+          isOpen={showInfo}
+          onClose={() => setShowInfo(false)}
+          colorBlindMode={settings.colorBlindMode}
+        />
         <AddTaskDialog
           isOpen={showAddTaskDialog}
           onClose={handleCloseDialog}
