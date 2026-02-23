@@ -12,14 +12,15 @@ import {
   CheckCircle2,
   Hourglass,
 } from "lucide-react-native";
-import { Task } from "../types";
+import { Task, Weekday } from "../types";
 import { getTaskTypeColor } from "./taskColors";
 import EditTask from "./EditTask";
 
 interface TaskCardProps {
   task: Task;
+  tasks?: Task[];
   onToggle: (id: string) => void;
-  onUpdate: (id: string, fields: { title?: string; due_date?: Date; notes?: string }) => void;
+  onUpdate: (id: string, fields: { title?: string; due_date?: Date; notes?: string; parent_id?: string; start_date?: Date; end_date?: Date; recurrence_interval?: number; days_selected?: Weekday[] }) => void;
   onDelete: (id: string) => void;
   showDate?: boolean;
   colorBlindMode?: boolean;
@@ -36,6 +37,7 @@ interface TaskStyle {
 
 export function TaskCard({
   task,
+  tasks = [],
   onToggle,
   onUpdate,
   onDelete,
@@ -177,6 +179,7 @@ export function TaskCard({
         isOpen={showEditDialog}
         onClose={() => setShowEditDialog(false)}
         task={task}
+        tasks={tasks}
         onSave={onUpdate}
         onDelete={onDelete}
         onToggle={onToggle}
