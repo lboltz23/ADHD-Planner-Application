@@ -9,7 +9,12 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "test": "jest",
+    "test:unit": "jest testing/unit --coverage",
+    "test:integration": "jest testing/integration",
+    "test:watch": "jest --watch",
+    "test:ci": "jest --ci --coverage"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
@@ -58,7 +63,13 @@
     "@types/uuid": "^10.0.0",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
-    "typescript": "~5.9.2"
+    "typescript": "~5.9.2",
+
+    "jest": "^29.7.0",
+    "jest-expo": "^54.0.0",
+    "@testing-library/react-native": "^12.4.5",
+    "@testing-library/jest-native": "^5.4.3",
+    "react-test-renderer": "19.1.0"
   },
   "private": true
 }
