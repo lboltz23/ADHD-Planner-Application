@@ -34,10 +34,20 @@ export default function NoteInput({
 }
 
 const styles = StyleSheet.create({
+  container: {
+    paddingVertical: 6,
+    paddingBottom: 12,
+  },
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 16,
+    backgroundColor: AppColors.inputBackground,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderColor: AppColors.border,
+    borderWidth: 1,
+    paddingBottom: 4,
   },
   label: {
     fontSize: 18,
@@ -55,6 +65,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   icon: {
-    marginLeft: 8,
+    marginRight: 6,
   },
 });
+

@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
   },
   dialog: {
     borderRadius: 16,
-    padding: 20,
+    padding: 18,
     width: "100%",
     maxWidth: 400,
     minHeight: 350,
@@ -433,7 +433,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   createButton: {
-    // backgroundColor set dynamically based on task type
+    // backgroundColor is set dynamically based on task type
   },
   createText: {
     color: "white",
