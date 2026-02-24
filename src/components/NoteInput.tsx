@@ -7,12 +7,16 @@ interface NoteInputProps {
   value: string;
   onChange: (text: string) => void;
   placeholder?: string;
+  colorBlindMode?: boolean;
+  isDarkMode?: boolean;
 }
 
 export default function NoteInput({
   value,
   onChange,
   placeholder = "Enter notes here...",
+  colorBlindMode = false,
+  isDarkMode = false,
 }: NoteInputProps) {
   return (
     <View style={styles.container}>
@@ -28,18 +32,14 @@ export default function NoteInput({
         onChangeText={onChange}
         value={value}
         placeholder={placeholder}
-        placeholderTextColor={AppColors.placeholder}
+        placeholderTextColor={getAppColors(colorBlindMode, isDarkMode).placeholder}
       />
-    </View>
+      <Pencil size={16} color={getAppColors(colorBlindMode, isDarkMode).primary} style={styles.icon} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    paddingVertical: 6,
-    paddingBottom: 12,
-  },
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -57,12 +57,13 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontSize: 16,
-    color: AppColors.primary,
-    paddingVertical: 6,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
   },
   icon: {
-    marginRight: 6,
+    marginLeft: 8,
   },
 });
-
