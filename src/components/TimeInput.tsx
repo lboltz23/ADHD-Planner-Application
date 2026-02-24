@@ -21,7 +21,7 @@ export default function TimePicker({
   const [showTime, setShowTime] = useState(false);
 
   const formatDate = (date: Date | null): string => {
-    if (!date) return "Select time";
+    if (!date) return "Select time...";
     return date.toLocaleTimeString("en-US", {
       hour:"2-digit",
       hour12: true,
@@ -33,7 +33,8 @@ export default function TimePicker({
   return (
     <View style={styles.dateInputRow}>
       <View style={styles.dateInputContainer}>
-        <Text style={[styles.label, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Time:</Text>
+        <View style = {{flexDirection: "row",justifyContent:"center",alignContent:"center",alignItems:"center"}}>
+          <Text style={[styles.label, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Time:  </Text>
         <TouchableOpacity
           style={[styles.dateInput,{ backgroundColor: getAppColors(colorBlindMode, isDarkMode).inputBackground, borderColor: getAppColors(colorBlindMode, isDarkMode).border }]}
           onPress={() => setShowTime(true)}
@@ -41,8 +42,8 @@ export default function TimePicker({
           <Text style={time ? styles.dateText : styles.datePlaceholder}>
             {formatDate(time)}
           </Text>
-          <Pencil size={16} color={getAppColors(colorBlindMode, isDarkMode).primary} style={styles.icon} />
         </TouchableOpacity>
+        <Pencil size={16} color={getAppColors(colorBlindMode, isDarkMode).primary} style={styles.icon} />
         <DateTimePickerModal
           isVisible={showTime}
           mode="time"
@@ -56,6 +57,7 @@ export default function TimePicker({
           }}
           onCancel={() => setShowTime(false)}
         />
+        </View>
       </View>
     </View>
   );
@@ -73,10 +75,11 @@ const styles = StyleSheet.create({
     minWidth: 120,
   },
   label: {
-    fontSize: 14,
+    fontSize: 20,
     fontWeight: "600",
-    color: AppColors.primary,
-    marginBottom: 8,
+    marginBottom: 4,
+    textAlign: "left",
+    marginRight: 8,
   },
   dateInput: {
     backgroundColor: AppColors.inputBackground,
@@ -85,6 +88,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
+    flex:1
   },
   dateText: {
     fontSize: 14,
