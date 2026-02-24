@@ -2,15 +2,21 @@ import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { AppColors } from "../constants/theme";
+import { getAppColors } from "../constants/theme";
+import { Pencil } from "lucide-react-native";
 
 interface TimePickerProps {
   time: Date | null;
   onTimeChange: (date: Date) => void;
+  colorBlindMode?: boolean;
+  isDarkMode?: boolean;
 }
 
 export default function TimePicker({
   time,
   onTimeChange,
+  colorBlindMode = false,
+  isDarkMode = false
 }: TimePickerProps) {
   const [showTime, setShowTime] = useState(false);
 
@@ -27,14 +33,15 @@ export default function TimePicker({
   return (
     <View style={styles.dateInputRow}>
       <View style={styles.dateInputContainer}>
-        <Text style={styles.label}>Time:</Text>
+        <Text style={[styles.label, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Time:</Text>
         <TouchableOpacity
-          style={styles.dateInput}
+          style={[styles.dateInput,{ backgroundColor: getAppColors(colorBlindMode, isDarkMode).inputBackground, borderColor: getAppColors(colorBlindMode, isDarkMode).border }]}
           onPress={() => setShowTime(true)}
         >
           <Text style={time ? styles.dateText : styles.datePlaceholder}>
             {formatDate(time)}
           </Text>
+          <Pencil size={16} color={getAppColors(colorBlindMode, isDarkMode).primary} style={styles.icon} />
         </TouchableOpacity>
         <DateTimePickerModal
           isVisible={showTime}
@@ -86,5 +93,7 @@ const styles = StyleSheet.create({
   datePlaceholder: {
     fontSize: 14,
     color: AppColors.placeholder,
+  },icon: {
+    marginLeft: 8,
   },
 });
