@@ -85,7 +85,7 @@ const ValidSignUp = () => {
       }
 
       if (!session) {
-        Alert.alert("Please check your inbox for email verification! Don't forget to check your spam folder.");
+        Alert.alert("Please check your inbox for email verification! Don't forget to check your spam folder. If an account already has that email try logging in.");
         router.back();
       }
     }
