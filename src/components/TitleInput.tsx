@@ -38,9 +38,6 @@ export default function TitleInput({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    paddingVertical: 4,
-  },
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -50,7 +47,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   label: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "600",
     marginBottom: 4,
     textAlign: "left",
@@ -65,6 +62,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   icon: {
-    marginRight: 6,
+    marginLeft: 8,
   },
 });
