@@ -22,6 +22,7 @@ const WEEKDAY_ABBREVIATIONS: Record<Weekday, string> = {
   Saturday: "Sat",
   Sunday: "Sun",
 };
+import { confirm } from "./Confirmation";
 
 export interface EditTaskProps {
   isOpen: boolean;
