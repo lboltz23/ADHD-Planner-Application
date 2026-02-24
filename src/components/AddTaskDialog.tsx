@@ -10,6 +10,8 @@ import DateRangePicker from "./DateRangePicker";
 import RelatedTaskInput from "./RelatedTask";
 import NoteInput from "./NoteInput";
 import TimePicker from "./TimeInput";
+import { getAppColors, AppThemeColors, resolveThemePreference } from "../constants/theme";
+import { useColorScheme } from '../hooks/use-color-scheme';
 
 const ALL_WEEKDAYS: Weekday[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const WEEKDAY_ABBREVIATIONS: Record<Weekday, string> = {
@@ -30,6 +32,7 @@ interface AddTaskDialogProps {
   initialTitle?: string;
   colorBlindMode?: boolean;
   tasks?: Task[];
+  isDarkMode?: boolean;
 }
 
 export default function AddTaskDialog({
@@ -38,8 +41,9 @@ export default function AddTaskDialog({
   onAddTask,
   initialTaskType,
   initialTitle = "",
-  colorBlindMode = false,
   tasks = [],
+  colorBlindMode = false,
+  isDarkMode = false,
 }: AddTaskDialogProps) {
   const [taskTitle, setTaskTitle] = useState(initialTitle);
   const [selectedDate, setSelectedDate] = useState("");
@@ -165,7 +169,7 @@ export default function AddTaskDialog({
     <Modal visible={isOpen} transparent animationType="fade">
       <View style={styles.overlay}>
         <ScrollView contentContainerStyle={styles.scrollContainer}>
-          <View style={styles.dialog}>
+          <View style={[styles.dialog, { backgroundColor: isDarkMode ? '#1b2133' : 'white' }]}>
             {/* Header */}
             <View style={styles.header}>
               <LinearGradient
@@ -174,62 +178,64 @@ export default function AddTaskDialog({
               >
                 <Plus color="white" size={20} />
               </LinearGradient>
-              <Text style={styles.title}>Create New Task</Text>
+              <Text style={[styles.title, { color: getAppColors(colorBlindMode, isDarkMode).primary  }]}>Create New Task</Text>
               <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-                <X size={24} color="#6b5b7f" />
+                <X size={24} color={getAppColors(colorBlindMode, isDarkMode).primary} />
               </TouchableOpacity>
             </View>
             {initialTaskType === "basic" && (
-              <View style={styles.section}>
-                <TitleInput value={taskTitle} onChange={handleInputChange} />
-                <NoteInput value={notes} onChange={setNotes} />
-                <TimePicker time = {editedTime} onTimeChange={setEditedTime}/>
-                <Text style={styles.label}>Select Date: </Text>
+              <View style={[styles.section, { borderColor: getAppColors(colorBlindMode, isDarkMode).sectionBorder }]}>
+                <TitleInput value={taskTitle} onChange={handleInputChange} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode} />
+                <NoteInput value={notes} onChange={setNotes} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode} />
+                <TimePicker time = {editedTime} onTimeChange={setEditedTime} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode}/>
+                <Text style={[styles.label, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Select Date *</Text>
                 {/* Calendar */}
                 <Calendar
                   onDayPress={(day) => setSelectedDate(day.dateString)}
                   markedDates={
                     selectedDate
-                      ? { [selectedDate]: { selected: true, selectedColor: "#b8a4d9" } }
+                      ? { [selectedDate]: { selected: true, selectedColor: colorBlindMode ? "#33BBEE" : "#b8a4d9" } }
                       : {}
                   }
                   minDate={toLocalDateString(new Date())}
                   theme={{
-                    todayTextColor: "#a8d8ea",
-                    arrowColor: "#a8d8ea",
+                    todayTextColor: colorBlindMode ? "#33BBEE" : "#a8d8ea",
+                    arrowColor: colorBlindMode ? "#33BBEE" :"#a8d8ea",
                   }}
-                  style={styles.calendar}
+                  style={[styles.calendar, { borderColor: getAppColors(colorBlindMode, isDarkMode).border }]}
                 />
               </View>
             )}
             {initialTaskType === "routine" && (
-              <View style={styles.section}>
-                <TitleInput value={taskTitle} onChange={handleInputChange} />
-                <NoteInput value={notes} onChange={setNotes} />
-                <TimePicker time = {editedTime} onTimeChange={setEditedTime}/>
+              <View style={[styles.section, { borderColor: getAppColors(colorBlindMode, isDarkMode).sectionBorder }]}>
+                <TitleInput value={taskTitle} onChange={handleInputChange} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode}/>
+                <NoteInput value={notes} onChange={setNotes} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode} />
+                <TimePicker time = {editedTime} onTimeChange={setEditedTime} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode}/>
 
                 <DateRangePicker
                   startDate={startDate}
                   endDate={endDate}
                   onStartDateChange={setStartDate}
                   onEndDateChange={setEndDate}
+                  colorBlindMode={colorBlindMode}
+                  isDarkMode={isDarkMode}
                 />
 
-                <Text style={styles.label}>Repeat On (select days): </Text>
+                <Text style={[styles.label, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Repeat On (select days) *</Text>
                 <View style={styles.frequencyRow}>
                   {ALL_WEEKDAYS.map((day) => (
                     <TouchableOpacity
                       key={day}
                       style={[
-                        styles.frequencyButton,
-                        selectedDays.includes(day) && styles.frequencyButtonActive,
+                        [styles.frequencyButton, { backgroundColor: getAppColors(colorBlindMode, isDarkMode).inputBackground, borderColor: getAppColors(colorBlindMode, isDarkMode).border }],
+                        selectedDays.includes(day) && [styles.frequencyButtonActive, { backgroundColor: getAppColors(colorBlindMode, isDarkMode).primary, borderColor: getAppColors(colorBlindMode, isDarkMode).primary }],
                       ]}
                       onPress={() => toggleDay(day)}
                     >
                       <Text
                         style={[
-                          styles.frequencyText,
-                          selectedDays.includes(day) && styles.frequencyTextActive,
+                          [styles.frequencyText, { color: getAppColors(colorBlindMode, isDarkMode).primary }],
+                          selectedDays.includes(day) && [styles.frequencyTextActive, { color: getAppColors(colorBlindMode, isDarkMode).inputBackground }],
                         ]}
                       >
                         {WEEKDAY_ABBREVIATIONS[day]}
@@ -240,54 +246,58 @@ export default function AddTaskDialog({
               </View>
             )}
             {initialTaskType === "related" && (
-              <View style={styles.section}>
-                <TitleInput value={taskTitle} onChange={handleInputChange} />
-                <NoteInput value={notes} onChange={setNotes} />
-                <TimePicker time = {editedTime} onTimeChange={setEditedTime}/>
+              <View style={[styles.section, { borderColor: getAppColors(colorBlindMode, isDarkMode).sectionBorder }]}>
+                <TitleInput value={taskTitle} onChange={handleInputChange} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode}/>
+                <NoteInput value={notes} onChange={setNotes} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode}/>
+                <TimePicker time = {editedTime} onTimeChange={setEditedTime} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode}/>
 
                 <RelatedTaskInput
                   tasks={tasks}
                   selectedTaskId={parentTaskId}
                   onSelect={setParentTaskId}
+                  colorBlindMode={colorBlindMode}
+                  isDarkMode={isDarkMode}
                 />
-                <Text style={styles.label}>Select Date: </Text>
+                <Text style={[styles.label, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Select Date *</Text>
                 <Calendar
                   onDayPress={(day) => setSelectedDate(day.dateString)}
                   markedDates={
                     selectedDate
-                      ? { [selectedDate]: { selected: true, selectedColor: "#b8a4d9" } }
+                      ? { [selectedDate]: { selected: true, selectedColor: colorBlindMode ? "#33BBEE" : "#b8a4d9" } }
                       : {}
                   }
                   minDate={toLocalDateString(new Date())}
                   theme={{
-                    todayTextColor: "#a8d8ea",
-                    arrowColor: "#a8d8ea",
+                    todayTextColor: colorBlindMode ? "#33BBEE" : "#a8d8ea",
+                    arrowColor: colorBlindMode ? "#33BBEE" :"#a8d8ea",
                   }}
-                  style={styles.calendar}
+                  style={[styles.calendar, { borderColor: getAppColors(colorBlindMode, isDarkMode).border }]}
                 />
               </View>
             )}
             {initialTaskType === "long_interval" && (
-              <View style={styles.section}>
-                <TitleInput value={taskTitle} onChange={handleInputChange} />
-                <NoteInput value={notes} onChange={setNotes} />
-                <TimePicker time = {editedTime} onTimeChange={setEditedTime}/>
+              <View style={[styles.section, { borderColor: getAppColors(colorBlindMode, isDarkMode).sectionBorder }]}>
+                <TitleInput value={taskTitle} onChange={handleInputChange} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode}/>
+                <NoteInput value={notes} onChange={setNotes} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode}/>
+                <TimePicker time = {editedTime} onTimeChange={setEditedTime} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode}/>
 
                 <DateRangePicker
                   startDate={startDate}
                   endDate={endDate}
                   onStartDateChange={setStartDate}
                   onEndDateChange={setEndDate}
+                  colorBlindMode={colorBlindMode}
+                  isDarkMode={isDarkMode}
                 />
 
                 <View style={styles.inputRow}>
-                  <Text style={styles.label}>Interval(months): </Text>
+                  <Text style={[styles.label, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Interval (months):</Text>
                   <TextInput
-                    style={styles.dateInput}
+                    style={[styles.dateInput, { backgroundColor: getAppColors(colorBlindMode, isDarkMode).inputBackground, borderColor: getAppColors(colorBlindMode, isDarkMode).border, color: getAppColors(colorBlindMode, isDarkMode).primary }]}
                     value={intervalMonths}
                     onChangeText={setIntervalMonths}
                     placeholder="e.g., 3"
-                    placeholderTextColor="#999"
+                    placeholderTextColor={getAppColors(colorBlindMode, isDarkMode).placeholder}
                     keyboardType="numeric"
                   />
                 </View>
@@ -295,8 +305,8 @@ export default function AddTaskDialog({
             )}
             {/* Action Buttons */}
             <View style={styles.buttonRow}>
-              <TouchableOpacity onPress={handleClose} style={[styles.button, styles.cancelButton]}>
-                <Text style={styles.cancelText}>Cancel</Text>
+              <TouchableOpacity onPress={handleClose} style={[styles.button, styles.cancelButton, { backgroundColor: getAppColors(colorBlindMode, isDarkMode).inputBackground, borderColor: getAppColors(colorBlindMode, isDarkMode).border }]}>
+                <Text style={[styles.cancelText, {color: getAppColors(colorBlindMode, isDarkMode).primary}]}>Cancel</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -331,9 +341,8 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   dialog: {
-    backgroundColor: "white",
     borderRadius: 16,
-    padding: 18,
+    padding: 20,
     width: "100%",
     maxWidth: 400,
     minHeight: 350,
@@ -341,8 +350,7 @@ const styles = StyleSheet.create({
   calendar: {
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#e5d9f2",
-    marginBottom: 16,
+    marginBottom: 6,
   },
   header: {
     flexDirection: "row",
@@ -360,7 +368,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: "600",
-    color: "#6b5b7f",
     flex: 1,
   },
   closeButton: {
@@ -370,13 +377,11 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 3,
     borderRadius: 8,
-    borderColor: "#e5d9f2",
     padding: 12,
   },
   label: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "600",
-    color: "#6b5b7f",
     marginBottom: 8,
   },
   inputRow: {
@@ -385,14 +390,12 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   dateInput: {
-    backgroundColor: "#f8f6fb",
     borderWidth: 1,
-    borderColor: "#e5d9f2",
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 14,
-    color: "#6b5b7f",
+    marginLeft: 8,
   },
   frequencyRow: {
     flexDirection: "row",
@@ -408,21 +411,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#e5d9f2",
-    backgroundColor: "#f8f6fb",
     alignItems: "center",
   },
   frequencyButtonActive: {
-    backgroundColor: "#b8a4d9",
-    borderColor: "#b8a4d9",
+    // backgroundColor set dynamically based on colorBlindMode,
   },
   frequencyText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#6b5b7f",
   },
   frequencyTextActive: {
-    color: "#ffffff",
+    // color set dynamically based on colorBlindMode
   },
   buttonRow: {
     flexDirection: "row",
@@ -437,16 +436,13 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     borderWidth: 1,
-    borderColor: "#e5d9f2",
-    backgroundColor: "#f8f6fb",
   },
   cancelText: {
-    color: "#6b5b7f",
     fontWeight: "600",
     fontSize: 14,
   },
   createButton: {
-    // backgroundColor is set dynamically based on task type
+    // backgroundColor set dynamically based on task type
   },
   createText: {
     color: "white",

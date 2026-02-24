@@ -13,8 +13,9 @@ import { SettingsData } from './Settings';
 import { TaskCard } from './TaskCard';
 import AddTaskDialog from './AddTaskDialog';
 import { TaskTypeSelector } from './TaskTypeSelector';
-import { Calendar, Settings, Zap } from 'lucide-react-native';
+import { Calendar, Settings, Zap, Info } from 'lucide-react-native';
 import { getFilterColor } from './taskColors';
+import InfoPopup from './Info';
 import { AppThemeColors, resolveThemePreference } from '../constants/theme';
 import { useColorScheme } from '../hooks/use-color-scheme';
 import { useFocusEffect } from 'expo-router';
@@ -27,7 +28,7 @@ interface DashboardProps {
   tasks: Task[];
   onAddTask: (params: CreateTaskParams) => void;
   onToggleTask: (id: string) => void;
-  onEditTask: (id: string, fields: { title?: string; due_date?: Date; notes?: string; parent_id?: string; start_date?: Date; end_date?: Date; recurrence_interval?: number; days_selected?: Weekday[] }) => void;
+  onEditTask: (id: string, fields: { title?: string; due_date?: Date; notes?: string }) => void;
   onDeleteTask: (id: string) => void;
   settings: SettingsData;
   onTriggerConfetti?: () => void;
@@ -55,6 +56,7 @@ export function Dashboard({
   const [taskView, setTaskView] = useState<'today' | 'upcoming' | 'repeating' | 'open'>('today');
   const [showAddTaskDialog, setShowAddTaskDialog] = useState(false);
   const [taskRefrsh, setTaskRefresh] = useState(0);
+  const [showInfo, setShowInfo] = useState(false);
   // Ref to track previous progress for confetti trigger
   const previousProgressRef = useRef(0);
 
@@ -153,7 +155,7 @@ export function Dashboard({
   };
 
   const handleProgressBar = () => {
-    if (todayTasks.length === 0)
+    if (completedTodayTasks === 0)
       return false;
     return true;
   }
@@ -171,7 +173,7 @@ export function Dashboard({
 
   useEffect(() => {
     const calculateStreak = () => {
-      let streak = 2172026;
+      let streak = 1;
       let currentDate = new Date();
       currentDate.setHours(0, 0, 0, 0);
 
@@ -433,6 +435,12 @@ export function Dashboard({
             <View style={styles.headerButtons}>
               <TouchableOpacity
                 style={styles.iconButton}
+                onPress={() => setShowInfo(true)}
+              >
+                <Info size={22} color={colors.accent} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.iconButton}
                 onPress={onNavigateToSettings}
               >
                 <Settings size={22} color={colors.accent} />
@@ -594,12 +602,12 @@ export function Dashboard({
                   <TaskCard
                     key={task.id}
                     task={task}
-                    tasks={tasks}
                     onToggle={onToggleTask}
                     onUpdate={onEditTask}
                     onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
                     showTime={true}
+                    isDarkMode={isDark}
                   />
                 ))}
               </View>
@@ -616,13 +624,13 @@ export function Dashboard({
                   <TaskCard
                     key={task.id}
                     task={task}
-                    tasks={tasks}
                     onToggle={onToggleTask}
                     onUpdate={onEditTask}
                     onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
                     showDate={true}
                     showTime={true}
+                    isDarkMode={isDark}
                   />
                 ))}
               </View>
@@ -639,11 +647,11 @@ export function Dashboard({
                   <TaskCard
                     key={task.id}
                     task={task}
-                    tasks={tasks}
                     onToggle={onToggleTask}
                     onUpdate={onEditTask}
                     onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
+                    isDarkMode={isDark}
                   />
                 ))}
               </View>
@@ -660,17 +668,23 @@ export function Dashboard({
                   <TaskCard
                     key={task.id}
                     task={task}
-                    tasks={tasks}
                     onToggle={onToggleTask}
                     onUpdate={onEditTask}
                     onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
+                    showDate={true}
+                    isDarkMode={isDark}
                   />
                 ))}
               </View>
             )}
           </View>
         )}
+        <InfoPopup
+          isOpen={showInfo}
+          onClose={() => setShowInfo(false)}
+          colorBlindMode={settings.colorBlindMode}
+        />
         <AddTaskDialog
           isOpen={showAddTaskDialog}
           onClose={handleCloseDialog}
@@ -679,6 +693,7 @@ export function Dashboard({
           initialTitle={newTaskTitle}
           colorBlindMode={settings.colorBlindMode}
           tasks={tasks}
+          isDarkMode={isDark}
         />
 
 
