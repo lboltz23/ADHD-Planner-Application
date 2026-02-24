@@ -34,7 +34,7 @@ export default function TimePicker({
     <View style={styles.dateInputRow}>
       <View style={styles.dateInputContainer}>
         <View style = {{flexDirection: "row",justifyContent:"center",alignContent:"center",alignItems:"center"}}>
-          <Text style={[styles.label, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Time:  </Text>
+          <Text style={[[styles.label, { color: getAppColors(colorBlindMode, isDarkMode).primary }], { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Time:  </Text>
         <TouchableOpacity
           style={[styles.dateInput,{ backgroundColor: getAppColors(colorBlindMode, isDarkMode).inputBackground, borderColor: getAppColors(colorBlindMode, isDarkMode).border }]}
           onPress={() => setShowTime(true)}
@@ -42,6 +42,7 @@ export default function TimePicker({
           <Text style={time ? styles.dateText : styles.datePlaceholder}>
             {formatDate(time)}
           </Text>
+          <Pencil size={16} color={getAppColors(colorBlindMode, isDarkMode).primary} style={styles.icon} />
         </TouchableOpacity>
         <Pencil size={16} color={getAppColors(colorBlindMode, isDarkMode).primary} style={styles.icon} />
         <DateTimePickerModal
