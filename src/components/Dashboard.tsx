@@ -65,6 +65,13 @@ export function Dashboard({
     },[])
   )
 
+  useEffect(()=>{
+    const interval = setInterval(() => {
+      setTaskRefresh(cur => cur +1);
+    },60000);
+    return () => clearInterval(interval)
+  },[])
+
   // Refresh tasks when closing creator moda;
   useEffect(() => {
     if(!showAddTaskDialog){
@@ -85,6 +92,7 @@ export function Dashboard({
         taskDate.getMonth() === now.getMonth() &&
         taskDate.getDate() === now.getDate();
 
+      now.setSeconds(0);
       const isFutureTime = taskDate >= now;
       
       return isSameDay && isFutureTime;
@@ -119,6 +127,7 @@ export function Dashboard({
       .filter((task) => {
         if (task.is_template || task.type === 'routine' ||  task.type === 'long_interval') return false;
         const taskDate = combineAsDate(task.due_date,task.time || new Date());
+        today.setSeconds(0);
         return taskDate < today;
       })
       .sort((a, b) => new Date(combineAsDate(b.due_date,b.time || new Date())).getTime() - 
@@ -635,8 +644,6 @@ export function Dashboard({
                     onUpdate={onEditTask}
                     onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
-                    showDate={true}
-                    showTime={true}
                   />
                 ))}
               </View>
