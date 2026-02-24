@@ -29,7 +29,7 @@ interface DashboardProps {
   tasks: Task[];
   onAddTask: (params: CreateTaskParams) => void;
   onToggleTask: (id: string) => void;
-  onEditTask: (id: string, fields: { title?: string; due_date?: Date; notes?: string; parent_id?: string; start_date?: Date; end_date?: Date; recurrence_interval?: number; days_selected?: Weekday[] }) => void;
+  onEditTask: (id: string, fields: { title?: string; due_date?: Date; notes?: string }) => void;
   onDeleteTask: (id: string) => void;
   settings: SettingsData;
   onTriggerConfetti?: () => void;
@@ -603,7 +603,6 @@ export function Dashboard({
                   <TaskCard
                     key={task.id}
                     task={task}
-                    tasks={tasks}
                     onToggle={onToggleTask}
                     onUpdate={onEditTask}
                     onDelete={onDeleteTask}
@@ -627,7 +626,6 @@ export function Dashboard({
                   <TaskCard
                     key={task.id}
                     task={task}
-                    tasks={tasks}
                     onToggle={onToggleTask}
                     onUpdate={onEditTask}
                     onDelete={onDeleteTask}
@@ -652,7 +650,6 @@ export function Dashboard({
                   <TaskCard
                     key={task.id}
                     task={task}
-                    tasks={tasks}
                     onToggle={onToggleTask}
                     onUpdate={onEditTask}
                     onDelete={onDeleteTask}
@@ -676,11 +673,12 @@ export function Dashboard({
                   <TaskCard
                     key={task.id}
                     task={task}
-                    tasks={tasks}
                     onToggle={onToggleTask}
                     onUpdate={onEditTask}
                     onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
+                    showDate={true}
+                    isDarkMode={isDark}
                   />
                 ))}
               </View>
@@ -701,6 +699,7 @@ export function Dashboard({
           initialTitle={newTaskTitle}
           colorBlindMode={settings.colorBlindMode}
           tasks={tasks}
+          isDarkMode={isDark}
         />
 
 
