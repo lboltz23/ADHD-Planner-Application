@@ -44,8 +44,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     colorBlindMode: false,
   });
 
-  const [streakCount, setStreakCount] = useState<number>(0);
-  const [lastLoginDate, setLastLoginDate] = useState<Date | null>(null);
+  const [streak, setStreak] = useState<{ current_streak: number; longest_streak: number; last_login?: string }>({
+    current_streak: 0,
+    longest_streak: 0,
+    last_login: undefined,
+  });
 
   const [confettiTrigger, setConfettiTrigger] = useState(0);
 
@@ -431,6 +434,43 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setConfettiTrigger(prev => prev + 1);
   }, []);
 
+  const fetchStreak = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('streaks')
+        .select('*')
+        .eq('user_id', DEFAULT_USER_ID)
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 = row not found
+        console.error('Error fetching streak:', error);
+        return;
+      }
+
+      if (data) {
+        setStreak({
+          current_streak: data.current_streak || 0,
+          longest_streak: data.longest_streak || 0,
+          last_login: data.last_login || undefined,
+        });
+      } else {
+        // Create a new streak row if it doesn't exist
+        const { error: insertError } = await supabase
+          .from('streaks')
+          .insert({ user_id: DEFAULT_USER_ID, current_streak: 0, longest_streak: 0, last_login: new Date().toISOString() });
+
+        if (insertError) console.error('Error creating new streak:', insertError);
+        setStreak({ current_streak: 0, longest_streak: 0, last_login: new Date().toISOString() });
+      }
+    } catch (err) {
+      console.error('Failed to fetch streak:', err);
+    }
+  }, []);
+
+    useEffect(() => {
+  fetchStreak();
+}, [fetchStreak]);
+
   const updateTask = useCallback(async (id: string, fields: { title?: string; due_date?: Date; notes?: string }) => {
     const task = tasks.find(t => t.id === id);
     if (!task) return;
@@ -672,25 +712,43 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [tasks]);
 
-  const updateStreak = () => {
-    const today = new Date();
-    if (lastLoginDate) {
-      const diffTime = Math.abs(today.getTime() - lastLoginDate.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      if (diffDays === 1) {
-        setStreakCount(prev => prev + 1);
-      } else if (diffDays > 1) {
-        setStreakCount(1);
-      }
-    } else {
-      setStreakCount(1);
-    }
-    setLastLoginDate(today);
-  };
+  const updateStreak = useCallback(async () => {
+  const today = new Date();
+  let newCurrent = 1;
+  let newLongest = streak.longest_streak;
 
-  const login = () => {
-    updateStreak();
-  };
+    if (streak.last_login) {
+      const lastLogin = new Date(streak.last_login);
+      const diffDays = Math.floor((today.getTime() - lastLogin.getTime()) / (1000 * 60 * 60 * 24));
+
+      if (diffDays === 1) {
+        newCurrent = streak.current_streak + 1;
+      } else if (diffDays > 1) {
+        newCurrent = 1;
+      } else {
+        newCurrent = streak.current_streak; // same day, no change
+      }
+    }
+
+    if (newCurrent > newLongest) newLongest = newCurrent;
+
+    setStreak({ current_streak: newCurrent, longest_streak: newLongest, last_login: today.toISOString() });
+
+    const { error } = await supabase
+      .from('streaks')
+      .upsert({
+        user_id: DEFAULT_USER_ID,
+        current_streak: newCurrent,
+        longest_streak: newLongest,
+        last_login: today.toISOString(),
+      });
+    if (error) console.error('Error updating streak:', error);
+  }, [streak]);
+
+ const login = useCallback(async () => {
+  await fetchStreak();   // wait for fresh data
+  await updateStreak();  // then calculate properly
+}, [fetchStreak, updateStreak]);
 
   // Call login() whenever the user logs in
 
@@ -704,7 +762,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         updateTask,
         deleteTask,
         updateSettings,
-        streakCount,
+        streakCount: streak.current_streak,
         login,
         confettiTrigger,
         triggerConfetti,
