@@ -7,6 +7,7 @@ import { getTaskTypeColor, getEnhancedTaskTypeColor } from "./taskColors";
 import TitleInput from "./TitleInput";
 import NoteInput from "./NoteInput";
 import { getAppColors } from "../constants/theme";
+import { confirm } from "./Confirmation";
 
 export interface EditTaskProps {
   isOpen: boolean;
