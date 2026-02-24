@@ -42,6 +42,7 @@ export default function TimePicker({
           <Text style={time ? styles.dateText : styles.datePlaceholder}>
             {formatDate(time)}
           </Text>
+          <Pencil size={16} color={getAppColors(colorBlindMode, isDarkMode).primary} style={styles.icon} />
         </TouchableOpacity>
         <Pencil size={16} color={getAppColors(colorBlindMode, isDarkMode).primary} style={styles.icon} />
         <DateTimePickerModal
