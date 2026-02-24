@@ -1,61 +1,64 @@
 import React from "react";
 import { View, Text, TextInput, StyleSheet } from "react-native";
 import { Pencil } from "lucide-react-native";
-import { getAppColors } from "../constants/theme";
-
+import { AppColors } from "../constants/theme";
 
 interface TitleInputProps {
   value: string;
   onChange: (text: string) => void;
   placeholder?: string;
-  colorBlindMode?: boolean;
-  isDarkMode?: boolean;
 }
 
 export default function TitleInput({
   value,
   onChange,
-  colorBlindMode = false,
-  isDarkMode = false,
   placeholder = "Enter task title",
 }: TitleInputProps) {
   return (
-    <View style={styles.inputRow}>
-      <Text style={[styles.label, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Title: *</Text>
+    <View style={styles.container}>
+    <Text style={styles.label}>Title: </Text>
+      <View style={styles.inputRow}>
+      <Pencil size={16} color={AppColors.primary} style={styles.icon} />
       <TextInput
-        style={[styles.input, { backgroundColor: getAppColors(colorBlindMode, isDarkMode).inputBackground, borderColor: getAppColors(colorBlindMode, isDarkMode).border, color: getAppColors(colorBlindMode, isDarkMode).primary }]}
+        style={styles.input}
         onChangeText={onChange}
         value={value}
         placeholder={placeholder}
-        placeholderTextColor={getAppColors(colorBlindMode, isDarkMode).placeholder}
+        placeholderTextColor={AppColors.placeholder}
+        underlineColorAndroid="transparent"
       />
-      <Pencil size={16} color={getAppColors(colorBlindMode, isDarkMode).primary} style={styles.icon} />
+    </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    paddingVertical: 4,
+  },
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
+    backgroundColor: AppColors.inputBackground,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderColor: AppColors.border,
+    borderWidth: 1,
   },
   label: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "600",
-    marginBottom: 4,
-    textAlign: "left",
-    marginRight: 8,
+    color: AppColors.primary,
+    marginBottom: 6,
   },
   input: {
     flex: 1,
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
+    fontSize: 16,
+    color: AppColors.primary,
+    paddingVertical: 6,
   },
   icon: {
-    marginLeft: 8,
+    marginRight: 6,
   },
 });
