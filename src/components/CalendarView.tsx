@@ -1,19 +1,19 @@
-import React, { useMemo, useState, useRef } from 'react';
-// import React, { useMemo, useState, useRef, useEffect } from 'react'; // Uncomment when enabling Supabase
-import { View, Text, ScrollView, StyleSheet, Dimensions, TouchableOpacity, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
+import { View, Text, ScrollView, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, Settings, ChevronDown, Plus } from 'lucide-react-native';
 import { TaskCard } from './TaskCard';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Task } from '../types';
+import { Task, Weekday } from '../types';
 import { SettingsData } from './Settings';
 import { ProgressCircle } from './ProgressCircle';
-// import { useApp } from '../contexts/AppContext'; // Uncomment when enabling Supabase
+import { AppThemeColors, resolveThemePreference, ThemeColors } from '../constants/theme';
+import { useColorScheme } from '../hooks/use-color-scheme';
+import { useApp } from '../contexts/AppContext'; 
 
 interface WeeklyViewProps {
-  tasks: Task[];
   onToggleTask: (id: string) => void;
-  onEditTask: (id: string, fields: { title?: string; due_date?: Date; notes?: string }) => void;
+  onEditTask: (id: string, fields: { title?: string; due_date?: Date; notes?: string; parent_id?: string; start_date?: Date; end_date?: Date; recurrence_interval?: number; days_selected?: Weekday[] }) => void;
   onDeleteTask: (id: string) => void;
   colorBlindMode?: boolean;
   onNavigateBack: () => void;
@@ -22,7 +22,13 @@ interface WeeklyViewProps {
   onTriggerConfetti?: () => void;
 }
 
-export function WeeklyView({ tasks, onToggleTask, onEditTask, onDeleteTask, colorBlindMode, onNavigateBack, onNavigateSettings }: WeeklyViewProps) {
+export function WeeklyView({ onToggleTask, onEditTask, onDeleteTask, colorBlindMode, onNavigateBack, onNavigateSettings, settings }: WeeklyViewProps) {
+  const systemScheme = useColorScheme();
+  const resolvedTheme = resolveThemePreference(settings.theme, systemScheme);
+  const colors = AppThemeColors[resolvedTheme];
+  const isDark = resolvedTheme === 'dark';
+  const styles = useMemo(() => getStyles(colors), [colors]);
+
   const screenWidth = Dimensions.get('window').width;
   const scrollViewRef = useRef<ScrollView>(null);
 
@@ -33,48 +39,40 @@ export function WeeklyView({ tasks, onToggleTask, onEditTask, onDeleteTask, colo
   });
   const [daysToShow, setDaysToShow] = useState(7);
   const [showMonthDropdown, setShowMonthDropdown] = useState(false);
-  const [isAtEnd, setIsAtEnd] = useState(false);
 
-  // ===========================================
-  // SUPABASE: Fetch tasks for selected month
-  // ===========================================
-  // Uncomment this section when enabling Supabase
-  //
-  // const { fetchTasksForMonth } = useApp();
-  // const [monthTasks, setMonthTasks] = useState<Task[]>([]);
-  // const [isLoading, setIsLoading] = useState(false);
-  //
-  // // Fetch tasks when month changes
-  // useEffect(() => {
-  //   const loadMonthTasks = async () => {
-  //     setIsLoading(true);
-  //     try {
-  //       const fetchedTasks = await fetchTasksForMonth(
-  //         selectedMonth.year,
-  //         selectedMonth.month
-  //       );
-  //       setMonthTasks(fetchedTasks);
-  //     } catch (error) {
-  //       console.error('Error loading month tasks:', error);
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   };
-  //   loadMonthTasks();
-  // }, [selectedMonth.year, selectedMonth.month, fetchTasksForMonth]);
-  //
-  // // When Supabase is enabled, use monthTasks instead of tasks prop
-  // // Change tasksByDate to use monthTasks:
-  // // const tasksByDate = useMemo(() => {
-  // //   const map: { [key: string]: Task[] } = {};
-  // //   monthTasks.forEach(task => {
-  // //     const key = task.date.toDateString();
-  // //     if (!map[key]) map[key] = [];
-  // //     map[key].push(task);
-  // //   });
-  // //   return map;
-  // // }, [monthTasks]);
-  // ===========================================
+
+  const { tasks } = useApp();
+
+  // Derive monthTasks from global tasks state (same pattern as Dashboard)
+  const monthTasks = useMemo(() => {
+    const monthStart = new Date(selectedMonth.year, selectedMonth.month, 1);
+    monthStart.setHours(0, 0, 0, 0);
+    const monthEnd = new Date(selectedMonth.year, selectedMonth.month + 1, 0);
+    monthEnd.setHours(23, 59, 59, 999);
+    return tasks.filter(task => {
+      if (task.is_template) return false;
+      const taskDate = new Date(task.due_date);
+      taskDate.setHours(0, 0, 0, 0);
+      return taskDate >= monthStart && taskDate <= monthEnd;
+    });
+  }, [tasks, selectedMonth.year, selectedMonth.month]);
+  
+  useEffect(() => {
+    setTimeout(() => {
+      scrollViewRef.current?.flashScrollIndicators();
+    }, 500);
+    }, []);
+  
+  const tasksByDate = useMemo(() => {
+    const map: { [key: string]: Task[] } = {};
+    monthTasks.forEach(task => {
+      const key = new Date(task.due_date).toDateString();
+      if (!map[key]) map[key] = [];
+      map[key].push(task);
+    });
+    return map;
+  }, [monthTasks]);
+  
 
   // Generate list of months (current month + next 11 months)
   const availableMonths = useMemo(() => {
@@ -124,17 +122,6 @@ export function WeeklyView({ tasks, onToggleTask, onEditTask, onDeleteTask, colo
     return daysToShow < daysInMonthRemaining;
   }, [selectedMonth, daysToShow]);
 
-  const tasksByDate = useMemo(() => {
-    const map: { [key: string]: Task[] } = {};
-    tasks.forEach(task => {
-      if (task.is_template) return;
-      const key = new Date(task.due_date).toDateString();
-      if (!map[key]) map[key] = [];
-      map[key].push(task);
-    });
-    return map;
-  }, [tasks]);
-
   // Group dates into pages of 3
   const pages = useMemo(() => {
     const result: Date[][] = [];
@@ -148,7 +135,6 @@ export function WeeklyView({ tasks, onToggleTask, onEditTask, onDeleteTask, colo
     setSelectedMonth({ year, month });
     setDaysToShow(7); // Reset to 7 days when changing month
     setShowMonthDropdown(false);
-    setIsAtEnd(false);
     scrollViewRef.current?.scrollTo({ x: 0, animated: false });
   };
 
@@ -156,18 +142,13 @@ export function WeeklyView({ tasks, onToggleTask, onEditTask, onDeleteTask, colo
     setDaysToShow(prev => prev + 7);
   };
 
-  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
-    const isEnd = contentOffset.x + layoutMeasurement.width >= contentSize.width - 10;
-    setIsAtEnd(isEnd);
-  };
-
-  const todayTasks = tasks.filter((task) => {
+  const todayTasks = monthTasks.filter((task) => {
     if (task.is_template) return false;
     const today = new Date();
     const taskDate = new Date(task.due_date);
     return taskDate.toDateString() === today.toDateString();
   });
+  
   const completedTodayTasks = todayTasks.filter((task) => task.completed)
     .length;
   const todayProgress =
@@ -183,15 +164,15 @@ export function WeeklyView({ tasks, onToggleTask, onEditTask, onDeleteTask, colo
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" backgroundColor="#f6f3fb" />
+      <StatusBar style={isDark ? 'light' : 'dark'} backgroundColor={colors.background} />
       <View style={styles.header}>
         <TouchableOpacity onPress={onNavigateBack} style={styles.backButton}>
-          <ArrowLeft size={20} color="#6b5b7f" />
+          <ArrowLeft size={20} color={colors.heading} />
         </TouchableOpacity>
 
         <Text style={styles.headerTitle}>Weekly Tasks</Text>
         <TouchableOpacity onPress={onNavigateSettings} style={styles.settingsButton}>
-          <Settings size={22} color="#b8a4d9" />
+          <Settings size={22} color={colors.accent} />
         </TouchableOpacity>
       </View>
 
@@ -204,7 +185,7 @@ export function WeeklyView({ tasks, onToggleTask, onEditTask, onDeleteTask, colo
           <Text style={styles.monthSelectorText}>
             {new Date(selectedMonth.year, selectedMonth.month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
           </Text>
-          <ChevronDown size={20} color="#6b5b7f" />
+          <ChevronDown size={20} color={colors.heading} />
         </TouchableOpacity>
       </View>
 
@@ -232,15 +213,12 @@ export function WeeklyView({ tasks, onToggleTask, onEditTask, onDeleteTask, colo
           </ScrollView>
         </View>
       )}
-
       <ScrollView
         ref={scrollViewRef}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={true}
         style={styles.weekContainer}
-        onScroll={handleScroll}
-        scrollEventThrottle={16}
       >
         {pages.map((pageDates, pageIndex) => (
           <ScrollView
@@ -264,6 +242,7 @@ export function WeeklyView({ tasks, onToggleTask, onEditTask, onDeleteTask, colo
                       <TaskCard
                         key={task.id}
                         task={task}
+                        tasks={tasks}
                         onToggle={onToggleTask}
                         onUpdate={onEditTask}
                         onDelete={onDeleteTask}
@@ -297,10 +276,11 @@ export function WeeklyView({ tasks, onToggleTask, onEditTask, onDeleteTask, colo
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f6fb',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -316,12 +296,12 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#6b5b7f',
+    color: colors.heading,
     flex: 1,
     marginLeft: 4,
   },
   settingsButton: {
-    backgroundColor: '#f2ecfa',
+    backgroundColor: colors.surfaceMuted,
     padding: 10,
     borderRadius: 8,
   },
@@ -333,21 +313,21 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   dayCard: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#e5d9f2',
+    borderColor: colors.border,
   },
   dayLabel: {
     fontWeight: '700',
     fontSize: 16,
     marginBottom: 8,
-    color: '#6b5b7f',
+    color: colors.heading,
   },
   noTasks: {
     textAlign: 'center',
-    color: '#999',
+    color: colors.textMuted,
     fontSize: 12,
     paddingVertical: 8,
   },
@@ -359,28 +339,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.surface,
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#e5d9f2',
+    borderColor: colors.border,
     gap: 8,
   },
   monthSelectorText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#6b5b7f',
+    color: colors.heading,
   },
   dropdownContainer: {
     position: 'absolute',
     top: 140,
     left: 16,
     right: 16,
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.surface,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#e5d9f2',
+    borderColor: colors.border,
     zIndex: 1000,
     elevation: 5,
     shadowColor: '#000',
@@ -396,24 +376,24 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0eaf8',
+    borderBottomColor: colors.border,
   },
   dropdownItemSelected: {
-    backgroundColor: '#f2ecfa',
+    backgroundColor: colors.surfaceMuted,
   },
   dropdownItemText: {
     fontSize: 15,
-    color: '#6b5b7f',
+    color: colors.text,
   },
   dropdownItemTextSelected: {
     fontWeight: '600',
-    color: '#b8a4d9',
+    color: colors.accent,
   },
   seeMoreButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#b8a4d9',
+    backgroundColor: colors.accent,
     paddingVertical: 14,
     paddingHorizontal: 20,
     borderRadius: 10,
@@ -425,4 +405,5 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
   },
-});
+  });
+}

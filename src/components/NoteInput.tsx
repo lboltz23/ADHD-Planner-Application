@@ -15,8 +15,11 @@ export default function NoteInput({
   placeholder = "Enter notes here...",
 }: NoteInputProps) {
   return (
-    <View style={styles.inputRow}>
-      <Text style={styles.label}>Notes: </Text>
+    <View style={styles.container}>
+    <Text style={styles.label}>Notes: </Text>
+      <View style={styles.inputRow}>
+      <Pencil size={16} color={AppColors.primary} style={styles.icon} />
+
       <TextInput
         style={styles.input}
         onChangeText={onChange}
@@ -24,37 +27,41 @@ export default function NoteInput({
         placeholder={placeholder}
         placeholderTextColor={AppColors.placeholder}
       />
-      <Pencil size={16} color={AppColors.primary} style={styles.icon} />
+    </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    paddingVertical: 6,
+    paddingBottom: 12,
+  },
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
+    backgroundColor: AppColors.inputBackground,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderColor: AppColors.border,
+    borderWidth: 1,
+    paddingBottom: 4,
   },
   label: {
     fontSize: 18,
     fontWeight: "600",
     color: AppColors.primary,
-    marginBottom: 4,
-    textAlign: "left",
-    marginRight: 8,
+    marginBottom: 6,
   },
   input: {
     flex: 1,
-    backgroundColor: AppColors.inputBackground,
-    borderWidth: 1,
-    borderColor: AppColors.border,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
+    fontSize: 16,
     color: AppColors.primary,
+    paddingVertical: 6,
   },
   icon: {
-    marginLeft: 8,
+    marginRight: 6,
   },
 });
+

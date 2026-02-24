@@ -17,6 +17,8 @@ import {
   Eye,
 } from 'lucide-react-native';
 import Slider  from '@react-native-community/slider';
+import { AppThemeColors, resolveThemePreference, ThemeColors } from '../constants/theme';
+import { useColorScheme } from '../hooks/use-color-scheme';
 
 export interface SettingsData {
   defaultTimerMinutes: number;
@@ -38,6 +40,7 @@ interface SettingsSectionProps {
   title: string;
   subtitle: string;
   iconColor: string;
+  themeColors: ThemeColors;
   children: React.ReactNode;
 }
 
@@ -46,16 +49,17 @@ function SettingsSection({
   title,
   subtitle,
   iconColor,
+  themeColors,
   children,
 }: SettingsSectionProps) {
   const styles = StyleSheet.create({
     section: {
-      backgroundColor: '#fff',
+      backgroundColor: themeColors.surface,
       borderRadius: 12,
       padding: 16,
       marginBottom: 16,
       borderWidth: 1,
-      borderColor: '#e5d9f2',
+      borderColor: themeColors.border,
     },
     header: {
       flexDirection: 'row',
@@ -77,12 +81,12 @@ function SettingsSection({
     title: {
       fontSize: 16,
       fontWeight: '600',
-      color: '#6b5b7f',
+      color: themeColors.heading,
       marginBottom: 4,
     },
     subtitle: {
       fontSize: 13,
-      color: '#999',
+      color: themeColors.textMuted,
     },
   });
 
@@ -107,6 +111,10 @@ export function Settings({
   settings,
   onUpdateSettings,
 }: SettingsProps) {
+  const systemScheme = useColorScheme();
+  const resolvedTheme = resolveThemePreference(settings.theme, systemScheme);
+  const colors = AppThemeColors[resolvedTheme];
+
   const updateSetting = <K extends keyof SettingsData>(
     key: K,
     value: SettingsData[K]
@@ -120,7 +128,7 @@ export function Settings({
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: '#fafafa',
+      backgroundColor: colors.background,
     },
     scrollContent: {
       padding: 16,
@@ -138,7 +146,7 @@ export function Settings({
     headerTitle: {
       fontSize: 24,
       fontWeight: '700',
-      color: '#6b5b7f',
+      color: colors.heading,
     },
     settingRow: {
       flexDirection: 'row',
@@ -152,16 +160,16 @@ export function Settings({
     settingLabelText: {
       fontSize: 14,
       fontWeight: '500',
-      color: '#333',
+      color: colors.text,
       marginBottom: 4,
     },
     settingSubtext: {
       fontSize: 12,
-      color: '#999',
+      color: colors.textMuted,
     },
     valueText: {
       fontSize: 13,
-      color: '#b8a4d9',
+      color: colors.accent,
       fontWeight: '500',
     },
     sliderContainer: {
@@ -175,11 +183,11 @@ export function Settings({
     },
     sliderMarkerText: {
       fontSize: 11,
-      color: '#999',
+      color: colors.textMuted,
     },
     selectOptions: {
       borderWidth: 1,
-      borderColor: '#e5d9f2',
+      borderColor: colors.border,
       borderRadius: 8,
       overflow: 'hidden',
       marginTop: 8,
@@ -188,11 +196,11 @@ export function Settings({
       paddingVertical: 12,
       paddingHorizontal: 12,
       borderBottomWidth: 1,
-      borderBottomColor: '#e5d9f2',
+      borderBottomColor: colors.border,
     },
     selectOptionText: {
       fontSize: 14,
-      color: '#333',
+      color: colors.text,
     },
     aboutSection: {
       alignItems: 'center',
@@ -201,7 +209,7 @@ export function Settings({
     },
     aboutText: {
       fontSize: 12,
-      color: '#999',
+      color: colors.textMuted,
       textAlign: 'center',
     },
   });
@@ -221,7 +229,7 @@ export function Settings({
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={onNavigateBack}>
-            <ArrowLeft size={20} color="#6b5b7f" />
+            <ArrowLeft size={20} color={colors.heading} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Settings</Text>
         </View>
@@ -232,6 +240,7 @@ export function Settings({
           title="Timer Settings"
           subtitle="Configure One Thing Mode timer"
           iconColor="#b8a4d9"
+          themeColors={colors}
         >
           <View style={styles.settingRow}>
             <View style={styles.settingLabel}>
@@ -251,7 +260,7 @@ export function Settings({
                 updateSetting('defaultTimerMinutes', value)
               }
               minimumTrackTintColor="#b8a4d9"
-              maximumTrackTintColor="#e5d9f2"
+              maximumTrackTintColor={colors.border}
               thumbTintColor="#b8a4d9"
             />
             <View style={styles.sliderMarkers}>
@@ -268,6 +277,7 @@ export function Settings({
           title="Appearance"
           subtitle="Customize the look and feel"
           iconColor="#a8d8ea"
+          themeColors={colors}
         >
           <View style={styles.settingRow}>
             <View style={styles.settingLabel}>
@@ -287,7 +297,7 @@ export function Settings({
                     borderBottomWidth: 0,
                   },
                   settings.theme === option && {
-                    backgroundColor: '#f0f0f0',
+                    backgroundColor: colors.surfaceMuted,
                   },
                 ]}
               >
@@ -296,7 +306,7 @@ export function Settings({
                     styles.selectOptionText,
                     settings.theme === option && {
                       fontWeight: '600',
-                      color: '#b8a4d9',
+                      color: colors.accent,
                     },
                   ]}
                 >
@@ -318,7 +328,7 @@ export function Settings({
               onValueChange={(checked) =>
                 updateSetting('confettiEnabled', checked)
               }
-              trackColor={{ false: '#e5d9f2', true: '#b8a4d9' }}
+              trackColor={{ false: colors.border, true: colors.accent }}
               thumbColor="#fff"
             />
           </View>
@@ -330,6 +340,7 @@ export function Settings({
           title="Accessibility"
           subtitle="Make the app more accessible"
           iconColor="#b8a4d9"
+          themeColors={colors}
         >
           <View style={styles.settingRow}>
             <View style={styles.settingLabel}>
@@ -343,7 +354,7 @@ export function Settings({
               onValueChange={(checked) =>
                 updateSetting('colorBlindMode', checked)
               }
-              trackColor={{ false: '#e5d9f2', true: '#0077bb' }}
+              trackColor={{ false: colors.border, true: '#0077bb' }}
               thumbColor="#fff"
             />
           </View>
@@ -355,6 +366,7 @@ export function Settings({
           title="Notifications"
           subtitle="Manage notification preferences"
           iconColor="#ffc9d4"
+          themeColors={colors}
         >
           <View style={styles.settingRow}>
             <View style={styles.settingLabel}>
@@ -368,7 +380,7 @@ export function Settings({
               onValueChange={(checked) =>
                 updateSetting('soundEnabled', checked)
               }
-              trackColor={{ false: '#e5d9f2', true: '#ffc9d4' }}
+              trackColor={{ false: colors.border, true: '#ffc9d4' }}
               thumbColor="#fff"
             />
           </View>
@@ -380,6 +392,7 @@ export function Settings({
           title="Task View"
           subtitle="Default task filter on dashboard"
           iconColor="#ffd89b"
+          themeColors={colors}
         >
           <View style={styles.settingRow}>
             <View style={styles.settingLabel}>
@@ -401,7 +414,7 @@ export function Settings({
                     borderBottomWidth: 0,
                   },
                   settings.defaultTaskView === option && {
-                    backgroundColor: '#f0f0f0',
+                    backgroundColor: colors.surfaceMuted,
                   },
                 ]}
               >

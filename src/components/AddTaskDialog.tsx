@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, Text, Modal, TouchableOpacity, StyleSheet, TextInput, ScrollView } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Plus, X } from "lucide-react-native";
-import { Task, TaskType, CreateTaskParams, Weekday } from "../types";
+import { Task, TaskType, CreateTaskParams, Weekday, toLocalDateString } from "../types";
 import { Calendar } from "react-native-calendars";
 import { getTaskTypeColor, getEnhancedTaskTypeColor } from "./taskColors";
 import TitleInput from "./TitleInput";
@@ -178,7 +178,7 @@ export default function AddTaskDialog({
               <View style={styles.section}>
                 <TitleInput value={taskTitle} onChange={handleInputChange} />
                 <NoteInput value={notes} onChange={setNotes} />
-                <Text style={styles.label}>Select Date *</Text>
+                <Text style={styles.label}>Select Date: </Text>
                 {/* Calendar */}
                 <Calendar
                   onDayPress={(day) => setSelectedDate(day.dateString)}
@@ -187,7 +187,7 @@ export default function AddTaskDialog({
                       ? { [selectedDate]: { selected: true, selectedColor: "#b8a4d9" } }
                       : {}
                   }
-                  minDate={new Date().toISOString().split('T')[0]}
+                  minDate={toLocalDateString(new Date())}
                   theme={{
                     todayTextColor: "#a8d8ea",
                     arrowColor: "#a8d8ea",
@@ -208,7 +208,7 @@ export default function AddTaskDialog({
                   onEndDateChange={setEndDate}
                 />
 
-                <Text style={styles.label}>Repeat On (select days) *</Text>
+                <Text style={styles.label}>Repeat On (select days): </Text>
                 <View style={styles.frequencyRow}>
                   {ALL_WEEKDAYS.map((day) => (
                     <TouchableOpacity
@@ -242,7 +242,7 @@ export default function AddTaskDialog({
                   selectedTaskId={parentTaskId}
                   onSelect={setParentTaskId}
                 />
-                <Text style={styles.label}>Select Date *</Text>
+                <Text style={styles.label}>Select Date: </Text>
                 <Calendar
                   onDayPress={(day) => setSelectedDate(day.dateString)}
                   markedDates={
@@ -250,7 +250,7 @@ export default function AddTaskDialog({
                       ? { [selectedDate]: { selected: true, selectedColor: "#b8a4d9" } }
                       : {}
                   }
-                  minDate={new Date().toISOString().split('T')[0]}
+                  minDate={toLocalDateString(new Date())}
                   theme={{
                     todayTextColor: "#a8d8ea",
                     arrowColor: "#a8d8ea",
@@ -272,7 +272,7 @@ export default function AddTaskDialog({
                 />
 
                 <View style={styles.inputRow}>
-                  <Text style={styles.label}>Interval (months):</Text>
+                  <Text style={styles.label}>Interval(months): </Text>
                   <TextInput
                     style={styles.dateInput}
                     value={intervalMonths}
@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
   dialog: {
     backgroundColor: "white",
     borderRadius: 16,
-    padding: 20,
+    padding: 18,
     width: "100%",
     maxWidth: 400,
     minHeight: 350,
@@ -437,7 +437,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   createButton: {
-    // backgroundColor set dynamically based on task type
+    // backgroundColor is set dynamically based on task type
   },
   createText: {
     color: "white",

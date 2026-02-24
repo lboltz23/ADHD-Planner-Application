@@ -3,17 +3,21 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { WeeklyView as CalendarComponent } from '../components/CalendarView';
 import { useApp } from '../contexts/AppContext';
+import { useSafeBack } from '../hooks/use-Safe-Back';
+import { useAppTheme } from '../hooks/use-app-theme';
+
 
 export default function CalendarViewScreen() {
   const router = useRouter();
-  const { tasks, settings, addTask, toggleTask, updateTask, deleteTask, triggerConfetti } = useApp();
+  const { settings, toggleTask, updateTask, deleteTask, triggerConfetti } = useApp();
+  const handleBack = useSafeBack();
+  const { colors } = useAppTheme();
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <CalendarComponent
-        onNavigateBack={() => router.back()}
+        onNavigateBack={handleBack}
         onNavigateSettings={() => router.push('/Settings')}
-        tasks={tasks}
         onToggleTask={toggleTask}
         colorBlindMode={settings.colorBlindMode}
         onEditTask={updateTask}
@@ -28,6 +32,5 @@ export default function CalendarViewScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
 });
