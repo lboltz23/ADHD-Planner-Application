@@ -9,7 +9,7 @@ import { useAppTheme } from '../hooks/use-app-theme';
 
 export default function CalendarViewScreen() {
   const router = useRouter();
-  const { settings, toggleTask, updateTask, deleteTask, triggerConfetti } = useApp();
+  const { tasks, settings, addTask, toggleTask, updateTask, deleteTask, triggerConfetti } = useApp();
   const handleBack = useSafeBack();
   const { colors } = useAppTheme();
 
@@ -18,6 +18,7 @@ export default function CalendarViewScreen() {
       <CalendarComponent
         onNavigateBack={handleBack}
         onNavigateSettings={() => router.push('/Settings')}
+        tasks={tasks}
         onToggleTask={toggleTask}
         colorBlindMode={settings.colorBlindMode}
         onEditTask={updateTask}

@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, Modal, TouchableOpacity, StyleSheet, ScrollView, TextInput } from "react-native";
+import React, { useState } from "react";
+import { View, Text, Modal, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
 import { X, Trash2, CheckCircle2, Link as LinkIcon, Save } from "lucide-react-native";
 import { Calendar } from "react-native-calendars";
-import { Task, toLocalDateString, Weekday } from "../types";
+import { Task, toLocalDateString } from "../types";
 import { getTaskTypeColor, getEnhancedTaskTypeColor } from "./taskColors";
 import TitleInput from "./TitleInput";
 import NoteInput from "./NoteInput";
@@ -39,7 +39,6 @@ export default function EditTask({
   isOpen,
   onClose,
   task,
-  tasks = [],
   onSave,
   onDelete,
   onToggle,
@@ -49,6 +48,7 @@ export default function EditTask({
   const [editedTitle, setEditedTitle] = useState(task.title);
   const [editedDate, setEditedDate] = useState(task.due_date);
   const [editedTime, setEditedTime] = useState(task.time);
+  const [editedNotes, setEditedNotes] = useState(task.notes || "");
   const [editedStartDate, setEditedStartDate] = useState(task.start_date);
   const [editedEndDate, setEditedEndDate] = useState(task.end_date);
   const [editedInterval, setEditedInterval] = useState(task.recurrence_interval);
@@ -73,38 +73,10 @@ export default function EditTask({
 
   const handleSave = () => {
     if (editedTitle.trim()) {
-      const fields: Parameters<typeof onSave>[1] = {
-        title: editedTitle.trim(),
-        due_date: editedDate,
-        notes: editedNotes,
-        time: editedTime
-      };
-
-      if (task.type === "related") {
-        fields.parent_id = editedParentId;
-      }
-
-      if (task.is_template) {
-        fields.start_date = editedStartDate;
-        fields.end_date = editedEndDate;
-        if (task.type === "routine") {
-          fields.days_selected = editedDaysSelected;
-        }
-        if (task.type === "long_interval") {
-          fields.recurrence_interval = editedInterval;
-        }
-      }
-
-      onSave(task.id, fields);
+      onSave(task.id, { title: editedTitle.trim(), due_date: editedDate, notes: editiedNotes });
       onClose();
     }
   };
-
-  const toggleDay = (day: Weekday) => {
-      setEditedDaysSelected((prev) =>
-        prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
-      );
-    };
 
   const handleDelete = () => {
     onDelete(task.id);
@@ -326,10 +298,6 @@ const styles = StyleSheet.create({
   },
   section: {
     marginBottom: 16,
-    borderWidth: 3,
-    borderRadius: 8,
-    borderColor: "#e5d9f2",
-    padding: 12,
   },
   label: {
     fontSize: 16,
@@ -429,50 +397,5 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#6b5b7f",
     flex: 1,
-  },
-  frequencyRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 12,
-  },
-  frequencyButton: {
-    flexGrow: 1,
-    flexBasis: "28%",
-    minWidth: 80,
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#e5d9f2",
-    backgroundColor: "#f8f6fb",
-    alignItems: "center",
-  },
-  frequencyButtonActive: {
-    backgroundColor: "#b8a4d9",
-    borderColor: "#b8a4d9",
-  },
-  frequencyText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#6b5b7f",
-  },
-  frequencyTextActive: {
-    color: "#ffffff",
-  },
-  inputRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  dateInput: {
-    backgroundColor: "#f8f6fb",
-    borderWidth: 1,
-    borderColor: "#e5d9f2",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    color: "#6b5b7f",
   },
 });

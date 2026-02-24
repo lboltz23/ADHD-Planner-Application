@@ -34,10 +34,6 @@ export default function NoteInput({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    paddingVertical: 6,
-    paddingBottom: 12,
-  },
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -58,7 +54,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   icon: {
-    marginRight: 6,
+    marginLeft: 8,
   },
 });
-
