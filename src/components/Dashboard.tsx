@@ -15,8 +15,6 @@ import AddTaskDialog from './AddTaskDialog';
 import { TaskTypeSelector } from './TaskTypeSelector';
 import { Calendar, Settings, Zap } from 'lucide-react-native';
 import { getFilterColor } from './taskColors';
-import { AppThemeColors, resolveThemePreference } from '../constants/theme';
-import { useColorScheme } from '../hooks/use-color-scheme';
 
 // Dashboard Props
 interface DashboardProps {
@@ -44,11 +42,6 @@ export function Dashboard({
   settings,
   onTriggerConfetti,
 }: DashboardProps) {
-  const systemScheme = useColorScheme();
-  const resolvedTheme = resolveThemePreference(settings.theme, systemScheme);
-  const colors = AppThemeColors[resolvedTheme];
-  const isDark = resolvedTheme === 'dark';
-
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [selectedType, setSelectedType] = useState<TaskType>('basic');
   const [taskView, setTaskView] = useState<'today' | 'upcoming' | 'repeating' | 'open'>('today');
@@ -136,7 +129,7 @@ export function Dashboard({
 
   useEffect(() => {
     const calculateStreak = () => {
-      let streak = 2172026;
+      let streak = 0;
       let currentDate = new Date();
       currentDate.setHours(0, 0, 0, 0);
 
@@ -180,7 +173,7 @@ export function Dashboard({
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.background,
+      backgroundColor: '#f8f6fb',
     },
     scrollContent: {
       padding: 16,
@@ -197,32 +190,27 @@ export function Dashboard({
     title: {
       fontSize: 28,
       fontWeight: '700',
-      color: colors.heading,
+      color: '#6b5b7f',
       marginBottom: 4,
     },
     subtitle: {
       fontSize: 14,
-      color: colors.textMuted,
+      color: '#9a8fbf',
     },
     headerRight: {
-      flexDirection: 'column',
-      gap: 8,
-      alignItems: 'flex-end',
-    },
-    headerButtons: {
       flexDirection: 'row',
       gap: 8,
       alignItems: 'center',
     },
     iconButton: {
-      backgroundColor: colors.surfaceMuted,
+      backgroundColor: '#f2ecfa',
       padding: 10,
       borderRadius: 8,
     },
     mainButton: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: colors.accent,
+      backgroundColor: '#b8a4d9',
       paddingVertical: 10,
       paddingHorizontal: 14,
       borderRadius: 8,
@@ -234,9 +222,7 @@ export function Dashboard({
       fontSize: 14,
     },
     focusCard: {
-      backgroundColor: settings.colorBlindMode
-        ? '#209ce5ff'
-        : (isDark ? '#2d4b5f' : '#96d7efff'),
+      backgroundColor: settings.colorBlindMode ?  "#209ce5ff" : '#96d7efff',
       borderRadius: 12,
       padding: 16,
       marginBottom: 20,
@@ -255,35 +241,35 @@ export function Dashboard({
     },
     focusSubtitle: {
       fontSize: 13,
-      color: isDark ? '#d6ebf4' : '#f0faff',
+      color: '#f0faff',
     },
     progressCard: {
-      backgroundColor: colors.surface,
+      backgroundColor: '#ffffff',
       borderRadius: 12,
       padding: 16,
       marginBottom: 20,
       borderWidth: 1,
-      borderColor: colors.border,
+      borderColor: '#e5d9f2',
     },
     progressLabel: {
       fontSize: 16,
       fontWeight: '600',
-      color: colors.heading,
+      color: '#6b5b7f',
       marginBottom: 4,
     },
     progressSub: {
       fontSize: 13,
-      color: colors.textMuted,
+      color: '#8e7fb2',
       marginBottom: 12,
     },
     progressBarBackground: {
-      backgroundColor: isDark ? '#2f374a' : '#e0d7f5',
+      backgroundColor: '#e0d7f5',
       height: 8,
       borderRadius: 4,
       overflow: 'hidden',
     },
     progressBarFill: {
-      backgroundColor: colors.accent,
+      backgroundColor: '#b8a4d9',
       height: '100%',
     },
     addTaskCard: {
@@ -297,17 +283,17 @@ export function Dashboard({
     },
     taskInput: {
       flex: 1,
-      backgroundColor: colors.inputBackground,
+      backgroundColor: '#ffffff',
       borderWidth: 1,
-      borderColor: colors.border,
+      borderColor: '#e5d9f2',
       borderRadius: 8,
       paddingHorizontal: 12,
       paddingVertical: 8,
       fontSize: 14,
-      color: colors.text,
+      color: '#473a44',
     },
     addButton: {
-      backgroundColor: colors.accentSoft,
+      backgroundColor: '#96d7efff',
       borderRadius: 6,
       padding: 8,
       justifyContent: 'center',
@@ -322,12 +308,12 @@ export function Dashboard({
     sectionTitle: {
       fontSize: 18,
       fontWeight: '600',
-      color: colors.heading,
+      color: '#6b5b7f',
       marginBottom: 12,
     },
     noTasksMessage: {
       textAlign: 'center',
-      color: colors.textMuted,
+      color: '#aaa',
       fontSize: 14,
       paddingVertical: 16,
     },
@@ -335,10 +321,10 @@ export function Dashboard({
       gap: 8,
     },
     addTaskBorder: {
-      backgroundColor: colors.surface,
+      backgroundColor: '#ffffff',
       borderRadius: 8,
       borderWidth: 1,
-      borderColor: colors.border,
+      borderColor: '#e5d9f2',
       padding: 10,
       marginBottom: 20,
     },
@@ -357,24 +343,23 @@ export function Dashboard({
       color: '#6b5b7f',
     },
     streakBadge: {
-      backgroundColor: isDark ? '#5d4a34' : '#ffe5cc',
+      backgroundColor: '#ffe5cc',
       paddingVertical: 8,
       paddingHorizontal: 10,
       borderRadius: 8,
       alignItems: 'center',
       justifyContent: 'center',
       minWidth: 50,
-      alignSelf: 'flex-end',
     },
     streakBadgeText: {
       fontSize: 18,
       fontWeight: '700',
-      color: isDark ? '#ffd089' : '#ff9500',
+      color: '#ff9500',
     },
     streakBadgeLabel: {
       fontSize: 11,
       fontWeight: '600',
-      color: isDark ? '#ffd089' : '#ff9500',
+      color: '#ff9500',
     },
   });
 
@@ -395,26 +380,24 @@ export function Dashboard({
             </Text>
           </View>
           <View style={styles.headerRight}>
-            <View style={styles.headerButtons}>
-              <TouchableOpacity
-                style={styles.iconButton}
-                onPress={onNavigateToSettings}
-              >
-                <Settings size={22} color={colors.accent} />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.mainButton}
-                onPress={onNavigateToCalendar}
-              >
-                {/* Calendar Icon */}
-                <Calendar size={18} color="#ffffff" />
-                <Text style={styles.mainButtonText}>Calendar</Text>
-              </TouchableOpacity>
-            </View>
             <View style={styles.streakBadge}>
               <Text style={styles.streakBadgeText}>{streakCount}</Text>
               <Text style={styles.streakBadgeLabel}>day</Text>
             </View>
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={onNavigateToSettings}
+            >
+              <Settings size={22} color="#b8a4d9" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.mainButton}
+              onPress={onNavigateToCalendar}
+            >
+              {/* Calendar Icon */}
+              <Calendar size={18} color="#ffffff" />
+              <Text style={styles.mainButtonText}>Calendar</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -469,7 +452,7 @@ export function Dashboard({
               value={newTaskTitle}
               onChangeText={setNewTaskTitle}
               onSubmitEditing={handleAddTask}
-              placeholderTextColor={colors.textMuted}
+              placeholderTextColor="#999"
             />
             <TouchableOpacity
               style={styles.addButton}
@@ -489,12 +472,12 @@ export function Dashboard({
               paddingVertical: 8,
               paddingHorizontal: 16,
               borderRadius: 8,
-              backgroundColor: taskView === 'open' ? getFilterColor('open', settings.colorBlindMode) : colors.surface,
+              backgroundColor: taskView === 'open' ? getFilterColor('open', settings.colorBlindMode) : '#ffffff',
               borderWidth: 1,
-              borderColor: colors.border,
+              borderColor: '#e5d9f2',
             }}
           >
-            <Text style={{ color: taskView === 'open' ? '#ffffff' : colors.heading, fontWeight: '600' }}>
+            <Text style={{ color: taskView === 'open' ? '#ffffff' : '#6b5b7f', fontWeight: '600' }}>
               Open
             </Text>
           </TouchableOpacity>
@@ -505,12 +488,12 @@ export function Dashboard({
             paddingVertical: 8,
             paddingHorizontal: 16,
             borderRadius: 8,
-            backgroundColor: taskView === 'today' ? getFilterColor('today', settings.colorBlindMode) : colors.surface,
+            backgroundColor: taskView === 'today' ? getFilterColor('today', settings.colorBlindMode) : '#ffffff',
             borderWidth: 1,
-            borderColor: colors.border,
+            borderColor: '#e5d9f2',
             }}
           >
-            <Text style={{ color: taskView === 'today' ? '#ffffff' : colors.heading, fontWeight: '600' }}>
+            <Text style={{ color: taskView === 'today' ? '#ffffff' : '#6b5b7f', fontWeight: '600' }}>
               Today
             </Text>
           </TouchableOpacity>
@@ -521,12 +504,12 @@ export function Dashboard({
               paddingVertical: 8,
               paddingHorizontal: 16,
               borderRadius: 8,
-              backgroundColor: taskView === 'upcoming' ? getFilterColor('upcoming', settings.colorBlindMode) : colors.surface,
+              backgroundColor: taskView === 'upcoming' ? getFilterColor('upcoming', settings.colorBlindMode) : '#ffffff',
               borderWidth: 1,
-              borderColor: colors.border,
+              borderColor: '#e5d9f2',
             }}
           >
-            <Text style={{ color: taskView === 'upcoming' ? '#ffffff' : colors.heading, fontWeight: '600' }}>
+            <Text style={{ color: taskView === 'upcoming' ? '#ffffff' : '#6b5b7f', fontWeight: '600' }}>
               Upcoming
             </Text>
           </TouchableOpacity>
@@ -537,12 +520,12 @@ export function Dashboard({
               paddingVertical: 8,
               paddingHorizontal: 16,
               borderRadius: 8,
-              backgroundColor: taskView === 'repeating' ? getFilterColor('repeating', settings.colorBlindMode) : colors.surface,
+              backgroundColor: taskView === 'repeating' ? getFilterColor('repeating', settings.colorBlindMode) : '#ffffff',
               borderWidth: 1,
-              borderColor: colors.border,
+              borderColor: '#e5d9f2',
             }}
           >
-            <Text style={{ color: taskView === 'repeating' ? '#ffffff' : colors.heading, fontWeight: '600' }}>
+            <Text style={{ color: taskView === 'repeating' ? '#ffffff' : '#6b5b7f', fontWeight: '600' }}>
               Repeating
             </Text>
           </TouchableOpacity>

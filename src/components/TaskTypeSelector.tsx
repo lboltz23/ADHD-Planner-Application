@@ -4,11 +4,11 @@ import {
   TouchableOpacity,
   Text,
   StyleSheet,
+  ViewStyle,
 } from 'react-native';
 import { Repeat, CheckSquare, Link as LinkIcon, Hourglass } from "lucide-react-native";
 import { TaskType } from "../types";
 import { getTaskTypeColor } from "./taskColors";
-import { useAppTheme } from "../hooks/use-app-theme";
 
 interface TaskTypeSelectorProps {
   selectedType: TaskType;
@@ -29,8 +29,6 @@ export function TaskTypeSelector({
   onSelectType,
   colorBlindMode = false,
 }: TaskTypeSelectorProps) {
-  const { isDark, colors } = useAppTheme();
-
   const getTypes = (): TypeOption[] => {
     if (colorBlindMode) {
       return [
@@ -39,28 +37,28 @@ export function TaskTypeSelector({
           label: "Basic",
           icon: CheckSquare,
           color: getTaskTypeColor("basic", true),
-          bgColor: isDark ? colors.surface : "#f5f5f5",
+          bgColor: "#f5f5f5",
         },
         {
           value: "routine",
           label: "Routine",
           icon: Repeat,
           color: getTaskTypeColor("routine", true),
-          bgColor: isDark ? colors.surface : "#f5f5f5",
+          bgColor: "#f5f5f5",
         },
         {
           value: "related",
           label: "Related",
           icon: LinkIcon,
           color: getTaskTypeColor("related", true),
-          bgColor: isDark ? colors.surface : "#f5f5f5",
+          bgColor: "#f5f5f5",
         },
         {          
           value: "long_interval",
           label: "Long-Interval",
           icon: Hourglass,
           color: getTaskTypeColor("long_interval", true),
-          bgColor: isDark ? colors.surface : "#f5f5f5",
+          bgColor: "#f5f5f5",
         }
       ];
     }
@@ -71,28 +69,28 @@ export function TaskTypeSelector({
         label: "Basic",
         icon: CheckSquare,
         color: "#a8d8ea",
-        bgColor: isDark ? "#1f2e3d" : "#e5f0f3",
+        bgColor: "#e5f0f3",
       },
       {
         value: "routine",
         label: "Routine",
         icon: Repeat,
         color: "#b8a4d9",
-        bgColor: isDark ? "#2a2438" : "#f5f0fa",
+        bgColor: "#f5f0fa",
       },
       {
         value: "related",
         label: "Related",
         icon: LinkIcon,
         color: "#ffc9d4",
-        bgColor: isDark ? "#3a2931" : "#fff5f7",
+        bgColor: "#fff5f7",
       },
       {
         value: "long_interval",
         label: "Long-Interval",
         icon: Hourglass,
         color: "#f5a4e0ff",
-        bgColor: isDark ? "#38273a" : "#f8edf5ff",
+        bgColor: "#f8edf5ff",
       },
     ];
   };
@@ -143,7 +141,7 @@ export function TaskTypeSelector({
             style={[
               styles.button,
               {
-                backgroundColor: isSelected ? (isDark ? colors.surfaceMuted : "#ffffffff") : type.bgColor,
+                backgroundColor: isSelected ? "#ffffffff" : type.bgColor,
                 borderColor: isSelected ? type.color : 'transparent',
                 borderWidth: isSelected ? 2 : 0,
               },

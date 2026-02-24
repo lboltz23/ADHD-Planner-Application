@@ -5,17 +5,15 @@ import { StyleSheet, View } from 'react-native';
 import { OneThingMode as OneThingComponent } from '../components/OneThingMode';
 import { useApp } from '../contexts/AppContext';
 import { useSafeBack } from '../hooks/use-Safe-Back';
-import { useAppTheme } from '../hooks/use-app-theme';
 
 
 export default function OneThingModeScreen() {
   const router = useRouter();
   const { tasks, settings, toggleTask, triggerConfetti } = useApp();
   const handleBack = useSafeBack();
-  const { colors } = useAppTheme();
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={styles.container}>
       <OneThingComponent
         onNavigateBack={handleBack}
         tasks={tasks}
@@ -30,5 +28,6 @@ export default function OneThingModeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#fff',
   },
 });

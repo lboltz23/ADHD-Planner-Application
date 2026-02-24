@@ -15,7 +15,6 @@ import {
 import { Task, Weekday } from "../types";
 import { getTaskTypeColor } from "./taskColors";
 import EditTask from "./EditTask";
-import { useAppTheme } from "../hooks/use-app-theme";
 
 interface TaskCardProps {
   task: Task;
@@ -46,7 +45,6 @@ export function TaskCard({
   colorBlindMode = false,
 }: TaskCardProps) {
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const { colors, isDark } = useAppTheme();
 
   const getTaskStyle = (type: Task["type"]): TaskStyle => {
     const taskColor = getTaskTypeColor(type, colorBlindMode);
@@ -59,11 +57,11 @@ export function TaskCard({
 
     if (colorBlindMode) {
       return {
-        gradient: isDark ? "#1f273a" : "#ffffff",
+        gradient: "#ffffff",
         borderColor: taskColor,
         iconColor: taskColor,
         completedColor: taskColor,
-        backgroundColor: isDark ? "#1f273a" : "#f5f5f5",
+        backgroundColor: "#f5f5f5",
         Icon: iconMap[type],
       };
     }
@@ -71,38 +69,38 @@ export function TaskCard({
     switch (type) {
       case "routine":
         return {
-          gradient: isDark ? "#232a3d" : "#faf8fc",
-          borderColor: isDark ? "#8e77bf" : "#b8a4d9",
-          iconColor: isDark ? "#8e77bf" : "#b8a4d9",
+          gradient: "#faf8fc",
+          borderColor: "#b8a4d9",
+          iconColor: "#b8a4d9",
           completedColor: "#d4c5e8",
-          backgroundColor: isDark ? "#1b2133" : "#ffffff",
+          backgroundColor: "#ffffff",
           Icon: Repeat,
         };
       case "basic":
         return {
-          gradient: isDark ? "#1d2a3a" : "#f9fcff",
-          borderColor: isDark ? "#6ea6c2" : "#a8d8ea",
-          iconColor: isDark ? "#6ea6c2" : "#a8d8ea",
+          gradient: "#f9fcff",
+          borderColor: "#a8d8ea",
+          iconColor: "#a8d8ea",
           completedColor: "#b8dde9",
-          backgroundColor: isDark ? "#1b2133" : "#ffffff",
+          backgroundColor: "#ffffff",
           Icon: CheckSquare,
         };
       case "related":
         return {
-          gradient: isDark ? "#2a2235" : "#fef9fc",
-          borderColor: isDark ? "#d58aa5" : "#ffc9d4",
-          iconColor: isDark ? "#d58aa5" : "#ffc9d4",
+          gradient: "#fef9fc",
+          borderColor: "#ffc9d4",
+          iconColor: "#ffc9d4",
           completedColor: "#ffd9e1",
-          backgroundColor: isDark ? "#1b2133" : "#ffffff",
+          backgroundColor: "#ffffff",
           Icon: LinkIcon,
         };
       case "long_interval":
         return {
-          gradient: isDark ? "#2c2231" : "#fff0fbff",
-          borderColor: isDark ? "#c784b6" : "#f5a4e0ff",
-          iconColor: isDark ? "#c784b6" : "#f5a4e0ff",
+          gradient: "#fff0fbff",
+          borderColor: "#f5a4e0ff",
+          iconColor: "#f5a4e0ff",
           completedColor: "#f1cfe8ff",
-          backgroundColor: isDark ? "#1b2133" : "#ffffff",
+          backgroundColor: "#ffffff",
           Icon: Hourglass,
         };
     }
@@ -160,20 +158,20 @@ export function TaskCard({
           >
             <CheckCircle2
               size={20}
-              color={task.completed ? (isDark ? "#6ed6a3" : "#b4e7ce") : colors.border}
+              color={task.completed ? "#b4e7ce" : "#e5d9f2"}
             />
           </TouchableOpacity>
 
           <Text style={[
             styles.taskTitle,
             {
-              color: task.completed ? colors.textMuted : colors.text,
+              color: task.completed ? "#999" : "#333",
               textDecorationLine: task.completed ? "line-through" : "none",
             },
           ]}>{task.title}</Text>
         </View>
 
-        {showDate && <Text style={[styles.dateText, { color: colors.textMuted }]}>{formatDate(task.due_date)}</Text>}
+        {showDate && <Text style={styles.dateText}>{formatDate(task.due_date)}</Text>}
       </TouchableOpacity>
 
       {/* Edit Task Dialog */}
@@ -222,5 +220,6 @@ const styles = StyleSheet.create({
     },
     dateText: {
       fontSize: 14,
+      color: "#999",
     },
   });

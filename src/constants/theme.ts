@@ -27,53 +27,6 @@ export const Colors = {
   },
 };
 
-export type ThemePreference = 'auto' | 'light' | 'dark';
-export type ResolvedTheme = 'light' | 'dark';
-
-export const AppThemeColors = {
-  light: {
-    background: '#f8f6fb',
-    screen: '#ffffff',
-    surface: '#ffffff',
-    surfaceMuted: '#f2ecfa',
-    inputBackground: '#f8f6fb',
-    border: '#e5d9f2',
-    text: '#333333',
-    textMuted: '#999999',
-    heading: '#6b5b7f',
-    accent: '#b8a4d9',
-    accentSoft: '#a8d8ea',
-    success: '#b4e7ce',
-    warning: '#ffd89b',
-  },
-  dark: {
-    background: '#0f1118',
-    screen: '#141826',
-    surface: '#1b2133',
-    surfaceMuted: '#242b42',
-    inputBackground: '#202841',
-    border: '#2e3856',
-    text: '#e6e9f2',
-    textMuted: '#9aa3bb',
-    heading: '#d7c6f7',
-    accent: '#8e77bf',
-    accentSoft: '#6ea6c2',
-    success: '#4f9b78',
-    warning: '#b5935c',
-  },
-} as const;
-
-export type ThemeColors = (typeof AppThemeColors)[keyof typeof AppThemeColors];
-
-export function resolveThemePreference(
-  preference: ThemePreference,
-  systemScheme: string | null | undefined
-): ResolvedTheme {
-  if (preference === 'dark') return 'dark';
-  if (preference === 'light') return 'light';
-  return systemScheme === 'dark' ? 'dark' : 'light';
-}
-
 export const AppColors = {
   primary: "#6b5b7f",
   border: "#e5d9f2",
