@@ -14,3 +14,7 @@ export const confirm = (message: string) => {
     );
   });
 };
+
+// Usage in your component:
+// const shouldContinue = await confirm('Do you want to delete this item?');
+// if (shouldContinue) { /* ... perform action ... */ }

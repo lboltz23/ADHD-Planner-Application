@@ -232,7 +232,7 @@ export default function EditTask({
                 <View style={styles.leftButtons}>
                   <TouchableOpacity
                     onPress= {async () => {
-                      const confirmed = await confirm(task.is_template ? "Are you sure you want to delete this recurring task?\n\n Warning: This will delete all instances of this task." : "Are you sure you want to delete this task?");
+                      const confirmed = await confirm("Are you sure you want to delete this task?");
                       if (confirmed) {
                         handleDelete();
                       }

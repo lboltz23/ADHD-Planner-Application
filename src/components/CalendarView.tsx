@@ -164,15 +164,15 @@ export function WeeklyView({ onToggleTask, onEditTask, onDeleteTask, colorBlindM
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" backgroundColor="#f6f3fb" />
+      <StatusBar style={isDark ? 'light' : 'dark'} backgroundColor={colors.background} />
       <View style={styles.header}>
         <TouchableOpacity onPress={onNavigateBack} style={styles.backButton}>
-          <ArrowLeft size={20} color="#6b5b7f" />
+          <ArrowLeft size={20} color={colors.heading} />
         </TouchableOpacity>
 
         <Text style={styles.headerTitle}>Weekly Tasks</Text>
         <TouchableOpacity onPress={onNavigateSettings} style={styles.settingsButton}>
-          <Settings size={22} color="#b8a4d9" />
+          <Settings size={22} color={colors.accent} />
         </TouchableOpacity>
       </View>
 
@@ -185,7 +185,7 @@ export function WeeklyView({ onToggleTask, onEditTask, onDeleteTask, colorBlindM
           <Text style={styles.monthSelectorText}>
             {new Date(selectedMonth.year, selectedMonth.month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
           </Text>
-          <ChevronDown size={20} color="#6b5b7f" />
+          <ChevronDown size={20} color={colors.heading} />
         </TouchableOpacity>
       </View>
 
@@ -276,10 +276,11 @@ export function WeeklyView({ onToggleTask, onEditTask, onDeleteTask, colorBlindM
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f6fb',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -295,12 +296,12 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#6b5b7f',
+    color: colors.heading,
     flex: 1,
     marginLeft: 4,
   },
   settingsButton: {
-    backgroundColor: '#f2ecfa',
+    backgroundColor: colors.surfaceMuted,
     padding: 10,
     borderRadius: 8,
   },
@@ -312,21 +313,21 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   dayCard: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#e5d9f2',
+    borderColor: colors.border,
   },
   dayLabel: {
     fontWeight: '700',
     fontSize: 16,
     marginBottom: 8,
-    color: '#6b5b7f',
+    color: colors.heading,
   },
   noTasks: {
     textAlign: 'center',
-    color: '#999',
+    color: colors.textMuted,
     fontSize: 12,
     paddingVertical: 8,
   },
@@ -338,28 +339,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.surface,
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#e5d9f2',
+    borderColor: colors.border,
     gap: 8,
   },
   monthSelectorText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#6b5b7f',
+    color: colors.heading,
   },
   dropdownContainer: {
     position: 'absolute',
     top: 140,
     left: 16,
     right: 16,
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.surface,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#e5d9f2',
+    borderColor: colors.border,
     zIndex: 1000,
     elevation: 5,
     shadowColor: '#000',
@@ -375,24 +376,24 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0eaf8',
+    borderBottomColor: colors.border,
   },
   dropdownItemSelected: {
-    backgroundColor: '#f2ecfa',
+    backgroundColor: colors.surfaceMuted,
   },
   dropdownItemText: {
     fontSize: 15,
-    color: '#6b5b7f',
+    color: colors.text,
   },
   dropdownItemTextSelected: {
     fontWeight: '600',
-    color: '#b8a4d9',
+    color: colors.accent,
   },
   seeMoreButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#b8a4d9',
+    backgroundColor: colors.accent,
     paddingVertical: 14,
     paddingHorizontal: 20,
     borderRadius: 10,
@@ -404,4 +405,5 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
   },
-});
+  });
+}
