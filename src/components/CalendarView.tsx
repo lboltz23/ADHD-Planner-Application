@@ -1,19 +1,21 @@
-import React, { useMemo, useState, useRef, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
+import React, { useMemo, useState, useRef } from 'react';
+// import React, { useMemo, useState, useRef, useEffect } from 'react'; // Uncomment when enabling Supabase
+import { View, Text, ScrollView, StyleSheet, Dimensions, TouchableOpacity, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, Settings, ChevronDown, Plus } from 'lucide-react-native';
 import { TaskCard } from './TaskCard';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Task, Weekday } from '../types';
+import { Task } from '../types';
 import { SettingsData } from './Settings';
 import { ProgressCircle } from './ProgressCircle';
 import { AppThemeColors, resolveThemePreference, ThemeColors } from '../constants/theme';
 import { useColorScheme } from '../hooks/use-color-scheme';
-import { useApp } from '../contexts/AppContext'; 
+// import { useApp } from '../contexts/AppContext'; // Uncomment when enabling Supabase
 
 interface WeeklyViewProps {
+  tasks: Task[];
   onToggleTask: (id: string) => void;
-  onEditTask: (id: string, fields: { title?: string; due_date?: Date; notes?: string; parent_id?: string; start_date?: Date; end_date?: Date; recurrence_interval?: number; days_selected?: Weekday[] }) => void;
+  onEditTask: (id: string, fields: { title?: string; due_date?: Date; notes?: string }) => void;
   onDeleteTask: (id: string) => void;
   colorBlindMode?: boolean;
   onNavigateBack: () => void;
@@ -22,7 +24,7 @@ interface WeeklyViewProps {
   onTriggerConfetti?: () => void;
 }
 
-export function WeeklyView({ onToggleTask, onEditTask, onDeleteTask, colorBlindMode, onNavigateBack, onNavigateSettings, settings }: WeeklyViewProps) {
+export function WeeklyView({ tasks, onToggleTask, onEditTask, onDeleteTask, colorBlindMode, onNavigateBack, onNavigateSettings, settings }: WeeklyViewProps) {
   const systemScheme = useColorScheme();
   const resolvedTheme = resolveThemePreference(settings.theme, systemScheme);
   const colors = AppThemeColors[resolvedTheme];
@@ -39,40 +41,48 @@ export function WeeklyView({ onToggleTask, onEditTask, onDeleteTask, colorBlindM
   });
   const [daysToShow, setDaysToShow] = useState(7);
   const [showMonthDropdown, setShowMonthDropdown] = useState(false);
+  const [isAtEnd, setIsAtEnd] = useState(false);
 
-
-  const { tasks } = useApp();
-
-  // Derive monthTasks from global tasks state (same pattern as Dashboard)
-  const monthTasks = useMemo(() => {
-    const monthStart = new Date(selectedMonth.year, selectedMonth.month, 1);
-    monthStart.setHours(0, 0, 0, 0);
-    const monthEnd = new Date(selectedMonth.year, selectedMonth.month + 1, 0);
-    monthEnd.setHours(23, 59, 59, 999);
-    return tasks.filter(task => {
-      if (task.is_template) return false;
-      const taskDate = new Date(task.due_date);
-      taskDate.setHours(0, 0, 0, 0);
-      return taskDate >= monthStart && taskDate <= monthEnd;
-    });
-  }, [tasks, selectedMonth.year, selectedMonth.month]);
-  
-  useEffect(() => {
-    setTimeout(() => {
-      scrollViewRef.current?.flashScrollIndicators();
-    }, 500);
-    }, []);
-  
-  const tasksByDate = useMemo(() => {
-    const map: { [key: string]: Task[] } = {};
-    monthTasks.forEach(task => {
-      const key = new Date(task.due_date).toDateString();
-      if (!map[key]) map[key] = [];
-      map[key].push(task);
-    });
-    return map;
-  }, [monthTasks]);
-  
+  // ===========================================
+  // SUPABASE: Fetch tasks for selected month
+  // ===========================================
+  // Uncomment this section when enabling Supabase
+  //
+  // const { fetchTasksForMonth } = useApp();
+  // const [monthTasks, setMonthTasks] = useState<Task[]>([]);
+  // const [isLoading, setIsLoading] = useState(false);
+  //
+  // // Fetch tasks when month changes
+  // useEffect(() => {
+  //   const loadMonthTasks = async () => {
+  //     setIsLoading(true);
+  //     try {
+  //       const fetchedTasks = await fetchTasksForMonth(
+  //         selectedMonth.year,
+  //         selectedMonth.month
+  //       );
+  //       setMonthTasks(fetchedTasks);
+  //     } catch (error) {
+  //       console.error('Error loading month tasks:', error);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
+  //   loadMonthTasks();
+  // }, [selectedMonth.year, selectedMonth.month, fetchTasksForMonth]);
+  //
+  // // When Supabase is enabled, use monthTasks instead of tasks prop
+  // // Change tasksByDate to use monthTasks:
+  // // const tasksByDate = useMemo(() => {
+  // //   const map: { [key: string]: Task[] } = {};
+  // //   monthTasks.forEach(task => {
+  // //     const key = task.date.toDateString();
+  // //     if (!map[key]) map[key] = [];
+  // //     map[key].push(task);
+  // //   });
+  // //   return map;
+  // // }, [monthTasks]);
+  // ===========================================
 
   // Generate list of months (current month + next 11 months)
   const availableMonths = useMemo(() => {
@@ -122,6 +132,17 @@ export function WeeklyView({ onToggleTask, onEditTask, onDeleteTask, colorBlindM
     return daysToShow < daysInMonthRemaining;
   }, [selectedMonth, daysToShow]);
 
+  const tasksByDate = useMemo(() => {
+    const map: { [key: string]: Task[] } = {};
+    tasks.forEach(task => {
+      if (task.is_template) return;
+      const key = new Date(task.due_date).toDateString();
+      if (!map[key]) map[key] = [];
+      map[key].push(task);
+    });
+    return map;
+  }, [tasks]);
+
   // Group dates into pages of 3
   const pages = useMemo(() => {
     const result: Date[][] = [];
@@ -135,6 +156,7 @@ export function WeeklyView({ onToggleTask, onEditTask, onDeleteTask, colorBlindM
     setSelectedMonth({ year, month });
     setDaysToShow(7); // Reset to 7 days when changing month
     setShowMonthDropdown(false);
+    setIsAtEnd(false);
     scrollViewRef.current?.scrollTo({ x: 0, animated: false });
   };
 
@@ -142,13 +164,18 @@ export function WeeklyView({ onToggleTask, onEditTask, onDeleteTask, colorBlindM
     setDaysToShow(prev => prev + 7);
   };
 
-  const todayTasks = monthTasks.filter((task) => {
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+    const isEnd = contentOffset.x + layoutMeasurement.width >= contentSize.width - 10;
+    setIsAtEnd(isEnd);
+  };
+
+  const todayTasks = tasks.filter((task) => {
     if (task.is_template) return false;
     const today = new Date();
     const taskDate = new Date(task.due_date);
     return taskDate.toDateString() === today.toDateString();
   });
-  
   const completedTodayTasks = todayTasks.filter((task) => task.completed)
     .length;
   const todayProgress =
@@ -213,12 +240,15 @@ export function WeeklyView({ onToggleTask, onEditTask, onDeleteTask, colorBlindM
           </ScrollView>
         </View>
       )}
+
       <ScrollView
         ref={scrollViewRef}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={true}
         style={styles.weekContainer}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
       >
         {pages.map((pageDates, pageIndex) => (
           <ScrollView
@@ -242,7 +272,6 @@ export function WeeklyView({ onToggleTask, onEditTask, onDeleteTask, colorBlindM
                       <TaskCard
                         key={task.id}
                         task={task}
-                        tasks={tasks}
                         onToggle={onToggleTask}
                         onUpdate={onEditTask}
                         onDelete={onDeleteTask}

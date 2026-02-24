@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, Modal, TouchableOpacity, StyleSheet, ScrollView, TextInput } from "react-native";
-import { X, Trash2, CheckCircle2, Link as LinkIcon } from "lucide-react-native";
+import React, { useState } from "react";
+import { View, Text, Modal, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
+import { X, Trash2, CheckCircle2, Link as LinkIcon, Save } from "lucide-react-native";
 import { Calendar } from "react-native-calendars";
 import { Task, Weekday, toLocalDateString } from "../types";
 import { getTaskTypeColor, getEnhancedTaskTypeColor } from "./taskColors";
 import TitleInput from "./TitleInput";
 import NoteInput from "./NoteInput";
+import { getAppColors } from "../constants/theme";
 import { confirm } from "./Confirmation";
 import RelatedTaskInput from "./RelatedTask";
 import DateRangePicker from "./DateRangePicker";
@@ -32,17 +33,18 @@ export interface EditTaskProps {
   onDelete: (id: string) => void;
   onToggle: (id: string) => void;
   colorBlindMode?: boolean;
+  isDarkMode?: boolean;
 }
 
 export default function EditTask({
   isOpen,
   onClose,
   task,
-  tasks = [],
   onSave,
   onDelete,
   onToggle,
   colorBlindMode = false,
+  isDarkMode = false,
 }: EditTaskProps) {
   const [editedTitle, setEditedTitle] = useState(task.title);
   const [editedDate, setEditedDate] = useState(task.due_date);
@@ -98,12 +100,6 @@ export default function EditTask({
     }
   };
 
-  const toggleDay = (day: Weekday) => {
-      setEditedDaysSelected((prev) =>
-        prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
-      );
-    };
-
   const handleDelete = () => {
     onDelete(task.id);
     onClose();
@@ -138,9 +134,9 @@ export default function EditTask({
               {/* Header */}
               <View style={styles.header}>
                 <View style={[styles.typeIndicator, { backgroundColor: typeColor }]} />
-                <Text style={styles.title}>Edit Task</Text>
+                <Text style={[styles.title, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Edit Task</Text>
                 <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                  <X size={24} color="#6b5b7f" />
+                  <X size={24} color={getAppColors(colorBlindMode, isDarkMode).primary} />
                 </TouchableOpacity>
               </View>
 
@@ -264,7 +260,7 @@ export default function EditTask({
                     onPress={handleToggleComplete}
                     style={[styles.button, task.completed ? styles.completeButtonActive : styles.completeButton]}
                   >
-                    <CheckCircle2 size={16} color={task.completed ? "#ffffff" : "#b4e7ce"} />
+                    <CheckCircle2 size={16} color={task.completed ? "#ffffff" : "#3bdc29"} />
                     <Text style={task.completed ? styles.completeTextActive : styles.completeText}>
                       {task.completed ? "Completed" : "Complete"}
                     </Text>
@@ -276,6 +272,7 @@ export default function EditTask({
                     onPress={handleSave}
                     style={[styles.button, styles.saveButton, { backgroundColor: getEnhancedTaskTypeColor(task.type, colorBlindMode) }]}
                   >
+                    <Save size={16} color="#ffffff" />
                     <Text style={styles.saveText}>Save</Text>
                   </TouchableOpacity>
                 </View>
@@ -329,15 +326,10 @@ const styles = StyleSheet.create({
   },
   section: {
     marginBottom: 16,
-    borderWidth: 3,
-    borderRadius: 8,
-    borderColor: "#e5d9f2",
-    padding: 12,
   },
   label: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#6b5b7f",
     marginBottom: 8,
     marginTop: 12,
   },
@@ -366,11 +358,11 @@ const styles = StyleSheet.create({
   leftButtons: {
     flexDirection: "row",
     flex: 1,
-    gap: 12,
+    gap: 6,
   },
   rightButtons: {
     flexDirection: "row",
-    gap: 12,
+    gap: 8,
     flex: 1,
     justifyContent: "flex-end",
   },
@@ -381,7 +373,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
-    gap: 6,
+    gap: 2,
   },
   deleteButton: {
     backgroundColor: "#f85e5e",
@@ -393,14 +385,14 @@ const styles = StyleSheet.create({
   },
   completeButton: {
     borderWidth: 1,
-    borderColor: "#b4e7ce",
-    backgroundColor: "#ffffff",
+    borderColor: "#3bdc29",
+    backgroundColor: "#e6f9e6",
   },
   completeButtonActive: {
-    backgroundColor: "#74f2ab",
+    backgroundColor: "#3bdc29",
   },
   completeText: {
-    color: "#4a9d7a",
+    color: "#3bdc29",
     fontWeight: "600",
     fontSize: 14,
   },
@@ -416,13 +408,14 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "600",
     fontSize: 14,
+    marginLeft: 4,
   },
   parentTaskRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 6,
     marginTop: 8,
-    padding: 10,
+    padding: 8,
     backgroundColor: "#fef9fc",
     borderWidth: 1,
     borderColor: "#ffc9d4",
