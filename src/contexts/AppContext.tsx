@@ -5,8 +5,10 @@ import { SettingsData } from '../components/Settings';
 import { supabase } from '@/lib/supabaseClient';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
+import { Session, User } from "@supabase/supabase-js";
 
-// Map JavaScript day numbers (0=Sunday) to Weekday names
+/* ----------------------------- Day Mapping ----------------------------- */
+
 const DAY_NUMBER_TO_WEEKDAY: Record<number, Weekday> = {
   0: "Sunday",
   1: "Monday",
@@ -17,12 +19,17 @@ const DAY_NUMBER_TO_WEEKDAY: Record<number, Weekday> = {
   6: "Saturday",
 };
 
+/* ----------------------------- Types ----------------------------- */
+
 interface AppContextType {
   tasks: Task[];
   settings: SettingsData;
   addTask: (params: CreateTaskParams) => void;
   toggleTask: (id: string) => void;
-  updateTask: (id: string, fields: { title?: string; due_date?: Date; notes?: string }) => void;
+  updateTask: (
+    id: string,
+    fields: { title?: string; due_date?: Date; notes?: string }
+  ) => void;
   deleteTask: (id: string) => void;
   updateSettings: (newSettings: SettingsData) => void;
   streakCount: number;
@@ -31,11 +38,21 @@ interface AppContextType {
   triggerConfetti: () => void;
 }
 
+// await supabase.auth.signInWithPassword({
+//   email: "test@test.com",
+//   password: "password123",
+// });
+
+// const DEFAULT_USER_ID = '9dfa5616-322a-4287-a980-d33754320861';
+
 const AppContext = createContext<AppContextType | undefined>(undefined);
+
+/* ====================================================================== */
+/*                               PROVIDER                                 */
+/* ====================================================================== */
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [tasks, setTasks] = useState<Task[]>([]);
-
   const [settings, setSettings] = useState<SettingsData>({
     defaultTimerMinutes: 25,
     soundEnabled: true,
@@ -45,397 +62,233 @@ export function AppProvider({ children }: { children: ReactNode }) {
     colorBlindMode: false,
   });
 
-  const [streakCount, setStreakCount] = useState<number>(0);
+  const [streakCount, setStreakCount] = useState(0);
   const [lastLoginDate, setLastLoginDate] = useState<Date | null>(null);
-
   const [confettiTrigger, setConfettiTrigger] = useState(0);
+  const [session, setSession] = useState<Session | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-  // Default user ID - replace with actual user ID when auth is implemented
-  const DEFAULT_USER_ID = '9dfa5616-322a-4287-a980-d33754320861';
 
-  // Helper function to generate task instances from a recurring template
-  const generateTaskInstancesFromTemplate = (template: any): Task[] => {
-    if (!template.start_date) return [];
-    const startDate = new Date(template.start_date);
-    // If no end date, generate a rolling 3-month window from today
-    const endDate = template.end_date
-      ? new Date(template.end_date)
-      : new Date(new Date().getFullYear(), new Date().getMonth() + 3, new Date().getDate());
-    const daysSelected = template.days_selected as Weekday[] | undefined;
-    const intervalMonths = template.recurrence_interval as number | undefined;
-    const createdAt = new Date(template.created_at);
-    const updatedAt = new Date(template.updated_at);
-    const completedDates: string[] = template.completed_dates || [];
+  /* ===================== AUTH SESSION HANDLING ===================== */
 
-    const scheduledDays = generateScheduledDays(startDate, endDate, daysSelected, intervalMonths);
+useEffect(() => {
+  // Get initial session
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    setSession(session);
+    setCurrentUser(session?.user ?? null);
+  });
 
-    return scheduledDays.map((scheduledDate) => {
-      const dateStr = scheduledDate.toISOString().split('T')[0];
-      const isCompleted = completedDates.includes(dateStr);
+  // Listen for auth changes
+  const { data: listener } = supabase.auth.onAuthStateChange(
+    (_event, session) => {
+      setSession(session);
+      setCurrentUser(session?.user ?? null);
+    }
+  );
 
-      return {
-        id: `${template.id}_${dateStr}`, // Unique ID per instance
-        user_id: template.user_id,
-        title: template.title,
-        due_date: scheduledDate,
-        completed: isCompleted,
-        type: template.type as Task['type'],
-        notes: template.description,
-        created_at: createdAt,
-        updated_at: updatedAt,
-        is_template: false,
-        parent_task_id: template.id, // Reference to the parent template
-        days_selected: daysSelected,
-        recurrence_interval: intervalMonths,
-        start_date: startDate,
-        end_date: endDate,
-      };
-    });
+  return () => {
+    listener.subscription.unsubscribe();
   };
+}, []);
 
-  // Load tasks from Supabase on mount
+  /* ====================================================================== */
+  /*                          LOAD TASKS (User Scoped)                      */
+  /* ====================================================================== */
+
   useEffect(() => {
+    if (!currentUser) return;
+
     const loadTasks = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('tasks')
-          .select('*')
-          .eq('user_id', DEFAULT_USER_ID);
+      const { data, error } = await supabase
+        .from("tasks")
+        .select("*")
+        .eq("user_id", currentUser.id);
 
-        if (error) {
-          console.error('Error loading tasks from Supabase:', error);
-          return;
-        }
-
-        if (data) {
-          const allTasks: Task[] = [];
-
-          data.forEach((row: any) => {
-            // Check if this is a recurring template
-            if (row.is_template && row.start_date && row.end_date) {
-              // Add the template itself for the Repeating view
-              allTasks.push({
-                id: row.id,
-                title: row.title,
-                user_id: row.user_id,
-                created_at: new Date(row.created_at),
-                updated_at: new Date(row.updated_at),
-                due_date: new Date(row.due_date),
-                completed: false,
-                type: row.type as Task['type'],
-                notes: row.description,
-                is_template: true,
-                days_selected: row.days_selected,
-                recurrence_interval: row.recurrence_interval,
-                start_date: new Date(row.start_date),
-                end_date: new Date(row.end_date),
-              });
-              // Generate instances from the template
-              const instances = generateTaskInstancesFromTemplate(row);
-              allTasks.push(...instances);
-            } else {
-              // Regular non-recurring task
-              allTasks.push({
-                id: row.id,
-                title: row.title,
-                user_id: row.user_id,
-                created_at: new Date(row.created_at),
-                updated_at: new Date(row.updated_at),
-                due_date: new Date(row.due_date),
-                completed: row.completed || false,
-                type: row.type as Task['type'],
-                notes: row.description,
-                is_template: false,
-              });
-            }
-          });
-
-          setTasks(allTasks);
-        }
-      } catch (error) {
-        console.error('Failed to load tasks:', error);
+      if (error) {
+        console.error("Load tasks error:", error);
+        return;
       }
+
+      if (!data) return;
+
+      const formatted: Task[] = data.map((row: any) => ({
+        id: row.id,
+        title: row.title,
+        user_id: row.user_id,
+        created_at: new Date(row.created_at),
+        updated_at: new Date(row.updated_at),
+        due_date: new Date(row.due_date),
+        completed: row.completed || false,
+        type: row.type,
+        notes: row.notes,
+        is_template: row.is_template,
+        parent_task_id: row.parent_task_id,
+        days_selected: row.days_selected,
+        recurrence_interval: row.recurrence_interval,
+        start_date: row.start_date ? new Date(row.start_date) : undefined,
+        end_date: row.end_date ? new Date(row.end_date) : undefined,
+      }));
+
+      setTasks(formatted);
     };
 
     loadTasks();
-  }, []);
+  }, [currentUser]);
 
-  // Helper function to generate scheduled days for recurring tasks
-  const generateScheduledDays = (
-    startDate: Date,
-    endDate: Date,
-    repeatDays?: Weekday[],
-    intervalMonths?: number
-  ): Date[] => {
-    const scheduledDays: Date[] = [];
-    const current = new Date(startDate);
-    const end = new Date(endDate);
+  /* ====================================================================== */
+  /*                               ADD TASK                                 */
+  /* ====================================================================== */
 
-    // Set times to midnight for consistent comparison
-    current.setHours(0, 0, 0, 0);
-    end.setHours(0, 0, 0, 0);
+  const addTask = useCallback(
+    async (params: CreateTaskParams) => {
+      if (!currentUser) return;
 
-    // If repeatDays is provided (routine tasks), filter by selected weekdays
-    if (repeatDays && repeatDays.length > 0) {
-      while (current <= end) {
-        const dayOfWeek = DAY_NUMBER_TO_WEEKDAY[current.getDay()];
-        if (repeatDays.includes(dayOfWeek)) {
-          scheduledDays.push(new Date(current));
-        }
-        current.setDate(current.getDate() + 1);
-      }
-    } else if (intervalMonths) {
-      // For long_interval tasks, use intervalMonths
-      while (current <= end) {
-        scheduledDays.push(new Date(current));
-        current.setMonth(current.getMonth() + intervalMonths);
-      }
-    } else {
-      // Default to daily if nothing specified
-      while (current <= end) {
-        scheduledDays.push(new Date(current));
-        current.setDate(current.getDate() + 1);
-      }
-    }
+      const id = uuidv4();
+      const now = new Date();
 
-    return scheduledDays;
-  };
-
-  const addTask = useCallback(async (params: CreateTaskParams) => {
-    const { title, due_date, type, days_selected, recurrence_interval, notes, start_date, end_date, parent_task_id } = params;
-    const baseId = uuidv4();
-    const now = new Date();
-
-    // Check if this is a recurring task
-    if (type === "routine" || type === "long_interval") {
-      // Store only ONE template task in Supabase with is_template = true
-      const templateTask: Record<string, any> = {
-        id: baseId,
-        title,
-        type,
-        notes: notes,
-        user_id: DEFAULT_USER_ID,
-        is_template: true,
-        start_date: start_date ? start_date.toISOString() : null,
-        end_date: end_date ? end_date.toISOString() : null,
-        days_selected: days_selected,
-        recurrence_interval: recurrence_interval,
-        due_date: (start_date || due_date).toISOString(),
-        completed: false,
-      };
-
-      const { error } = await supabase.from('tasks').insert(templateTask);
-      if (error) {
-        console.error('Error inserting recurring task template:', error);
-      } else {
-        // Add template to local state
-        const templateForState: Task = {
-          id: baseId,
-          user_id: DEFAULT_USER_ID,
-          title,
-          due_date: start_date || due_date,
-          completed: false,
-          type,
-          notes,
-          created_at: now,
-          updated_at: now,
-          is_template: true,
-          days_selected,
-          recurrence_interval,
-          start_date: start_date || undefined,
-          end_date: end_date || undefined,
-        };
-        // Generate instances locally for display (only if both dates exist)
-        const instances = generateTaskInstancesFromTemplate({
-          ...templateTask,
-          created_at: now.toISOString(),
-          updated_at: now.toISOString(),
-        });
-        setTasks(prev => [...prev, templateForState, ...instances]);
-      }
-    } else {
-      // Regular non-recurring task (basic or related)
       const newTask: Task = {
-        id: baseId,
-        user_id: DEFAULT_USER_ID,
-        title,
-        due_date: due_date,
+        id,
+        user_id: currentUser.id,
+        title: params.title,
+        due_date: params.due_date,
         completed: false,
-        type,
-        notes,
+        type: params.type,
+        notes: params.notes,
         created_at: now,
         updated_at: now,
         is_template: false,
-        parent_task_id: type === "related" ? parent_task_id : undefined,
+        parent_task_id:
+          params.type === "related" ? params.parent_task_id : undefined,
       };
 
-      // Insert into Supabase
-      const { error } = await supabase.from('tasks').insert({
-        id: newTask.id,
+      const { error } = await supabase.from("tasks").insert({
+        id,
+        user_id: currentUser.id,
         title: newTask.title,
         due_date: newTask.due_date.toISOString(),
-        completed: newTask.completed,
+        completed: false,
         type: newTask.type,
         notes: newTask.notes,
-        user_id: DEFAULT_USER_ID,
         is_template: false,
         parent_task_id: newTask.parent_task_id,
       });
 
       if (error) {
-        console.error('Error inserting task:', error);
-      } else {
-        setTasks(prev => [...prev, newTask]);
-      }
-    }
-  }, []);
-
-  const toggleTask = useCallback(async (id: string) => {
-    // Find the task to determine if it's a recurring instance
-    const task = tasks.find(t => t.id === id);
-    if (!task) return;
-
-    const newCompletedState = !task.completed;
-
-    // Optimistically update UI first
-    setTasks(prev => prev.map(t =>
-      t.id === id ? { ...t, completed: newCompletedState } : t
-    ));
-
-    // Check if this is a recurring task instance (has a parent_task_id)
-    if (task.is_template === false && task.parent_task_id) {
-      // Extract the date from the instance ID (format: templateId_YYYY-MM-DD)
-      const dateStr = task.due_date.toISOString().split('T')[0];
-
-      // Get current completed_dates from Supabase
-      const { data: templateData, error: fetchError } = await supabase
-        .from('tasks')
-        .select('completed_dates')
-        .eq('id', task.parent_task_id)
-        .single();
-
-      if (fetchError) {
-        console.error('Error fetching template:', fetchError);
-        // Revert on error
-        setTasks(prev => prev.map(t =>
-          t.id === id ? { ...t, completed: !newCompletedState } : t
-        ));
+        console.error("Insert error:", error);
         return;
       }
 
-      const currentCompletedDates: string[] = templateData?.completed_dates || [];
-      let updatedCompletedDates: string[];
+      setTasks((prev) => [...prev, newTask]);
+    },
+    [currentUser]
+  );
 
-      if (newCompletedState) {
-        // Add date to completed_dates if not already present
-        if (!currentCompletedDates.includes(dateStr)) {
-          updatedCompletedDates = [...currentCompletedDates, dateStr];
-        } else {
-          updatedCompletedDates = currentCompletedDates;
-        }
-      } else {
-        // Remove date from completed_dates
-        updatedCompletedDates = currentCompletedDates.filter(d => d !== dateStr);
-      }
+  /* ====================================================================== */
+  /*                             TOGGLE TASK                                */
+  /* ====================================================================== */
 
-      // Update the template's completed_dates in Supabase
-      const { error: updateError } = await supabase
-        .from('tasks')
-        .update({ completed_dates: updatedCompletedDates })
-        .eq('id', task.parent_task_id);
+  const toggleTask = useCallback(
+    async (id: string) => {
+      if (!currentUser) return;
 
-      if (updateError) {
-        console.error('Error updating completed_dates:', updateError);
-        // Revert on error
-        setTasks(prev => prev.map(t =>
-          t.id === id ? { ...t, completed: !newCompletedState } : t
-        ));
-      }
-    } else {
-      // Regular non-recurring task - update completed field directly
+      const task = tasks.find((t) => t.id === id);
+      if (!task) return;
+
+      const updated = !task.completed;
+
+      setTasks((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, completed: updated } : t))
+      );
+
       const { error } = await supabase
-        .from('tasks')
-        .update({ completed: newCompletedState })
-        .eq('id', id);
+        .from("tasks")
+        .update({ completed: updated })
+        .eq("id", id)
+        .eq("user_id", currentUser.id);
 
       if (error) {
-        console.error('Error toggling task:', error);
-        // Revert on error
-        setTasks(prev => prev.map(t =>
-          t.id === id ? { ...t, completed: !newCompletedState } : t
-        ));
+        console.error("Toggle error:", error);
       }
-    }
-  }, [tasks]);
+    },
+    [tasks, currentUser]
+  );
 
-  const updateTask = useCallback(async (id: string, fields: { title?: string; due_date?: Date; notes?: string }) => {
-    // Optimistically update UI first
-    const originalTask = tasks.find(t => t.id === id);
-    setTasks(prev => prev.map(task =>
-      task.id === id ? { ...task, ...fields } : task
-    ));
+  /* ====================================================================== */
+  /*                             UPDATE TASK                                */
+  /* ====================================================================== */
 
-    // Build Supabase update payload
-    const supabaseFields: Record<string, any> = {};
-    if (fields.title !== undefined) supabaseFields.title = fields.title;
-    if (fields.due_date !== undefined) supabaseFields.due_date = fields.due_date.toISOString();
-    if (fields.notes !== undefined) supabaseFields.notes = fields.notes;
+  const updateTask = useCallback(
+    async (
+      id: string,
+      fields: { title?: string; due_date?: Date; notes?: string }
+    ) => {
+      if (!currentUser) return;
 
-    const { error } = await supabase
-      .from('tasks')
-      .update(supabaseFields)
-      .eq('id', id);
+      const payload: Record<string, any> = {};
+      if (fields.title) payload.title = fields.title;
+      if (fields.due_date)
+        payload.due_date = fields.due_date.toISOString();
+      if (fields.notes !== undefined)
+        payload.notes = fields.notes;
 
-    if (error) {
-      console.error('Error updating task:', error);
-      // Revert on error
-      if (originalTask) {
-        setTasks(prev => prev.map(task =>
-          task.id === id ? originalTask : task
-        ));
+      const { error } = await supabase
+        .from("tasks")
+        .update(payload)
+        .eq("id", id)
+        .eq("user_id", currentUser.id);
+
+      if (!error) {
+        setTasks((prev) =>
+          prev.map((t) => (t.id === id ? { ...t, ...fields } : t))
+        );
+      } else {
+        console.error("Update error:", error);
       }
-    }
-  }, [tasks]);
+    },
+    [currentUser]
+  );
 
-  const updateSettings = useCallback((newSettings: SettingsData) => {
-    setSettings(newSettings);
-  }, []);
+  /* ====================================================================== */
+  /*                             DELETE TASK                                */
+  /* ====================================================================== */
 
-  const triggerConfetti = useCallback(() => {
-    setConfettiTrigger(prev => prev + 1);
-  }, []);
+  const deleteTask = useCallback(
+    async (id: string) => {
+      if (!currentUser) return;
 
-  const deleteTask = useCallback(async (id: string) => {
-    // Optimistically update UI first
-    const originalTasks = tasks;
-    setTasks(prev => prev.filter(task => task.id !== id));
+      setTasks((prev) => prev.filter((t) => t.id !== id));
 
-    // Delete from Supabase
-    const { error } = await supabase
-      .from('tasks')
-      .delete()
-      .eq('id', id);
+      const { error } = await supabase
+        .from("tasks")
+        .delete()
+        .eq("id", id)
+        .eq("user_id", currentUser.id);
 
-    if (error) {
-      console.error('Error deleting task:', error);
-      // Revert on error
-      setTasks(originalTasks);
-    }
-  }, [tasks]);
+      if (error) {
+        console.error("Delete error:", error);
+      }
+    },
+    [currentUser]
+  );
+
+  /* ====================================================================== */
+  /*                            STREAK LOGIC                                */
+  /* ====================================================================== */
 
   const updateStreak = () => {
     const today = new Date();
+
     if (lastLoginDate) {
-      const diffTime = Math.abs(today.getTime() - lastLoginDate.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      if (diffDays === 1) {
-        setStreakCount(prev => prev + 1);
-      } else if (diffDays > 1) {
-        setStreakCount(1);
-      }
+      const diff =
+        (today.getTime() - lastLoginDate.getTime()) /
+        (1000 * 60 * 60 * 24);
+
+      if (Math.floor(diff) === 1) setStreakCount((s) => s + 1);
+      else if (diff > 1) setStreakCount(1);
     } else {
       setStreakCount(1);
     }
+
     setLastLoginDate(today);
   };
 
@@ -443,7 +296,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     updateStreak();
   };
 
-  // Call login() whenever the user logs in
+  const updateSettings = useCallback(
+    (newSettings: SettingsData) => {
+      setSettings(newSettings);
+    },
+    []
+  );
+
+  const triggerConfetti = useCallback(() => {
+    setConfettiTrigger((prev) => prev + 1);
+  }, []);
+
+  /* ====================================================================== */
 
   return (
     <AppContext.Provider
@@ -468,8 +332,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
 export function useApp() {
   const context = useContext(AppContext);
-  if (context === undefined) {
-    throw new Error('useApp must be used within an AppProvider');
+  if (!context) {
+    throw new Error("useApp must be used within an AppProvider");
   }
   return context;
 }
