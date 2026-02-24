@@ -8,7 +8,7 @@ import {
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Task, TaskType, CreateTaskParams, Weekday } from '../types';
+import { Task, TaskType, CreateTaskParams } from '../types';
 import { SettingsData } from './Settings';
 import { TaskCard } from './TaskCard';
 import AddTaskDialog from './AddTaskDialog';
@@ -26,7 +26,7 @@ interface DashboardProps {
   tasks: Task[];
   onAddTask: (params: CreateTaskParams) => void;
   onToggleTask: (id: string) => void;
-  onEditTask: (id: string, fields: { title?: string; due_date?: Date; notes?: string; parent_id?: string; start_date?: Date; end_date?: Date; recurrence_interval?: number; days_selected?: Weekday[] }) => void;
+  onEditTask: (id: string, fields: { title?: string; due_date?: Date; notes?: string }) => void;
   onDeleteTask: (id: string) => void;
   settings: SettingsData;
   onTriggerConfetti?: () => void;
@@ -91,13 +91,13 @@ export function Dashboard({
     today.setHours(0, 0, 0, 0);
     return tasks
       .filter((task) => {
-        if (task.is_template || task.type === 'routine' ||  task.type === 'long_interval') return false;
+        if (task.is_template) return false;
         const taskDate = new Date(task.due_date);
         taskDate.setHours(0, 0, 0, 0);
         return taskDate < today;
       })
-      .sort((a, b) => new Date(b.due_date).getTime() - new Date(a.due_date).getTime())
-      .slice(0, 7);
+      .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
+      .slice(0, 5);
   }, [tasks]);
  
   const handleAddTask = () => {
@@ -559,7 +559,6 @@ export function Dashboard({
                   <TaskCard
                     key={task.id}
                     task={task}
-                    tasks={tasks}
                     onToggle={onToggleTask}
                     onUpdate={onEditTask}
                     onDelete={onDeleteTask}
@@ -581,7 +580,6 @@ export function Dashboard({
                   <TaskCard
                     key={task.id}
                     task={task}
-                    tasks={tasks}
                     onToggle={onToggleTask}
                     onUpdate={onEditTask}
                     onDelete={onDeleteTask}
@@ -604,7 +602,6 @@ export function Dashboard({
                   <TaskCard
                     key={task.id}
                     task={task}
-                    tasks={tasks}
                     onToggle={onToggleTask}
                     onUpdate={onEditTask}
                     onDelete={onDeleteTask}
@@ -626,7 +623,6 @@ export function Dashboard({
                   <TaskCard
                     key={task.id}
                     task={task}
-                    tasks={tasks}
                     onToggle={onToggleTask}
                     onUpdate={onEditTask}
                     onDelete={onDeleteTask}
