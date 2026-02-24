@@ -7,16 +7,12 @@ interface NoteInputProps {
   value: string;
   onChange: (text: string) => void;
   placeholder?: string;
-  colorBlindMode?: boolean;
-  isDarkMode?: boolean;
 }
 
 export default function NoteInput({
   value,
   onChange,
   placeholder = "Enter notes here...",
-  colorBlindMode = false,
-  isDarkMode = false,
 }: NoteInputProps) {
   return (
     <View style={styles.container}>
@@ -29,7 +25,7 @@ export default function NoteInput({
         onChangeText={onChange}
         value={value}
         placeholder={placeholder}
-        placeholderTextColor={getAppColors(colorBlindMode, isDarkMode).placeholder}
+        placeholderTextColor={AppColors.placeholder}
       />
     </View>
     </View>

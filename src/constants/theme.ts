@@ -79,37 +79,7 @@ export const AppColors = {
   border: "#e5d9f2",
   inputBackground: "#f8f6fb",
   placeholder: "#999",
-  sectionBorder: "#e5d9f2",
 } as const;
-
-export const  AppColorsColorBlind = {
-  primary: "#3D3D3D",
-  border: "#A0A0A0",
-  inputBackground: "#FAFAFA",
-  placeholder: "#757575",
-  sectionBorder: "#D6D6D6",
-} as const;
-
-export const AppColorsDark = {
-  primary: "#e6e9f2",
-  border: "#2e3856",
-  inputBackground: '#202841',
-  placeholder: "#9aa3bb",
-  sectionBorder: "#2e3856",
-} as const;
-
-export function getAppColors(colorBlindMode: boolean, isDarkMode: boolean) {
-  if (colorBlindMode && isDarkMode) {
-    return AppColorsDark;
-  }
-  if (isDarkMode) {
-    return AppColorsDark;
-  }
-  if (colorBlindMode) {
-    return AppColorsColorBlind;
-  }
-  return AppColors;
-}
 
 export const Fonts = Platform.select({
   ios: {

@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { getAppColors } from "../constants/theme";
+import { AppColors } from "../constants/theme";
 import { Dropdown } from "react-native-element-dropdown";
 import { Task } from "../types";
 
@@ -8,16 +8,12 @@ interface RelatedTaskInputProps {
   tasks: Task[];
   selectedTaskId: string;
   onSelect: (taskId: string) => void;
-  colorBlindMode?: boolean;
-  isDarkMode?: boolean;
 }
 
 export default function RelatedTaskInput({
   tasks,
   selectedTaskId,
   onSelect,
-  colorBlindMode = false,
-  isDarkMode = false,
 }: RelatedTaskInputProps) {
   const selectableTasks = tasks.filter((task) => {
     // Hide completed tasks
@@ -34,9 +30,9 @@ export default function RelatedTaskInput({
   if (selectableTasks.length === 0) {
     return (
       <View style={styles.container}>
-        <Text style={[styles.label, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Related To:</Text>
-        <View style={[styles.emptyState, { backgroundColor: getAppColors(colorBlindMode, isDarkMode).inputBackground, borderColor: getAppColors(colorBlindMode, isDarkMode).border }]}>
-          <Text style={[styles.emptyText, { color: getAppColors(colorBlindMode, isDarkMode).placeholder }]}>
+        <Text style={styles.label}>Related To:</Text>
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyText}>
             No tasks available. Create a task first to link to.
           </Text>
         </View>
@@ -46,11 +42,11 @@ export default function RelatedTaskInput({
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.label, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Related To:</Text>
+      <Text style={styles.label}>Related To:</Text>
       <Dropdown
-        style={[styles.dropdown, { backgroundColor: getAppColors(colorBlindMode, isDarkMode).inputBackground, borderColor: getAppColors(colorBlindMode, isDarkMode).border }]}
-        placeholderStyle={[styles.placeholderText, { color: getAppColors(colorBlindMode, isDarkMode).placeholder }]}
-        selectedTextStyle={[styles.selectedText, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}
+        style={styles.dropdown}
+        placeholderStyle={styles.placeholderText}
+        selectedTextStyle={styles.selectedText}
         data={selectableTasks}
         labelField="title"
         valueField="id"
@@ -64,32 +60,40 @@ export default function RelatedTaskInput({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 18,
+    marginBottom: 12,
   },
   label: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
+    color: AppColors.primary,
     marginBottom: 8,
   },
   dropdown: {
+    backgroundColor: AppColors.inputBackground,
     borderWidth: 1,
+    borderColor: AppColors.border,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
   placeholderText: {
     fontSize: 14,
+    color: AppColors.placeholder,
   },
   selectedText: {
     fontSize: 14,
+    color: AppColors.primary,
   },
   emptyState: {
+    backgroundColor: AppColors.inputBackground,
     borderWidth: 1,
+    borderColor: AppColors.border,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 14,
   },
   emptyText: {
     fontSize: 14,
+    color: AppColors.placeholder,
   },
 });

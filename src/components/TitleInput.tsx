@@ -8,15 +8,11 @@ interface TitleInputProps {
   value: string;
   onChange: (text: string) => void;
   placeholder?: string;
-  colorBlindMode?: boolean;
-  isDarkMode?: boolean;
 }
 
 export default function TitleInput({
   value,
   onChange,
-  colorBlindMode = false,
-  isDarkMode = false,
   placeholder = "Enter task title",
 }: TitleInputProps) {
   return (

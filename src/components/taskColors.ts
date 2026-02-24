@@ -24,7 +24,7 @@ export const colorBlindFilterColors: FilterColorScheme = {
   today: "#0077BB", // Blue (deuteranopia safe)
   upcoming: "#EE7733",   // Orange (protanopia safe)
   repeating: "#009988", // Teal (tritanopia safe)
-  open: "#EE3377", // Magenta (high contrast)
+  open: "#CC3311", // Red (high contrast)
 };
 
 // Default pastel color scheme
@@ -47,7 +47,7 @@ export const colorBlindColors: TaskColorScheme = {
   routine: "#0077BB", // Blue (deuteranopia safe)
   basic: "#EE7733",   // Orange (protanopia safe)
   related: "#009988", // Teal (tritanopia safe)
-  long_interval: "#EE3377", // Magenta
+  long_interval: "#CC3311", // 
 };
 
 export function getTaskTypeColor(type: Task["type"], colorBlindMode: boolean): string {

@@ -26,7 +26,6 @@ interface TaskCardProps {
   showDate?: boolean;
   showTime?: boolean;
   colorBlindMode?: boolean;
-  isDarkMode?: boolean;
 }
 
 interface TaskStyle {
@@ -47,7 +46,6 @@ export function TaskCard({
   showDate,
   showTime,
   colorBlindMode = false,
-  isDarkMode = false,
 }: TaskCardProps) {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const { colors, isDark } = useAppTheme();
@@ -201,7 +199,6 @@ export function TaskCard({
         onDelete={onDelete}
         onToggle={onToggle}
         colorBlindMode={colorBlindMode}
-        isDarkMode={isDark}
       />
     </>
   );
