@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, Modal, TouchableOpacity, StyleSheet, ScrollView, TextInput } from "react-native";
-import { X, Trash2, CheckCircle2, Link as LinkIcon } from "lucide-react-native";
+import { X, Trash2, CheckCircle2, Link as LinkIcon, Save } from "lucide-react-native";
 import { Calendar } from "react-native-calendars";
 import { Task, toLocalDateString, Weekday } from "../types";
 import { getTaskTypeColor, getEnhancedTaskTypeColor } from "./taskColors";
 import TitleInput from "./TitleInput";
 import NoteInput from "./NoteInput";
+import { getAppColors } from "../constants/theme";
 import { confirm } from "./Confirmation";
 import RelatedTaskInput from "./RelatedTask";
 import DateRangePicker from "./DateRangePicker";
@@ -30,6 +31,7 @@ export interface EditTaskProps {
   onDelete: (id: string) => void;
   onToggle: (id: string) => void;
   colorBlindMode?: boolean;
+  isDarkMode?: boolean;
 }
 
 export default function EditTask({
@@ -41,6 +43,7 @@ export default function EditTask({
   onDelete,
   onToggle,
   colorBlindMode = false,
+  isDarkMode = false,
 }: EditTaskProps) {
   const [editedTitle, setEditedTitle] = useState(task.title);
   const [editedDate, setEditedDate] = useState(task.due_date);
@@ -129,30 +132,32 @@ export default function EditTask({
       <Modal visible={isOpen} transparent animationType="fade">
         <View style={styles.overlay}>
           <ScrollView contentContainerStyle={styles.scrollContainer}>
-            <View style={styles.dialog}>
+            <View style={[styles.dialog, { backgroundColor: isDarkMode ? '#1b2133' : 'white', borderColor: getAppColors(colorBlindMode, isDarkMode).border }]}>
               {/* Header */}
               <View style={styles.header}>
                 <View style={[styles.typeIndicator, { backgroundColor: typeColor }]} />
-                <Text style={styles.title}>Edit Task</Text>
+                <Text style={[styles.title, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Edit Task</Text>
                 <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                  <X size={24} color="#6b5b7f" />
+                  <X size={24} color={getAppColors(colorBlindMode, isDarkMode).primary} />
                 </TouchableOpacity>
               </View>
 
               {/* Content */}
-              <View style={styles.section}>
-                <TitleInput value={editedTitle} onChange={setEditedTitle} />
-                <NoteInput value = {editedNotes} onChange={setEditedNotes} />
+              <View style={[styles.section, { borderColor: getAppColors(colorBlindMode, isDarkMode).border }]}>
+                <TitleInput value={editedTitle} onChange={setEditedTitle} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode} />
+                <NoteInput value = {editedNotes} onChange={setEditedNotes} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode} />
                 {task.type === "related" ? (
                     <RelatedTaskInput
                       tasks={tasks}
                       selectedTaskId={editedParentId || task.parent_task_id || ""}
                       onSelect={setEditedParentId}
+                      colorBlindMode={colorBlindMode}
+                      isDarkMode={isDarkMode}
                       />
                 ) : null}
                 {task.type === "basic" || task.type === "related" || task.is_template === false ? (
                   <>
-                    <Text style={styles.label}>Due Date</Text>
+                    <Text style={[styles.label, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Due Date</Text>
                     <Calendar
                       onDayPress={handleDateSelect}
                       markedDates={{
@@ -177,23 +182,25 @@ export default function EditTask({
                       endDate={editedEndDate || new Date()}
                       onStartDateChange={setEditedStartDate}
                       onEndDateChange={setEditedEndDate}
+                      isDarkMode={isDarkMode}
+                      colorBlindMode={colorBlindMode}
                     />
 
-                   <Text style={styles.label}>Repeat On (select days) *</Text>
+                   <Text style={[styles.label, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Repeat On (select days) *</Text>
                    <View style={styles.frequencyRow}>
                     {ALL_WEEKDAYS.map((day) => (
                     <TouchableOpacity
                       key={day}
                       style={[
-                        styles.frequencyButton,
-                        editedDaysSelected.includes(day) && styles.frequencyButtonActive,
+                        [styles.frequencyButton, { borderColor: getAppColors(colorBlindMode, isDarkMode).border, backgroundColor: getAppColors(colorBlindMode, isDarkMode).inputBackground }],
+                        editedDaysSelected.includes(day) && [styles.frequencyButtonActive, { backgroundColor: getAppColors(colorBlindMode, isDarkMode).border }],
                       ]}
                       onPress={() => toggleDay(day)}
                     >
                       <Text
                         style={[
-                          styles.frequencyText,
-                          editedDaysSelected.includes(day) && styles.frequencyTextActive,
+                          [styles.frequencyText, { color: getAppColors(colorBlindMode, isDarkMode).primary }],
+                          editedDaysSelected.includes(day) && [styles.frequencyTextActive, { color: getAppColors(colorBlindMode, isDarkMode).primary }],
                         ]}
                       >
                         {WEEKDAY_ABBREVIATIONS[day]}
@@ -210,16 +217,18 @@ export default function EditTask({
                     endDate={editedEndDate || new Date()}
                     onStartDateChange={setEditedStartDate}
                     onEndDateChange={setEditedEndDate}
+                    isDarkMode={isDarkMode}
+                    colorBlindMode={colorBlindMode}
                   />
 
                 <View style={styles.inputRow}>
-                  <Text style={styles.label}>Interval (months):</Text>
+                  <Text style={[styles.label, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Interval (months):</Text>
                   <TextInput
-                    style={styles.dateInput}
+                    style={[styles.dateInput, { backgroundColor: getAppColors(colorBlindMode, isDarkMode).inputBackground, borderColor: getAppColors(colorBlindMode, isDarkMode).border, color: getAppColors(colorBlindMode, isDarkMode).primary }]}
                     value={editedInterval ? String(editedInterval) : ""}
                     onChangeText={(text) => setEditedInterval(text ? parseInt(text, 10) || undefined : undefined)}
                     placeholder="e.g., 3"
-                    placeholderTextColor="#999"
+                    placeholderTextColor={getAppColors(colorBlindMode, isDarkMode).placeholder}
                     keyboardType="numeric"
                   />
                 </View>
@@ -252,7 +261,7 @@ export default function EditTask({
                     onPress={handleToggleComplete}
                     style={[styles.button, task.completed ? styles.completeButtonActive : styles.completeButton]}
                   >
-                    <CheckCircle2 size={16} color={task.completed ? "#ffffff" : "#b4e7ce"} />
+                    <CheckCircle2 size={16} color={task.completed ? "#ffffff" : "#3bdc29"} />
                     <Text style={task.completed ? styles.completeTextActive : styles.completeText}>
                       {task.completed ? "Completed" : "Complete"}
                     </Text>
@@ -264,6 +273,7 @@ export default function EditTask({
                     onPress={handleSave}
                     style={[styles.button, styles.saveButton, { backgroundColor: getEnhancedTaskTypeColor(task.type, colorBlindMode) }]}
                   >
+                    <Save size={16} color="#ffffff" />
                     <Text style={styles.saveText}>Save</Text>
                   </TouchableOpacity>
                 </View>
@@ -325,7 +335,6 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#6b5b7f",
     marginBottom: 8,
     marginTop: 12,
   },
@@ -354,11 +363,11 @@ const styles = StyleSheet.create({
   leftButtons: {
     flexDirection: "row",
     flex: 1,
-    gap: 12,
+    gap: 6,
   },
   rightButtons: {
     flexDirection: "row",
-    gap: 12,
+    gap: 8,
     flex: 1,
     justifyContent: "flex-end",
   },
@@ -369,7 +378,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
-    gap: 6,
+    gap: 2,
   },
   deleteButton: {
     backgroundColor: "#f85e5e",
@@ -381,14 +390,14 @@ const styles = StyleSheet.create({
   },
   completeButton: {
     borderWidth: 1,
-    borderColor: "#b4e7ce",
-    backgroundColor: "#ffffff",
+    borderColor: "#3bdc29",
+    backgroundColor: "#e6f9e6",
   },
   completeButtonActive: {
-    backgroundColor: "#74f2ab",
+    backgroundColor: "#3bdc29",
   },
   completeText: {
-    color: "#4a9d7a",
+    color: "#3bdc29",
     fontWeight: "600",
     fontSize: 14,
   },
@@ -404,13 +413,14 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "600",
     fontSize: 14,
+    marginLeft: 4,
   },
   parentTaskRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 6,
     marginTop: 8,
-    padding: 10,
+    padding: 8,
     backgroundColor: "#fef9fc",
     borderWidth: 1,
     borderColor: "#ffc9d4",
@@ -436,7 +446,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: "#e5d9f2",
-    backgroundColor: "#f8f6fb",
     alignItems: "center",
   },
   frequencyButtonActive: {
@@ -446,7 +455,6 @@ const styles = StyleSheet.create({
   frequencyText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#6b5b7f",
   },
   frequencyTextActive: {
     color: "#ffffff",
@@ -465,5 +473,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     fontSize: 14,
     color: "#6b5b7f",
+    marginLeft: 8,
   },
 });

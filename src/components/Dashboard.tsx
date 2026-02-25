@@ -270,7 +270,7 @@ export function Dashboard({
     progressLabel: {
       fontSize: 16,
       fontWeight: '600',
-      color: colors.heading,
+      color: isDark ? '#a7bbeb' : colors.heading,
       marginBottom: 4,
     },
     progressSub: {
@@ -285,7 +285,7 @@ export function Dashboard({
       overflow: 'hidden',
     },
     progressBarFill: {
-      backgroundColor: colors.accent,
+      backgroundColor: isDark ? '#a7bbeb' : colors.accent,
       height: '100%',
     },
     addTaskCard: {
@@ -572,6 +572,7 @@ export function Dashboard({
                     onUpdate={onEditTask}
                     onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
+                    isDarkMode={isDark}
                   />
                 ))}
               </View>
@@ -594,6 +595,7 @@ export function Dashboard({
                     onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
                     showDate={true}
+                    isDarkMode={isDark}
                   />
                 ))}
               </View>
@@ -615,6 +617,7 @@ export function Dashboard({
                     onUpdate={onEditTask}
                     onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
+                    isDarkMode={isDark}
                   />
                 ))}
               </View>
@@ -636,6 +639,7 @@ export function Dashboard({
                     onUpdate={onEditTask}
                     onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
+                    isDarkMode={isDark}
                   />
                 ))}
               </View>
@@ -646,6 +650,7 @@ export function Dashboard({
           isOpen={showInfo}
           onClose={() => setShowInfo(false)}
           colorBlindMode={settings.colorBlindMode}
+          isDarkMode={isDark}
         />
         <AddTaskDialog
           isOpen={showAddTaskDialog}
@@ -655,6 +660,7 @@ export function Dashboard({
           initialTitle={newTaskTitle}
           colorBlindMode={settings.colorBlindMode}
           tasks={tasks}
+          isDarkMode={isDark}
         />
 
 
