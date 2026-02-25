@@ -120,7 +120,7 @@ export function Dashboard({
   };
 
   const handleProgressBar = () => {
-    if (todayTasks.length === 0)
+    if (completedTodayTasks === 0)
       return false;
     return true;
   }
@@ -138,7 +138,7 @@ export function Dashboard({
 
   useEffect(() => {
     const calculateStreak = () => {
-      let streak = 2172026;
+      let streak = 1;
       let currentDate = new Date();
       currentDate.setHours(0, 0, 0, 0);
 

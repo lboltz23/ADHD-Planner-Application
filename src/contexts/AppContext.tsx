@@ -14,7 +14,6 @@ function parseLocalDate(dateStr: string): Date {
 }
 
 
-// Map JavaScript day numbers (0=Sunday) to Weekday names
 const DAY_NUMBER_TO_WEEKDAY: Record<number, Weekday> = {
   0: "Sunday",
   1: "Monday",
@@ -24,6 +23,8 @@ const DAY_NUMBER_TO_WEEKDAY: Record<number, Weekday> = {
   5: "Friday",
   6: "Saturday",
 };
+
+/* ----------------------------- Types ----------------------------- */
 
 interface AppContextType {
   tasks: Task[];
@@ -42,9 +43,12 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+/* ====================================================================== */
+/*                               PROVIDER                                 */
+/* ====================================================================== */
+
 export function AppProvider({ children }: { children: ReactNode }) {
   const [tasks, setTasks] = useState<Task[]>([]);
-
   const [settings, setSettings] = useState<SettingsData>({
     defaultTimerMinutes: 25,
     soundEnabled: true,
@@ -54,13 +58,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
     colorBlindMode: false,
   });
 
-  const [streakCount, setStreakCount] = useState<number>(0);
+  const [streakCount, setStreakCount] = useState(0);
   const [lastLoginDate, setLastLoginDate] = useState<Date | null>(null);
-
   const [confettiTrigger, setConfettiTrigger] = useState(0);
 
-  // Default user ID - replace with actual user ID when auth is implemented
-  const DEFAULT_USER_ID = '9dfa5616-322a-4287-a980-d33754320861';
+  // Authenticated Supabase user
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setCurrentUser(data.user ?? null);
+    });
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setCurrentUser(session?.user ?? null);
+    });
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, []);
 
   // Helper function to generate task instances from a recurring template
   const generateTaskInstancesFromTemplate = (template: any): Task[] => {
@@ -113,17 +130,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Load tasks from Supabase on mount
   useEffect(() => {
+    if (!currentUser) return;
+
     const loadTasks = async () => {
       try {
-        const { data, error } = await supabase
-          .from('tasks')
-          .select('*')
-          .eq('user_id', DEFAULT_USER_ID);
+      const { data, error } = await supabase
+        .from("tasks")
+        .select("*")
+        .eq("user_id", currentUser.id);
 
-        if (error) {
-          console.error('Error loading tasks from Supabase:', error);
-          return;
-        }
+      if (error) {
+        console.error("Load tasks error:", error);
+        return;
+      }
 
         if (data) {
           const allTasks: Task[] = [];
@@ -219,7 +238,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
 
     loadTasks();
-  }, []);
+  }, [currentUser]);
 
   // Helper function to generate scheduled days for recurring tasks
   const generateScheduledDays = (
@@ -262,37 +281,55 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return scheduledDays;
   };
 
-  const addTask = useCallback(async (params: CreateTaskParams) => {
-    const { title, due_date, type, days_selected, recurrence_interval, notes, start_date, end_date, parent_task_id } = params;
-    const baseId = uuidv4();
-    const now = new Date();
+  const addTask = useCallback(
+    async (params: CreateTaskParams) => {
+      if (!currentUser) return;
 
-    // Check if this is a recurring task
-    if (type === "routine" || type === "long_interval") {
-      // Store only ONE template task in Supabase with is_template = true
-      const templateTask: Record<string, any> = {
-        id: baseId,
+      const now = new Date();
+      const id = uuidv4();  // Generate a unique ID for the new task or template
+
+      // Destructure fields from params
+      const {
         title,
         type,
-        notes: notes,
-        user_id: DEFAULT_USER_ID,
+        notes,
+        start_date,
+        end_date,
+        days_selected,
+        recurrence_interval,
+        due_date,
+        parent_task_id,
+      } = params;
+
+    // ------------------------ Recurring Task ------------------------
+    // Handles "routine" or "long_interval" tasks
+    if (type === "routine" || type === "long_interval") {
+    // Store only ONE template task in Supabase with is_template = true
+      const templateTask: Record<string, any> = {
+        id,
+        title,
+        type,
+        notes,
+        user_id: currentUser.id,
         is_template: true,
         start_date: start_date ? toLocalDateString(start_date) : null,
         end_date: end_date ? toLocalDateString(end_date) : null,
-        days_selected: days_selected,
-        recurrence_interval: recurrence_interval,
+        days_selected,
+        recurrence_interval,
         due_date: toLocalDateString(start_date || due_date),
         completed: false,
       };
 
+      // Insert the template task into Supabase
       const { error } = await supabase.from('tasks').insert(templateTask);
       if (error) {
         console.error('Error inserting recurring task template:', error);
       } else {
+        // ----------------- Local State Update -----------------
         // Add template to local state
         const templateForState: Task = {
-          id: baseId,
-          user_id: DEFAULT_USER_ID,
+          id,
+          user_id: currentUser.id,
           title,
           due_date: start_date || due_date,
           completed: false,
@@ -306,39 +343,45 @@ export function AppProvider({ children }: { children: ReactNode }) {
           start_date: start_date || undefined,
           end_date: end_date || undefined,
         };
+
         // Generate instances locally for display (only if both dates exist)
         const instances = generateTaskInstancesFromTemplate({
           ...templateTask,
           created_at: now.toISOString(),
           updated_at: now.toISOString(),
         });
+
+        // Add template and its instances to local state
         setTasks(prev => [...prev, templateForState, ...instances]);
       }
+      // ------------------------ Non-Recurring Task ------------------------  
     } else {
       // Regular non-recurring task (basic or related)
+      // Build new task object
       const newTask: Task = {
-        id: baseId,
-        user_id: DEFAULT_USER_ID,
-        title,
-        due_date: due_date,
+        id,
+        user_id: currentUser.id,
+        title: params.title,
+        due_date: params.due_date,
         completed: false,
-        type,
-        notes,
+        type: params.type,
+        notes: params.notes,
         created_at: now,
         updated_at: now,
         is_template: false,
-        parent_task_id: type === "related" ? parent_task_id : undefined,
+        parent_task_id:
+          params.type === "related" ? params.parent_task_id : undefined,
       };
 
-      // Insert into Supabase
-      const { error } = await supabase.from('tasks').insert({
-        id: newTask.id,
+      // Insert the new task into Supabase
+      const { error } = await supabase.from("tasks").insert({
+        id,
+        user_id: currentUser.id,
         title: newTask.title,
         due_date: toLocalDateString(newTask.due_date),
         completed: newTask.completed,
         type: newTask.type,
         notes: newTask.notes,
-        user_id: DEFAULT_USER_ID,
         is_template: false,
         parent_task_id: newTask.parent_task_id,
       });
@@ -349,12 +392,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setTasks(prev => [...prev, newTask]);
       }
     }
-  }, []);
+  }, [currentUser]);
 
   const toggleTask = useCallback(async (id: string) => {
     // Find the task to determine if it's a recurring instance
     const task = tasks.find(t => t.id === id);
-    if (!task) return;
+    if (!task || !currentUser) return;
 
     const newCompletedState = !task.completed;
 
@@ -372,6 +415,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase
         .from('tasks')
         .update({ completed: newCompletedState })
+        .eq("user_id", currentUser.id)
         .eq('id', id);
 
       if (error) {
@@ -388,6 +432,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         .from('tasks')
         .select('completed_dates')
         .eq('id', task.parent_task_id)
+        .eq("user_id", currentUser.id)
         .single();
 
       if (fetchError) {
@@ -425,24 +470,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } else {
       // Regular non-recurring task - update completed field directly
       const { error } = await supabase
-        .from('tasks')
+        .from("tasks")
         .update({ completed: newCompletedState })
-        .eq('id', id);
+        .eq("id", id)
+        .eq("user_id", currentUser.id);
 
       if (error) {
-        console.error('Error toggling task:', error);
-        // Revert on error
-        setTasks(prev => prev.map(t =>
-          t.id === id ? { ...t, completed: !newCompletedState } : t
-        ));
-      }
+      console.error("Toggle error:", error);
+      setTasks(prev => prev.map(t =>
+        t.id === id ? { ...t, completed: !newCompletedState } : t
+      ));
     }
-  }, [tasks]);
+  }
+}, [tasks, currentUser]);
+
+  /* ====================================================================== */
+  /*                             UPDATE TASK                                */
+  /* ====================================================================== */
 
 
   const updateTask = useCallback(async (id: string, fields: { title?: string; due_date?: Date; notes?: string; parent_id?: string; start_date?: Date; end_date?: Date; recurrence_interval?: number; days_selected?: Weekday[] }) => {
     const task = tasks.find(t => t.id === id);
-    if (!task) return;
+    if (!task || !currentUser) return;
 
     const newTitle = fields.title ?? task.title;
     const newDate = fields.due_date ?? task.due_date;
@@ -525,7 +574,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase
         .from('tasks')
         .update(supabaseUpdate)
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', currentUser?.id);
 
       if (error) {
         console.error('Error updating recurring instance override:', error);
@@ -538,7 +588,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase
         .from('tasks')
         .update(supabaseUpdate)
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', currentUser?.id);
 
       if (error) {
         console.error('Error updating template:', error);
@@ -610,7 +661,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase
         .from('tasks')
         .update(supabaseUpdate)
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', currentUser?.id);
 
       if (error) {
         console.error('Error updating task:', error);
@@ -633,6 +685,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const monthStart = new Date(year, month, 1);
     const monthEnd = new Date(year, month + 1, 0, 23, 59, 59, 999); // Last day of month, end of day
 
+    if (!currentUser) return [];
+
     // Use local date strings for Supabase queries (padded by 1 day for safety)
     const queryStart = toLocalDateString(new Date(year, month, 0)); // Day before month start
     const queryEnd = toLocalDateString(new Date(year, month + 1, 1)); // Day after month end
@@ -642,7 +696,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const { data: regularData, error: regularError } = await supabase
         .from('tasks')
         .select('*')
-        .eq('user_id', DEFAULT_USER_ID)
+        .eq('user_id', currentUser?.id)
         .eq('is_template', false)
         .gte('due_date', queryStart)
         .lte('due_date', queryEnd);
@@ -656,7 +710,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const { data: templateData, error: templateError } = await supabase
         .from('tasks')
         .select('*')
-        .eq('user_id', DEFAULT_USER_ID)
+        .eq('user_id', currentUser?.id)
         .eq('is_template', true)
         .lte('start_date', queryEnd)
         .or(`end_date.gte.${queryStart},end_date.is.null`);
@@ -742,11 +796,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       console.error('Error in fetchTasksForMonth:', error);
       return [];
     }
-  }, []);
+  }, [currentUser]);
 
   const deleteTask = useCallback(async (id: string) => {
     const task = tasks.find(t => t.id === id);
-    if (!task) return;
+    if (!task || !currentUser) return;
 
     const isRecurringInstance = task.parent_task_id && !task.is_template && task.type !== 'related';
     const isInMemoryInstance = isRecurringInstance && id.includes('_') && /\d{4}-\d{2}-\d{2}$/.test(id);
@@ -799,7 +853,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const { error: deleteError } = await supabase
         .from('tasks')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', currentUser?.id);
 
       if (deleteError) {
         console.error('Error deleting override row:', deleteError);
@@ -811,6 +866,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         .from('tasks')
         .select('excluded_dates')
         .eq('id', task.parent_task_id)
+        .eq('user_id', currentUser?.id)
         .single();
 
       const currentDates: string[] = templateData?.excluded_dates || [];
@@ -830,6 +886,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         .from('tasks')
         .update({ parent_task_id: null })
         .eq('parent_task_id', id)
+        .eq('user_id', currentUser?.id)
         .eq('type', 'related');
 
       if (unlinkError) {
@@ -850,6 +907,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         .from('tasks')
         .delete()
         .eq('parent_task_id', id)
+        .eq('user_id', currentUser?.id)
         .neq('type', 'related');
 
       if (overrideError) {
@@ -861,28 +919,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase
       .from('tasks')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .eq('user_id', currentUser?.id);
 
     if (error) {
       console.error('Error deleting task:', error);
       // Revert — add the task back to local state
       setTasks(prev => [...prev, task]);
     }
-  }, [tasks]);
+  }, [tasks, currentUser]);
 
   const updateStreak = () => {
     const today = new Date();
+
     if (lastLoginDate) {
-      const diffTime = Math.abs(today.getTime() - lastLoginDate.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      if (diffDays === 1) {
-        setStreakCount(prev => prev + 1);
-      } else if (diffDays > 1) {
-        setStreakCount(1);
-      }
+      const diff =
+        (today.getTime() - lastLoginDate.getTime()) /
+        (1000 * 60 * 60 * 24);
+
+      if (Math.floor(diff) === 1) setStreakCount((s) => s + 1);
+      else if (diff > 1) setStreakCount(1);
     } else {
       setStreakCount(1);
     }
+
     setLastLoginDate(today);
   };
 
@@ -890,7 +950,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     updateStreak();
   };
 
-  // Call login() whenever the user logs in
+  /* ====================================================================== */
 
   return (
     <AppContext.Provider
@@ -916,8 +976,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
 export function useApp() {
   const context = useContext(AppContext);
-  if (context === undefined) {
-    throw new Error('useApp must be used within an AppProvider');
+  if (!context) {
+    throw new Error("useApp must be used within an AppProvider");
   }
   return context;
 }
