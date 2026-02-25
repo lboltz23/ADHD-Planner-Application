@@ -8,13 +8,14 @@ import {
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Task, TaskType, CreateTaskParams } from '../types';
+import { Task, TaskType, CreateTaskParams, Weekday } from '../types';
 import { SettingsData } from './Settings';
 import { TaskCard } from './TaskCard';
 import AddTaskDialog from './AddTaskDialog';
 import { TaskTypeSelector } from './TaskTypeSelector';
-import { Calendar, Settings, Zap } from 'lucide-react-native';
+import { Calendar, Settings, Zap, Info } from 'lucide-react-native';
 import { getFilterColor } from './taskColors';
+import InfoPopup from './Info';
 import { AppThemeColors, resolveThemePreference } from '../constants/theme';
 import { useColorScheme } from '../hooks/use-color-scheme';
 
@@ -26,7 +27,7 @@ interface DashboardProps {
   tasks: Task[];
   onAddTask: (params: CreateTaskParams) => void;
   onToggleTask: (id: string) => void;
-  onEditTask: (id: string, fields: { title?: string; due_date?: Date; notes?: string }) => void;
+  onEditTask: (id: string, fields: { title?: string; due_date?: Date; notes?: string; parent_id?: string; start_date?: Date; end_date?: Date; recurrence_interval?: number; days_selected?: Weekday[] }) => void;
   onDeleteTask: (id: string) => void;
   settings: SettingsData;
   onTriggerConfetti?: () => void;
@@ -53,6 +54,7 @@ export function Dashboard({
   const [selectedType, setSelectedType] = useState<TaskType>('basic');
   const [taskView, setTaskView] = useState<'today' | 'upcoming' | 'repeating' | 'open'>('today');
   const [showAddTaskDialog, setShowAddTaskDialog] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
   // Ref to track previous progress for confetti trigger
   const previousProgressRef = useRef(0);
 
@@ -91,13 +93,13 @@ export function Dashboard({
     today.setHours(0, 0, 0, 0);
     return tasks
       .filter((task) => {
-        if (task.is_template) return false;
+        if (task.is_template || task.type === 'routine' ||  task.type === 'long_interval') return false;
         const taskDate = new Date(task.due_date);
         taskDate.setHours(0, 0, 0, 0);
         return taskDate < today;
       })
-      .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
-      .slice(0, 5);
+      .sort((a, b) => new Date(b.due_date).getTime() - new Date(a.due_date).getTime())
+      .slice(0, 7);
   }, [tasks]);
  
   const handleAddTask = () => {
@@ -398,6 +400,12 @@ export function Dashboard({
             <View style={styles.headerButtons}>
               <TouchableOpacity
                 style={styles.iconButton}
+                onPress={() => setShowInfo(true)}
+              >
+                <Info size={22} color={colors.accent} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.iconButton}
                 onPress={onNavigateToSettings}
               >
                 <Settings size={22} color={colors.accent} />
@@ -559,6 +567,7 @@ export function Dashboard({
                   <TaskCard
                     key={task.id}
                     task={task}
+                    tasks={tasks}
                     onToggle={onToggleTask}
                     onUpdate={onEditTask}
                     onDelete={onDeleteTask}
@@ -580,6 +589,7 @@ export function Dashboard({
                   <TaskCard
                     key={task.id}
                     task={task}
+                    tasks={tasks}
                     onToggle={onToggleTask}
                     onUpdate={onEditTask}
                     onDelete={onDeleteTask}
@@ -602,6 +612,7 @@ export function Dashboard({
                   <TaskCard
                     key={task.id}
                     task={task}
+                    tasks={tasks}
                     onToggle={onToggleTask}
                     onUpdate={onEditTask}
                     onDelete={onDeleteTask}
@@ -623,11 +634,11 @@ export function Dashboard({
                   <TaskCard
                     key={task.id}
                     task={task}
+                    tasks={tasks}
                     onToggle={onToggleTask}
                     onUpdate={onEditTask}
                     onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
-                    showDate={true}
                     isDarkMode={isDark}
                   />
                 ))}
@@ -635,6 +646,11 @@ export function Dashboard({
             )}
           </View>
         )}
+        <InfoPopup
+          isOpen={showInfo}
+          onClose={() => setShowInfo(false)}
+          colorBlindMode={settings.colorBlindMode}
+        />
         <AddTaskDialog
           isOpen={showAddTaskDialog}
           onClose={handleCloseDialog}
