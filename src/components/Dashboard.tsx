@@ -270,7 +270,7 @@ export function Dashboard({
     progressLabel: {
       fontSize: 16,
       fontWeight: '600',
-      color: colors.heading,
+      color: isDark ? '#a7bbeb' : colors.heading,
       marginBottom: 4,
     },
     progressSub: {
@@ -285,7 +285,7 @@ export function Dashboard({
       overflow: 'hidden',
     },
     progressBarFill: {
-      backgroundColor: colors.accent,
+      backgroundColor: isDark ? '#a7bbeb' : colors.accent,
       height: '100%',
     },
     addTaskCard: {
