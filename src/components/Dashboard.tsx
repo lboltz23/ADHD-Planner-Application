@@ -650,6 +650,7 @@ export function Dashboard({
           isOpen={showInfo}
           onClose={() => setShowInfo(false)}
           colorBlindMode={settings.colorBlindMode}
+          isDarkMode={isDark}
         />
         <AddTaskDialog
           isOpen={showAddTaskDialog}
