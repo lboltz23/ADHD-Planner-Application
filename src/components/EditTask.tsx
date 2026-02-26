@@ -9,6 +9,7 @@ import NoteInput from "./NoteInput";
 import { getAppColors } from "../constants/theme";
 import DateRangePicker from "./DateRangePicker";
 import TimePicker from "./TimeInput";
+import { confirm } from "./Confirmation";
 
 export interface EditTaskProps {
   isOpen: boolean;
