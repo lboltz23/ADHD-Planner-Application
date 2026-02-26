@@ -19,6 +19,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Task } from '../types';
 import { SettingsData } from './Settings';
 import { getTaskTypeColor } from './taskColors';
+import { AppThemeColors, resolveThemePreference } from '../constants/theme';
+import { useColorScheme } from '../hooks/use-color-scheme';
 
 interface OneThingModeProps {
   onNavigateBack: () => void;
@@ -35,6 +37,11 @@ export function OneThingMode({
   settings,
   onTriggerConfetti,
 }: OneThingModeProps) {
+  const systemScheme = useColorScheme();
+  const resolvedTheme = resolveThemePreference(settings.theme, systemScheme);
+  const colors = AppThemeColors[resolvedTheme];
+  const isDark = resolvedTheme === 'dark';
+
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [timeInSeconds, setTimeInSeconds] = useState(
     settings.defaultTimerMinutes * 60
@@ -235,7 +242,7 @@ export function OneThingMode({
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: '#fafafa',
+      backgroundColor: colors.background,
     },
     scrollContent: {
       padding: 16,
@@ -253,10 +260,10 @@ export function OneThingMode({
     headerTitle: {
       fontSize: 24,
       fontWeight: '700',
-      color: '#6b5b7f',
+      color: colors.heading,
     },
     mainCard: {
-      backgroundColor: '#ffffff',
+      backgroundColor: colors.surface,
       borderRadius: 16,
       padding: 32,
       minHeight: 500,
@@ -264,7 +271,7 @@ export function OneThingMode({
       alignItems: 'center',
       marginBottom: 24,
       borderWidth: 1,
-      borderColor: '#e5d9f2',
+      borderColor: colors.border,
     },
     focusArea: {
       alignItems: 'center',
@@ -277,7 +284,7 @@ export function OneThingMode({
     },
     focusLabel: {
       fontSize: 14,
-      color: '#999',
+      color: colors.textMuted,
     },
     taskTitle: {
       fontSize: 28,
@@ -310,7 +317,7 @@ export function OneThingMode({
       alignItems: 'center',
     },
     playButton: {
-      backgroundColor: '#b8a4d9',
+      backgroundColor: colors.accent,
       paddingHorizontal: 24,
       paddingVertical: 12,
       borderRadius: 8,
@@ -324,15 +331,15 @@ export function OneThingMode({
       fontWeight: '600',
     },
     resetButton: {
-      backgroundColor: '#ffffff',
+      backgroundColor: colors.surface,
       borderWidth: 1,
-      borderColor: '#e5d9f2',
+      borderColor: colors.border,
       paddingHorizontal: 16,
       paddingVertical: 12,
       borderRadius: 8,
     },
     completeButton: {
-      backgroundColor: '#b4e7ce',
+      backgroundColor: colors.success,
       paddingHorizontal: 24,
       paddingVertical: 12,
       borderRadius: 8,
@@ -341,7 +348,7 @@ export function OneThingMode({
       gap: 8,
     },
     completeButtonText: {
-      color: '#4a4458',
+      color: isDark ? '#102019' : '#4a4458',
       fontSize: 16,
       fontWeight: '600',
     },
@@ -351,12 +358,12 @@ export function OneThingMode({
     },
     noTasksText: {
       fontSize: 18,
-      color: '#999',
+      color: colors.textMuted,
       fontWeight: '500',
     },
     noTasksSubtext: {
       fontSize: 14,
-      color: '#ccc',
+      color: colors.textMuted,
     },
     switchFocusSection: {
       marginTop: 12,
@@ -365,7 +372,7 @@ export function OneThingMode({
     switchFocusTitle: {
       fontSize: 16,
       fontWeight: '600',
-      color: '#6b5b7f',
+      color: colors.heading,
       marginBottom: 8,
     },
     taskSelectorList: {
@@ -377,13 +384,13 @@ export function OneThingMode({
       gap: 12,
       padding: 12,
       borderRadius: 12,
-      backgroundColor: '#ffffff',
+      backgroundColor: colors.surface,
       borderWidth: 2,
       borderColor: 'transparent',
     },
     taskSelectorCardSelected: {
       borderColor: taskColor,
-      backgroundColor: '#f8f6fb',
+      backgroundColor: colors.inputBackground,
     },
     taskDot: {
       width: 12,
@@ -392,7 +399,7 @@ export function OneThingMode({
     },
     taskSelectorText: {
       fontSize: 14,
-      color: '#333',
+      color: colors.text,
       flex: 1,
     },
     alertPopupOverlay: {
@@ -403,19 +410,19 @@ export function OneThingMode({
       zIndex: 1000,
     },
     alertPopupCard: {
-      backgroundColor: '#ffffff',
+      backgroundColor: colors.surface,
       borderRadius: 16,
       padding: 32,
       alignItems: 'center',
       gap: 16,
       borderWidth: 2,
-      borderColor: '#b8a4d9',
+      borderColor: colors.accent,
       maxWidth: 300,
     },
     alertPopupText: {
       fontSize: 20,
       fontWeight: '600',
-      color: '#6b5b7f',
+      color: colors.heading,
       textAlign: 'center',
     },
   });
@@ -429,7 +436,7 @@ export function OneThingMode({
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={onNavigateBack}>
-            <ArrowLeft size={20} color="#6b5b7f" />
+            <ArrowLeft size={20} color={colors.heading} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>One Thing Mode</Text>
         </View>
@@ -486,7 +493,7 @@ export function OneThingMode({
                   onPress={resetTimer}
                   activeOpacity={0.8}
                 >
-                  <RotateCcw size={20} color="#b8a4d9" />
+                  <RotateCcw size={20} color={colors.accent} />
                 </TouchableOpacity>
               </View>
 
@@ -496,7 +503,7 @@ export function OneThingMode({
                 onPress={handleCompleteTask}
                 activeOpacity={0.8}
               >
-                <CheckCircle2 size={20} color="#4a4458" />
+                <CheckCircle2 size={20} color={isDark ? '#102019' : '#4a4458'} />
                 <Text style={styles.completeButtonText}>Complete Task</Text>
               </TouchableOpacity>
             </View>
@@ -550,7 +557,7 @@ export function OneThingMode({
       {showAlertPopup && (
         <View style={styles.alertPopupOverlay}>
           <View style={styles.alertPopupCard}>
-            <Bell size={32} color="#b8a4d9" />
+            <Bell size={32} color={colors.accent} />
             <Text style={styles.alertPopupText}>{alertMessage}</Text>
           </View>
         </View>

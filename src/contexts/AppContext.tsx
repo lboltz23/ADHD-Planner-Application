@@ -1,11 +1,32 @@
 // src/contexts/AppContext.tsx
 import React, { createContext, useContext, useState, useCallback, useMemo, useEffect, ReactNode } from 'react';
-import { Task, CreateTaskParams, Weekday, UpdateTaskParams, toLocalDateString } from '../types';
+import { Task, CreateTaskParams, Weekday, UpdateTaskParams, toLocalDateString, toLocalTimeString, combineAsDate } from '../types';
 import { SettingsData } from '../components/Settings';
 import { supabase } from '@/lib/supabaseClient';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
 
+// Parse a date string from Supabase as a LOCAL date (avoids UTC timezone shift)
+function parseLocalDate(dateStr: string): Date {
+  const [y, m, d] = dateStr.split('T')[0].split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+function parseLocalTime(dateStr: string): Date {
+  const timePart = dateStr.split('T')[1];
+
+  if (!timePart) {
+    throw new Error("No time found in date string");
+  }
+
+  const cleanTime = timePart.split('.')[0]; // remove milliseconds if present
+  const [h, m, s] = cleanTime.split(':').map(Number);
+
+  return new Date(1970, 0, 1, h || 0, m || 0, s || 0);
+}
+
+
+// Map JavaScript day numbers (0=Sunday) to Weekday names
 const DAY_NUMBER_TO_WEEKDAY: Record<number, Weekday> = {
   0: "Sunday",
   1: "Monday",
@@ -21,7 +42,7 @@ interface AppContextType {
   settings: SettingsData;
   addTask: (params: CreateTaskParams) => void;
   toggleTask: (id: string) => void;
-  updateTask: (id: string, fields: { title?: string; due_date?: Date; notes?: string }) => void;
+  updateTask: (id: string, fields: { title?: string; due_date?: Date; time?: Date;notes?: string }) => void;
   deleteTask: (id: string) => void;
   updateSettings: (newSettings: SettingsData) => void;
   streakCount: number;
@@ -81,6 +102,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         user_id: template.user_id,
         title: template.title,
         due_date: scheduledDate,
+        time: scheduledDate,
         completed: isCompleted,
         type: template.type as Task['type'],
         notes: template.notes,
@@ -141,7 +163,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 user_id: row.user_id,
                 created_at: new Date(row.created_at),
                 updated_at: new Date(row.updated_at),
-                due_date: new Date(row.due_date),
+                due_date: parseLocalDate(row.due_date),
+                time:parseLocalTime(row.due_date),
                 completed: false,
                 type: row.type as Task['type'],
                 notes: row.notes,
@@ -167,7 +190,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
                     user_id: override.user_id,
                     created_at: new Date(override.created_at),
                     updated_at: new Date(override.updated_at),
-                    due_date: new Date(override.due_date),
+                    due_date: parseLocalDate(override.due_date),
+                    time:parseLocalTime(override.due_date),
                     completed: override.completed || false,
                     type: override.type as Task['type'],
                     notes: override.notes,
@@ -186,7 +210,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 user_id: row.user_id,
                 created_at: new Date(row.created_at),
                 updated_at: new Date(row.updated_at),
-                due_date: new Date(row.due_date),
+                due_date: parseLocalDate(row.due_date),
+                time:parseLocalTime(row.due_date),
                 completed: row.completed || false,
                 type: row.type as Task['type'],
                 notes: row.notes,
@@ -248,7 +273,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const addTask = useCallback(async (params: CreateTaskParams) => {
-    const { title, due_date, type, days_selected, recurrence_interval, notes, start_date, end_date, parent_task_id } = params;
+    const { title, time, due_date, type, days_selected, recurrence_interval, notes, start_date, end_date, parent_task_id } = params;
     const baseId = uuidv4();
     const now = new Date();
 
@@ -266,7 +291,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         end_date: end_date ? toLocalDateString(end_date) : null,
         days_selected: days_selected,
         recurrence_interval: recurrence_interval,
-        due_date: toLocalDateString(start_date || due_date),
+        due_date: toLocalDateString(start_date || due_date) + toLocalTimeString(time || due_date),
         completed: false,
       };
 
@@ -279,6 +304,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           id: baseId,
           user_id: DEFAULT_USER_ID,
           title,
+          time: time || due_date,
           due_date: start_date || due_date,
           completed: false,
           type,
@@ -305,6 +331,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         id: baseId,
         user_id: DEFAULT_USER_ID,
         title,
+        time:time,
         due_date: due_date,
         completed: false,
         type,
@@ -319,7 +346,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.from('tasks').insert({
         id: newTask.id,
         title: newTask.title,
-        due_date: toLocalDateString(newTask.due_date),
+        due_date: toLocalDateString(newTask.due_date) + toLocalTimeString(newTask.time || new Date()),
         completed: newTask.completed,
         type: newTask.type,
         notes: newTask.notes,
@@ -432,24 +459,40 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setConfettiTrigger(prev => prev + 1);
   }, []);
 
-  const updateTask = useCallback(async (id: string, fields: { title?: string; due_date?: Date; notes?: string }) => {
+  const updateTask = useCallback(async (id: string, fields: { title?: string; due_date?: Date; notes?: string; time?: Date;}) => {
     const task = tasks.find(t => t.id === id);
     if (!task) return;
 
     const newTitle = fields.title ?? task.title;
     const newDate = fields.due_date ?? task.due_date;
+    const newTime = fields.time ?? task.time;
     const newNotes = fields.notes ?? task.notes;
 
     // Build the Supabase update payload (only changed fields)
     const supabaseUpdate: Record<string, any> = { updated_at: new Date().toISOString() };
     if (fields.title !== undefined) supabaseUpdate.title = fields.title;
-    if (fields.due_date !== undefined) supabaseUpdate.due_date = toLocalDateString(fields.due_date);
+    if (fields.due_date !== undefined || fields.time !== undefined) {
+        const baseDate = fields.due_date ?? task.due_date;
+        const baseTime = fields.time ?? task.time ?? task.due_date;
+
+        supabaseUpdate.due_date =
+          toLocalDateString(baseDate) +
+          toLocalTimeString(baseTime);
+      }
     if (fields.notes !== undefined) supabaseUpdate.notes = fields.notes;
 
     // Local state update object
     const localUpdate: Partial<Task> = { updated_at: new Date() };
     if (fields.title !== undefined) localUpdate.title = fields.title;
-    if (fields.due_date !== undefined) localUpdate.due_date = fields.due_date;
+    if (fields.due_date !== undefined || fields.time !== undefined) {
+        const baseDate = fields.due_date ?? task.due_date;
+        const baseTime = fields.time ?? task.time ?? task.due_date;
+
+        const combined = combineAsDate(baseDate, baseTime);
+
+        localUpdate.due_date = combined;
+        localUpdate.time = combined; // 🔥 keep time in sync
+    }
     if (fields.notes !== undefined) localUpdate.notes = fields.notes;
 
     const isRecurringInstance = task.parent_task_id && !task.is_template && task.type !== 'related';
@@ -470,6 +513,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         title: newTitle,
         type: task.type,
         due_date: toLocalDateString(newDate),
+        time: toLocalTimeString(newTime || newDate),
         completed: task.completed,
         user_id: task.user_id,
         is_template: false,

@@ -4,6 +4,7 @@ import { View, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Dashboard } from '../components/Dashboard';
 import { useApp } from '../contexts/AppContext';
+import { useAppTheme } from '../hooks/use-app-theme';
 // TODO: uncomment when @supabase/supabase-js is installed
 // import { supabase } from '@/lib/supabaseClient';
 
@@ -11,9 +12,10 @@ import { useApp } from '../contexts/AppContext';
 export default function DashboardScreen() {
   const router = useRouter();
   const { tasks, settings, addTask, toggleTask, updateTask, deleteTask, triggerConfetti } = useApp();
+  const { colors } = useAppTheme();
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <Dashboard
         onNavigateToCalendar={() => router.push('/CalendarView')}
         onNavigateToOneThingMode={() => router.push('/OneThingMode')}
@@ -33,6 +35,5 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
 });
