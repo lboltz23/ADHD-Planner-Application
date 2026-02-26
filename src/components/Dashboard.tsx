@@ -155,7 +155,7 @@ export function Dashboard({
   };
 
   const handleProgressBar = () => {
-    if (completedTodayTasks === 0)
+    if (completedTodayTasks.length === 0)
       return false;
     return true;
   }
