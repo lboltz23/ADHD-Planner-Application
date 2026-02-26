@@ -472,7 +472,7 @@ export function Dashboard({
               placeholderTextColor={colors.textMuted}
 
               autoCapitalize="none"
-              textContentType="nickname"
+              textContentType="none"
               autoComplete="off"
               importantForAutofill="no"
             />
