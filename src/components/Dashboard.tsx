@@ -470,6 +470,11 @@ export function Dashboard({
               onChangeText={setNewTaskTitle}
               onSubmitEditing={handleAddTask}
               placeholderTextColor={colors.textMuted}
+
+              autoCapitalize="none"
+              textContentType="none"
+              autoComplete="off"
+              importantForAutofill="no"
             />
             <TouchableOpacity
               style={styles.addButton}
