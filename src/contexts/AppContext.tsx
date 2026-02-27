@@ -6,7 +6,6 @@ import { supabase } from '@/lib/supabaseClient';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
 import { preventAutoHideAsync } from 'expo-router/build/utils/splash';
-import { parse } from 'react-native-svg';
 
 // Parse a date string from Supabase as a LOCAL date (avoids UTC timezone shift)
 function parseLocalDate(dateStr: string): Date {
