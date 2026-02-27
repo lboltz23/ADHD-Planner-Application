@@ -17,6 +17,11 @@ import {
   Eye,
 } from 'lucide-react-native';
 import Slider  from '@react-native-community/slider';
+import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { User } from '@supabase/supabase-js';
+import { signOut } from '@/lib/supabaseClient';
+import { DotLoader } from './DotLoader';
 import { AppThemeColors, resolveThemePreference, ThemeColors } from '../constants/theme';
 import { useColorScheme } from '../hooks/use-color-scheme';
 
@@ -33,6 +38,11 @@ interface SettingsProps {
   onNavigateBack: () => void;
   settings: SettingsData;
   onUpdateSettings: (settings: SettingsData) => void;
+  user : User | null;
+  username: {
+    username:string | null;
+    loading: boolean
+  }
 }
 
 interface SettingsSectionProps {
@@ -110,6 +120,8 @@ export function Settings({
   onNavigateBack,
   settings,
   onUpdateSettings,
+  user,
+  username
 }: SettingsProps) {
   const systemScheme = useColorScheme();
   const resolvedTheme = resolveThemePreference(settings.theme, systemScheme);
@@ -147,6 +159,11 @@ export function Settings({
       fontSize: 24,
       fontWeight: '700',
       color: colors.heading,
+    },
+    headerRight: {
+      flex:1,
+      alignItems:'flex-end',
+      alignContent:'flex-end',
     },
     settingRow: {
       flexDirection: 'row',
@@ -212,6 +229,20 @@ export function Settings({
       color: colors.textMuted,
       textAlign: 'center',
     },
+    mainButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#b8a4d9',
+      paddingVertical: 10,
+      paddingHorizontal: 14,
+      borderRadius: 8,
+      gap: 6,
+    },
+    mainButtonText: {
+      color: '#ffffff',
+      fontWeight: '600',
+      fontSize: 14,
+    },
   });
 
   const themeOptions: SettingsData['theme'][] = ['auto', 'light', 'dark'];
@@ -222,17 +253,41 @@ export function Settings({
     'related',
     'long_interval',
   ];
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+
+  //Add sign in and out stuff
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
+    <View style={[styles.container,{paddingTop:insets.top,}]}>
+      <ScrollView style={[styles.scrollContent,]} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={onNavigateBack}>
             <ArrowLeft size={20} color={colors.heading} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Settings</Text>
+          <View style={styles.headerRight}>
+            {!user ?
+            <TouchableOpacity
+              style={styles.mainButton}
+              onPress={() => router.replace('/login')}>
+              <Text style={styles.mainButtonText}>Login In</Text>
+            </TouchableOpacity>
+            :
+             <TouchableOpacity
+              style={styles.mainButton}
+              onPress={() => {signOut(); router.replace("/login")}}>
+              <Text style={styles.mainButtonText}>Sign Out</Text>
+            </TouchableOpacity>
+             }
+          </View>
         </View>
+        {username.username && <View style={styles.header}>
+          {username.loading ? <DotLoader/> :
+          <Text style={styles.headerTitle}>Hey {username.username}!</Text>
+          }
+        </View>}
 
         {/* Timer Settings */}
         <SettingsSection
@@ -445,6 +500,6 @@ export function Settings({
           </Text>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }

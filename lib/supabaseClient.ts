@@ -1,7 +1,70 @@
-// src/lib/supabaseClient.ts
-import { createClient } from '@supabase/supabase-js';
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { createClient, processLock, User } from '@supabase/supabase-js'
+import { AppState, Platform } from 'react-native'
+import 'react-native-url-polyfill/auto'
+
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    ...(Platform.OS !== 'web' ? { storage: AsyncStorage } : {}),
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: false,
+  },
+})
+
+// Tells Supabase Auth to continuously refresh the session automatically
+// if the app is in the foreground. When this is added, you will continue
+// to receive `onAuthStateChange` events with the `TOKEN_REFRESHED` or
+// `SIGNED_OUT` event if the user's session is terminated. This should
+// only be registered once.
+// if (Platform.OS !== 'web') {
+//   AppState.addEventListener('change', (state) => {
+//     if (state === 'active') {
+//       supabase.auth.startAutoRefresh()
+//     } else {
+//       supabase.auth.stopAutoRefresh()
+//     }
+//   })
+// }
+export const getProfile = async (user : User | null) => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('display_name')
+    .eq('id', user?.id)
+    .single();
+
+  if (error) {
+    console.log("Profile error:", error);
+    return null;
+  }
+
+  if (!data.display_name){return null}
+
+  return data.display_name
+}
+
+export async function getCurrentUser() {
+  const { data: { session }, error } = await supabase.auth.getSession();
+
+    if (session) {
+    const userId = session.user.id;
+    console.log('Current user ID:', userId);
+    } else {
+    console.log('No user logged in');
+    }
+}
+
+export async function signOut() {
+  const { error } = await supabase.auth.signOut();
+
+  if (error) {
+    console.error('Sign out error:', error.message);
+    return;
+  }
+
+  console.log('User signed out successfully');
+}
