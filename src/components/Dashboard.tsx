@@ -301,7 +301,7 @@ export function Dashboard({
       padding: 16,
       marginBottom: 20,
       borderWidth: 1,
-      borderColor: getAppColors(settings.colorBlindMode).border,
+      borderColor: getAppColors(settings.colorBlindMode, isDark).border,
     },
     progressLabel: {
       fontSize: 16,
@@ -337,7 +337,7 @@ export function Dashboard({
       flex: 1,
       backgroundColor: colors.inputBackground,
       borderWidth: 1,
-      borderColor: getAppColors(settings.colorBlindMode).border,
+      borderColor: getAppColors(settings.colorBlindMode, isDark).border,
       borderRadius: 8,
       paddingHorizontal: 12,
       paddingVertical: 8,
@@ -360,12 +360,12 @@ export function Dashboard({
     sectionTitle: {
       fontSize: 18,
       fontWeight: '600',
-      color: getAppColors(settings.colorBlindMode).primary,
+      color: getAppColors(settings.colorBlindMode, isDark).primary,
       marginBottom: 12,
     },
     noTasksMessage: {
       textAlign: 'center',
-      color: getAppColors(settings.colorBlindMode).placeholder,
+      color: getAppColors(settings.colorBlindMode, isDark).placeholder,
       fontSize: 14,
       paddingVertical: 16,
     },
@@ -376,7 +376,7 @@ export function Dashboard({
       backgroundColor: colors.surface,
       borderRadius: 8,
       borderWidth: 1,
-      borderColor: getAppColors(settings.colorBlindMode).border,
+      borderColor: getAppColors(settings.colorBlindMode, isDark).border,
       padding: 10,
       marginBottom: 20,
     },
@@ -444,7 +444,7 @@ export function Dashboard({
                 style={styles.iconButton}
                 onPress={onNavigateToSettings}
               >
-                <Settings size={22} color= {settings.colorBlindMode? "#757575" : {colors.accent}} />
+                <Settings size={22} color={settings.colorBlindMode ? "#757575" : colors.accent} />
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.mainButton}

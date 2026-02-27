@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, Text, Modal, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
 import { X, Trash2, CheckCircle2, Link as LinkIcon, Save } from "lucide-react-native";
 import { Calendar } from "react-native-calendars";
-import { Task, toLocalDateString } from "../types";
+import { Task, Weekday, toLocalDateString } from "../types";
 import { getTaskTypeColor, getEnhancedTaskTypeColor } from "./taskColors";
 import TitleInput from "./TitleInput";
 import NoteInput from "./NoteInput";
@@ -13,6 +13,7 @@ import DateRangePicker from "./DateRangePicker";
 import TimePicker from "./TimeInput";
 
 const ALL_WEEKDAYS: Weekday[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
 const WEEKDAY_ABBREVIATIONS: Record<Weekday, string> = {
   Monday: "Mon",
   Tuesday: "Tue",
@@ -22,7 +23,6 @@ const WEEKDAY_ABBREVIATIONS: Record<Weekday, string> = {
   Saturday: "Sat",
   Sunday: "Sun",
 };
-import { confirm } from "./Confirmation";
 
 export interface EditTaskProps {
   isOpen: boolean;
