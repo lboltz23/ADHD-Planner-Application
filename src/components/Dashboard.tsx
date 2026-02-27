@@ -65,6 +65,14 @@ export function Dashboard({
     },[])
   )
 
+  useEffect(()=>{
+    const interval = setInterval(() => {
+      setTaskRefresh(cur => cur +1);
+    },60000);
+    return () => clearInterval(interval)
+
+    },[])
+  
 
   useEffect(() => {
     if(!showAddTaskDialog){
@@ -85,8 +93,8 @@ export function Dashboard({
         taskDate.getMonth() === now.getMonth() &&
         taskDate.getDate() === now.getDate();
 
+      now.setSeconds(0)
       const isFutureTime = taskDate >= now;
-      
       return isSameDay && isFutureTime;
     })  .sort((a, b) => new Date(combineAsDate(a.due_date,a.time || new Date())).getTime() - 
                       new Date(combineAsDate(b.due_date,b.time || new Date())).getTime());
@@ -117,8 +125,8 @@ export function Dashboard({
     return tasks
       .filter((task) => {
         if (task.is_template || task.type === 'routine' ||  task.type === 'long_interval') return false;
-        const taskDate = new Date(task.due_date);
-        taskDate.setHours(0, 0, 0, 0);
+        const taskDate =combineAsDate(task.due_date,task.time || new Date());
+        today.setSeconds(0)
         return taskDate < today;
       })
       .sort((a, b) => new Date(combineAsDate(a.due_date,a.time || new Date())).getTime() - 
