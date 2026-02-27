@@ -584,14 +584,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [tasks]);
 
-  const updateSettings = useCallback((newSettings: SettingsData) => {
-    setSettings(newSettings);
-  }, []);
-
-  const triggerConfetti = useCallback(() => {
-    setConfettiTrigger(prev => prev + 1);
-  }, []);
-
   const fetchTasksForMonth = useCallback(async (year: number, month: number): Promise<Task[]> => {
     const monthStart = new Date(year, month, 1);
     const monthEnd = new Date(year, month + 1, 0, 23, 59, 59, 999); // Last day of month, end of day
