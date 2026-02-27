@@ -184,11 +184,11 @@ export default function AddTaskDialog({
               </TouchableOpacity>
             </View>
             {initialTaskType === "basic" && (
-              <View style={[[styles.section, { borderColor: getAppColors(colorBlindMode, isDarkMode).sectionBorder }], { borderColor: getAppColors(colorBlindMode, isDarkMode).sectionBorder }]}>
-                <TitleInput value={taskTitle} onChange={handleInputChange} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode} />
-                <NoteInput value={notes} onChange={setNotes} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode} />
-                <TimePicker time = {editedTime} onTimeChange={setEditedTime}/>
-                <Text style={[[styles.label, { color: getAppColors(colorBlindMode, isDarkMode).primary }], { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Select Date *</Text>
+              <View style={[styles.section, { borderColor: getAppColors(colorBlindMode, isDarkMode).sectionBorder }]}>
+                <TitleInput value={taskTitle} onChange={handleInputChange} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode} />
+                <NoteInput value={notes} onChange={setNotes} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode} />
+                <TimePicker time = {editedTime} onTimeChange={setEditedTime} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode}/>
+                <Text style={[styles.label, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Select Date *</Text>
                 {/* Calendar */}
                 <Calendar
                   onDayPress={(day) => setSelectedDate(day.dateString)}
@@ -210,7 +210,7 @@ export default function AddTaskDialog({
               <View style={[styles.section, { borderColor: getAppColors(colorBlindMode, isDarkMode).sectionBorder }]}>
                 <TitleInput value={taskTitle} onChange={handleInputChange} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode}/>
                 <NoteInput value={notes} onChange={setNotes} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode} />
-                <TimePicker time = {editedTime} onTimeChange={setEditedTime}/>
+                <TimePicker time = {editedTime} onTimeChange={setEditedTime} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode}/>
 
                 <DateRangePicker
                   startDate={startDate}
@@ -249,7 +249,7 @@ export default function AddTaskDialog({
               <View style={[styles.section, { borderColor: getAppColors(colorBlindMode, isDarkMode).sectionBorder }]}>
                 <TitleInput value={taskTitle} onChange={handleInputChange} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode}/>
                 <NoteInput value={notes} onChange={setNotes} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode}/>
-                <TimePicker time = {editedTime} onTimeChange={setEditedTime}/>
+                <TimePicker time = {editedTime} onTimeChange={setEditedTime} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode}/>
 
                 <RelatedTaskInput
                   tasks={tasks}
@@ -279,7 +279,7 @@ export default function AddTaskDialog({
               <View style={[styles.section, { borderColor: getAppColors(colorBlindMode, isDarkMode).sectionBorder }]}>
                 <TitleInput value={taskTitle} onChange={handleInputChange} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode}/>
                 <NoteInput value={notes} onChange={setNotes} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode}/>
-                <TimePicker time = {editedTime} onTimeChange={setEditedTime}/>
+                <TimePicker time = {editedTime} onTimeChange={setEditedTime} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode}/>
 
                 <DateRangePicker
                   startDate={startDate}

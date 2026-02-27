@@ -56,6 +56,7 @@ export function Dashboard({
   const [selectedType, setSelectedType] = useState<TaskType>('basic');
   const [taskView, setTaskView] = useState<'today' | 'upcoming' | 'repeating' | 'open'>('today');
   const [showAddTaskDialog, setShowAddTaskDialog] = useState(false);
+  const [taskRefrsh, setTaskRefresh] = useState(0);
   const [showInfo, setShowInfo] = useState(false);
   const [taskRefrsh, setTaskRefresh] = useState(0);
   // Ref to track previous progress for confetti trigger
