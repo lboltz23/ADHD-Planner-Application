@@ -9,13 +9,14 @@ export interface Task {
   title: string;
   type: TaskType;
   due_date: Date;
+  time?: Date;
   completed: boolean;
   created_at: Date;
   updated_at: Date;
 
   start_date?: Date; // For routine tasks
   end_date?: Date;   // For routine tasks
-  notes?: string;
+  notes?: string; 
   days_selected?: Weekday[]; // For routine tasks
   recurrence_interval?: number; // For long interval tasks
   parent_task_id?: string; // For templates, refers to the template task ID
@@ -28,6 +29,7 @@ export interface CreateTaskParams {
   title: string;
   type: TaskType;
   notes?: string;
+  time?: Date;
 
   due_date: Date;
   days_selected?: Weekday[]; // For routine tasks
@@ -44,6 +46,30 @@ export function toLocalDateString(date: Date): string {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+}
+
+export function toLocalTimeString(date: Date): string {
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+
+  return `T${hours}:${minutes}:${seconds}`;
+}
+
+export function combineAsDate(
+  datePart: Date,
+  timePart: Date
+): Date {
+  const combined = new Date(datePart);
+
+  combined.setHours(
+    timePart.getHours(),
+    timePart.getMinutes(),
+    timePart.getSeconds(),
+    0
+  );
+
+  return combined;
 }
 
 export interface UpdateTaskParams {
