@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -8,7 +8,7 @@ import {
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Task, TaskType, CreateTaskParams, Weekday } from '../types';
+import { Task, TaskType, CreateTaskParams, Weekday, combineAsDate } from '../types';
 import { SettingsData } from './Settings';
 import { TaskCard } from './TaskCard';
 import AddTaskDialog from './AddTaskDialog';
@@ -18,7 +18,7 @@ import { getFilterColor } from './taskColors';
 import InfoPopup from './Info';
 import { AppThemeColors, resolveThemePreference } from '../constants/theme';
 import { useColorScheme } from '../hooks/use-color-scheme';
-
+import { useFocusEffect } from 'expo-router';
 // Dashboard Props
 interface DashboardProps {
   onNavigateToCalendar: () => void;
@@ -53,21 +53,44 @@ export function Dashboard({
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [selectedType, setSelectedType] = useState<TaskType>('basic');
   const [taskView, setTaskView] = useState<'today' | 'upcoming' | 'repeating' | 'open'>('today');
+  const [taskRefresh, setTaskRefresh] = useState(0);
   const [showAddTaskDialog, setShowAddTaskDialog] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
   // Ref to track previous progress for confetti trigger
   const previousProgressRef = useRef(0);
 
+  useFocusEffect(
+    useCallback(() => {
+      setTaskRefresh(cur => cur +1);
+    },[])
+  )
+
+
+  useEffect(() => {
+    if(!showAddTaskDialog){
+      setTaskRefresh(cur => cur + 1); // Refresh task lists when add task dialog is closed (after adding a task)
+    }
+  }, [showAddTaskDialog]);
   // Filter tasks from props for today
   const todayTasks = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const now = new Date();
+
     return tasks.filter((task) => {
       if (task.is_template) return false;
-      const taskDate = new Date(task.due_date);
-      return taskDate.toDateString() === today.toDateString();
-    });
-  }, [tasks]);
+
+      const taskDate = combineAsDate(task.due_date,task.time || new Date());
+
+      const isSameDay =
+        taskDate.getFullYear() === now.getFullYear() &&
+        taskDate.getMonth() === now.getMonth() &&
+        taskDate.getDate() === now.getDate();
+
+      const isFutureTime = taskDate >= now;
+      
+      return isSameDay && isFutureTime;
+    })  .sort((a, b) => new Date(combineAsDate(a.due_date,a.time || new Date())).getTime() - 
+                      new Date(combineAsDate(b.due_date,b.time || new Date())).getTime());
+  }, [tasks,taskRefresh]);
 
   // Filter tasks from props for upcoming (next 5 tasks after today)
   const upcomingTasks = useMemo(() => {
@@ -80,13 +103,13 @@ export function Dashboard({
         taskDate.setHours(0, 0, 0, 0);
         return taskDate > today;
       })
-      .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
-      .slice(0, 5);
-  }, [tasks]);
+      .sort((a, b) => new Date(combineAsDate(a.due_date,a.time || new Date())).getTime() - 
+                    new Date(combineAsDate(b.due_date,b.time || new Date())).getTime())      .slice(0, 5);
+  }, [tasks, taskRefresh]);
 
   const repeatingTasks = useMemo(() => {
     return tasks.filter((task) => task.is_template === true);
-  }, [tasks]);
+  }, [tasks, taskRefresh]);
 
   const openTasks = useMemo(() => {
     const today = new Date();
@@ -98,9 +121,10 @@ export function Dashboard({
         taskDate.setHours(0, 0, 0, 0);
         return taskDate < today;
       })
-      .sort((a, b) => new Date(b.due_date).getTime() - new Date(a.due_date).getTime())
+      .sort((a, b) => new Date(combineAsDate(a.due_date,a.time || new Date())).getTime() - 
+                      new Date(combineAsDate(b.due_date,b.time || new Date())).getTime())      
       .slice(0, 7);
-  }, [tasks]);
+  }, [tasks, taskRefresh]);
  
   const handleAddTask = () => {
     if (newTaskTitle.trim() && !showAddTaskDialog) {
@@ -120,7 +144,7 @@ export function Dashboard({
   };
 
   const handleProgressBar = () => {
-    if (completedTodayTasks.length === 0)
+    if (completedTodayTasks === 0)
       return false;
     return true;
   }
@@ -572,6 +596,7 @@ export function Dashboard({
                     onUpdate={onEditTask}
                     onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
+                    showTime={true}
                   />
                 ))}
               </View>
@@ -594,6 +619,7 @@ export function Dashboard({
                     onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
                     showDate={true}
+                    showTime={true}
                   />
                 ))}
               </View>
