@@ -3,6 +3,7 @@ import { View, Text, Modal, TouchableOpacity, StyleSheet, ScrollView } from "rea
 import { X, Trash2, CheckCircle2, Link as LinkIcon, Save } from "lucide-react-native";
 import { Calendar } from "react-native-calendars";
 import { Task, Weekday, toLocalDateString } from "../types";
+import { Task, Weekday, toLocalDateString } from "../types";
 import { getTaskTypeColor, getEnhancedTaskTypeColor } from "./taskColors";
 import TitleInput from "./TitleInput";
 import NoteInput from "./NoteInput";
@@ -121,92 +122,25 @@ export default function EditTask({
               {/* Content */}
               <View style={[styles.section, { borderColor: getAppColors(colorBlindMode, isDarkMode).sectionBorder }]}>
                 <TitleInput value={editedTitle} onChange={setEditedTitle} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode} />
-                <NoteInput value = {editedNotes} onChange={setEditedNotes} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode} />
-                <TimePicker time = {editedTime || new Date()} onTimeChange={setEditedTime}/>
-                {task.type === "related" ? (
-                    <RelatedTaskInput
-                      tasks={tasks}
-                      selectedTaskId={editedParentId || task.parent_task_id || ""}
-                      onSelect={setEditedParentId}
-                      />
-                ) : null}
-                {task.type === "basic" || task.type === "related" || task.is_template === false ? (
-                  <>
-                    <Text style={[styles.label, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Due Date</Text>
-                    <Calendar
-                      onDayPress={handleDateSelect}
-                      markedDates={{
-                        [getDateString(editedDate)]: {
-                          selected: true,
-                          selectedColor: colorBlindMode ? "#33BBEE" : "#b8a4d9",
-                        }
-                      }}
-                      minDate={toLocalDateString(new Date())}
-                      theme={{
-                        todayTextColor: colorBlindMode ? "#33BBEE" : "#a8d8ea",
-                        arrowColor: colorBlindMode ? "#33BBEE" : "#a8d8ea",
-                      }}
-                      style={[styles.calendar, { borderColor: getAppColors(colorBlindMode, isDarkMode).border }]}
-                    />
-                  </>
-                ) : null}
-                {task.type === "routine" && task.is_template === true ? (
-                  <>
-                    <DateRangePicker
-                      startDate={editedStartDate || new Date()}
-                      endDate={editedEndDate || new Date()}
-                      onStartDateChange={setEditedStartDate}
-                      onEndDateChange={setEditedEndDate}
-                    />
-
-                   <Text style={styles.label}>Repeat On (select days) *</Text>
-                   <View style={styles.frequencyRow}>
-                    {ALL_WEEKDAYS.map((day) => (
-                    <TouchableOpacity
-                      key={day}
-                      style={[
-                        styles.frequencyButton,
-                        editedDaysSelected.includes(day) && styles.frequencyButtonActive,
-                      ]}
-                      onPress={() => toggleDay(day)}
-                    >
-                      <Text
-                        style={[
-                          styles.frequencyText,
-                          editedDaysSelected.includes(day) && styles.frequencyTextActive,
-                        ]}
-                      >
-                        {WEEKDAY_ABBREVIATIONS[day]}
-                      </Text>
-                    </TouchableOpacity>
-                    ))}
-                  </View>
-                </>
-                ): null}
-                {task.type === "long_interval" && task.is_template === true ? (
-                  <>
-                  <DateRangePicker
-                    startDate={editedStartDate || new Date()}
-                    endDate={editedEndDate || new Date()}
-                    onStartDateChange={setEditedStartDate}
-                    onEndDateChange={setEditedEndDate}
-                  />
-
-                <View style={styles.inputRow}>
-                  <Text style={styles.label}>Interval (months):</Text>
-                  <TextInput
-                    style={styles.dateInput}
-                    value={editedInterval ? String(editedInterval) : ""}
-                    onChangeText={(text) => setEditedInterval(text ? parseInt(text, 10) || undefined : undefined)}
-                    placeholder="e.g., 3"
-                    placeholderTextColor="#999"
-                    keyboardType="numeric"
-                  />
+                <NoteInput value = {editiedNotes} onChange={setEditedNotes} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode} />
+                <TimePicker time = {editedTime} onTimeChange={setEditedTime} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode}/>
+                <Text style={[styles.label, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Due Date</Text>
+                <Calendar
+                  onDayPress={handleDateSelect}
+                  markedDates={{
+                    [getDateString(editedDate)]: {
+                      selected: true,
+                      selectedColor: colorBlindMode ? "#33BBEE" : "#b8a4d9",
+                    }
+                  }}
+                  minDate={toLocalDateString(new Date())}
+                  theme={{
+                    todayTextColor: colorBlindMode ? "#33BBEE" : "#a8d8ea",
+                    arrowColor: colorBlindMode ? "#33BBEE" : "#a8d8ea",
+                  }}
+                  style={[styles.calendar, { borderColor: getAppColors(colorBlindMode, isDarkMode).border }]}
+                />
                 </View>
-                </>
-                ) : null}
-                  
-              </View>
               {/* Action Buttons */}
               <View style={styles.buttonRow}>
                 <View style={styles.leftButtons}>

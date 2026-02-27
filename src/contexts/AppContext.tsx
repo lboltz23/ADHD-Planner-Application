@@ -5,7 +5,6 @@ import { SettingsData } from '../components/Settings';
 import { supabase } from '@/lib/supabaseClient';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
-import { preventAutoHideAsync } from 'expo-router/build/utils/splash';
 
 // Parse a date string from Supabase as a LOCAL date (avoids UTC timezone shift)
 function parseLocalDate(dateStr: string): Date {
@@ -190,7 +189,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                     user_id: override.user_id,
                     created_at: new Date(override.created_at),
                     updated_at: new Date(override.updated_at),
-                    due_date: parseLocalDate(override.due_date),
+                    due_date: new Date(override.due_date),
                     time:parseLocalTime(override.due_date),
                     completed: override.completed || false,
                     type: override.type as Task['type'],
@@ -451,8 +450,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [tasks]);
 
+  const updateSettings = useCallback((newSettings: SettingsData) => {
+    setSettings(newSettings);
+  }, []);
 
-  const updateTask = useCallback(async (id: string, fields: { title?: string; due_date?: Date; notes?: string; parent_id?: string; start_date?: Date; end_date?: Date; recurrence_interval?: number; days_selected?: Weekday[] }) => {
+  const triggerConfetti = useCallback(() => {
+    setConfettiTrigger(prev => prev + 1);
+  }, []);
+
+  const updateTask = useCallback(async (id: string, fields: { title?: string; due_date?: Date; notes?: string; time?: Date;}) => {
     const task = tasks.find(t => t.id === id);
     if (!task) return;
 

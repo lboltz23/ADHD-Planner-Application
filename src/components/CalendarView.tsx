@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useRef } from 'react';
-// import React, { useMemo, useState, useRef, useEffect } from 'react'; // Uncomment when enabling Supabase
-import { View, Text, ScrollView, StyleSheet, Dimensions, TouchableOpacity, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
+
+import { View, Text, ScrollView, StyleSheet, Dimensions, TouchableOpacity, NativeSyntheticEvent, NativeScrollEvent} from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, Settings, ChevronDown, Plus } from 'lucide-react-native';
 import { TaskCard } from './TaskCard';
@@ -276,8 +276,8 @@ export function WeeklyView({ tasks, onToggleTask, onEditTask, onDeleteTask, colo
                         onUpdate={onEditTask}
                         onDelete={onDeleteTask}
                         colorBlindMode={!!colorBlindMode}
-                        isDarkMode={isDark}
                         showTime={true}
+                        isDarkMode={isDark}
                       />
                     ))
                   )}
