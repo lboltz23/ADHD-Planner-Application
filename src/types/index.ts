@@ -9,6 +9,7 @@ export interface Task {
   title: string;
   type: TaskType;
   due_date: Date;
+  time?: Date;
   completed: boolean;
   created_at: Date;
   updated_at: Date;
@@ -28,6 +29,7 @@ export interface CreateTaskParams {
   title: string;
   type: TaskType;
   notes?: string;
+  time?: Date;
 
   due_date: Date;
   days_selected?: Weekday[]; // For routine tasks
@@ -46,10 +48,34 @@ export function toLocalDateString(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
+export function toLocalTimeString(date: Date): string {
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  return `${hours}:${minutes}:${seconds}`;
+}
+
+export function combineAsDate(
+  datePart: Date,
+  timePart: Date
+): Date {
+  const combined = new Date(datePart);
+
+  combined.setHours(
+    timePart.getHours(),
+    timePart.getMinutes(),
+    timePart.getSeconds(),
+    0
+  );
+
+  return combined;
+}
+
 export interface UpdateTaskParams {
   title?: string;
   type?: TaskType;
   due_date?: Date;
+  time?:Date;
   completed?: boolean;
   notes?: string;
   start_date?: Date;
