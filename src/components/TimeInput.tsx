@@ -2,20 +2,26 @@ import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { AppColors } from "../constants/theme";
+import { getAppColors } from "../constants/theme";
+import { Pencil } from "lucide-react-native";
 
 interface TimePickerProps {
   time: Date | null;
   onTimeChange: (date: Date) => void;
+  colorBlindMode?: boolean;
+  isDarkMode?: boolean;
 }
 
 export default function TimePicker({
   time,
   onTimeChange,
+  colorBlindMode = false,
+  isDarkMode = false
 }: TimePickerProps) {
   const [showTime, setShowTime] = useState(false);
 
   const formatDate = (date: Date | null): string => {
-    if (!date) return "Select time";
+    if (!date) return "Select time...";
     return date.toLocaleTimeString("en-US", {
       hour:"2-digit",
       hour12: true,
@@ -27,15 +33,17 @@ export default function TimePicker({
   return (
     <View style={styles.dateInputRow}>
       <View style={styles.dateInputContainer}>
-        <Text style={styles.label}>Time:</Text>
+        <View style = {{flexDirection: "row",justifyContent:"center",alignContent:"center",alignItems:"center"}}>
+          <Text style={[styles.label, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Time:  </Text>
         <TouchableOpacity
-          style={styles.dateInput}
+          style={[styles.dateInput,{ backgroundColor: getAppColors(colorBlindMode, isDarkMode).inputBackground, borderColor: getAppColors(colorBlindMode, isDarkMode).border }]}
           onPress={() => setShowTime(true)}
         >
           <Text style={time ? styles.dateText : styles.datePlaceholder}>
             {formatDate(time)}
           </Text>
         </TouchableOpacity>
+        <Pencil size={16} color={getAppColors(colorBlindMode, isDarkMode).primary} style={styles.icon} />
         <DateTimePickerModal
           isVisible={showTime}
           mode="time"
@@ -49,6 +57,7 @@ export default function TimePicker({
           }}
           onCancel={() => setShowTime(false)}
         />
+        </View>
       </View>
     </View>
   );
@@ -66,10 +75,11 @@ const styles = StyleSheet.create({
     minWidth: 120,
   },
   label: {
-    fontSize: 14,
+    fontSize: 20,
     fontWeight: "600",
-    color: AppColors.primary,
-    marginBottom: 8,
+    marginBottom: 4,
+    textAlign: "left",
+    marginRight: 8,
   },
   dateInput: {
     backgroundColor: AppColors.inputBackground,
@@ -78,6 +88,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
+    flex:1
   },
   dateText: {
     fontSize: 14,
@@ -86,5 +97,7 @@ const styles = StyleSheet.create({
   datePlaceholder: {
     fontSize: 14,
     color: AppColors.placeholder,
+  },icon: {
+    marginLeft: 8,
   },
 });
