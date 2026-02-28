@@ -93,7 +93,7 @@ export function Dashboard({
     today.setHours(0, 0, 0, 0);
     return tasks
       .filter((task) => {
-        if (task.is_template || task.type === 'routine' ||  task.type === 'long_interval') return false;
+        if (task.is_template || task.type === 'routine' ||  task.type === 'long_interval' || task.completed) return false;
         const taskDate = new Date(task.due_date);
         taskDate.setHours(0, 0, 0, 0);
         return taskDate < today;
