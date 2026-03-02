@@ -392,7 +392,7 @@ export function Dashboard({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.accent,
+    backgroundColor: isDark ? '#45a9f6' : colors.accent,
     paddingVertical: 14,
     paddingHorizontal: 20,
     borderRadius: 10,
