@@ -6,6 +6,9 @@ import { supabase } from '@/lib/supabaseClient';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
 import { preventAutoHideAsync } from 'expo-router/build/utils/splash';
+import { User } from '@supabase/supabase-js';
+import { router } from 'expo-router';
+import * as Linking from 'expo-linking'
 
 // Parse a date string from Supabase as a LOCAL date (avoids UTC timezone shift)
 function parseLocalDate(dateStr: string): Date {
@@ -66,6 +69,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const [streakCount, setStreakCount] = useState<number>(0);
   const [lastLoginDate, setLastLoginDate] = useState<Date | null>(null);
+  const [user, setUser] = useState<User | null>(null)
 
   const [confettiTrigger, setConfettiTrigger] = useState(0);
 
@@ -122,14 +126,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  // Load tasks from Supabase on mount
   useEffect(() => {
-    const loadTasks = async () => {
-      try {
+    const subscription = Linking.addEventListener('url', async ({ url }) => {
+      const { data, error } = await supabase.auth.exchangeCodeForSession(url)
+
+      if (error) {
+        console.error(error)
+      }
+    })
+
+    return () => subscription.remove()
+  }, [])
+
+  const loadTasks = async (user_id:string | undefined) => {
+      try {      
         const { data, error } = await supabase
           .from('tasks')
           .select('*')
-          .eq('user_id', DEFAULT_USER_ID);
+          .eq('user_id', user_id);
 
         if (error) {
           console.error('Error loading tasks from Supabase:', error);
@@ -232,8 +246,39 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    loadTasks();
+  // Load tasks from Supabase on mount
+  useEffect(() => {
+    // Get User
+    const StartUp = async() => {
+      const init = async () => {
+        const { data } = await supabase.auth.getSession()
+        setUser(data.session?.user ?? null)
+        if(!data.session?.user){
+          router.push("/login");
+          return;
+        } else {
+          return data.session.user
+        }
+      }
+
+      // Listen to auth changes.
+      const { data: subscription } = supabase.auth.onAuthStateChange(
+        (_event, session) => {
+          setUser(session?.user ?? null)
+        }
+      )
+    
+      // temp value because of state race conditions
+      let temp = await init()
+      if(temp)loadTasks(temp.id);
+    }
+    StartUp();
   }, []);
+
+  //If user changes
+  useEffect(() =>{
+    if(user) loadTasks(user.id)
+  },[user])
 
   // Helper function to generate scheduled days for recurring tasks
   const generateScheduledDays = (
@@ -280,6 +325,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const { title,time, due_date, type, days_selected, recurrence_interval, notes, start_date, end_date, parent_task_id } = params;
     const baseId = uuidv4();
     const now = new Date();
+    if (!user){ throw new Error("Authentication required. Please create an account.");}
 
     // Check if this is a recurring task
     if (type === "routine" || type === "long_interval") {
@@ -289,7 +335,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         title,
         type,
         notes: notes,
-        user_id: DEFAULT_USER_ID,
+        user_id: user.id,
         is_template: true,
         start_date: start_date ? toLocalDateString(start_date) : null,
         end_date: end_date ? toLocalDateString(end_date) : null,
@@ -306,7 +352,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         // Add template to local state
         const templateForState: Task = {
           id: baseId,
-          user_id: DEFAULT_USER_ID,
+          user_id: user.id,
           title,
           time: time || due_date,
           due_date: start_date || due_date,
@@ -333,7 +379,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // Regular non-recurring task (basic or related)
       const newTask: Task = {
         id: baseId,
-        user_id: DEFAULT_USER_ID,
+        user_id: user.id,
         title,
         time:time,
         due_date: due_date,
@@ -354,7 +400,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         completed: newTask.completed,
         type: newTask.type,
         notes: newTask.notes,
-        user_id: DEFAULT_USER_ID,
+        user_id: user.id,
         is_template: false,
         parent_task_id: newTask.parent_task_id,
       });
@@ -365,7 +411,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setTasks(prev => [...prev, newTask]);
       }
     }
-  }, []);
+  }, [user,tasks]);
 
   const toggleTask = useCallback(async (id: string) => {
     // Find the task to determine if it's a recurring instance
@@ -453,7 +499,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         ));
       }
     }
-  }, [tasks]);
+  }, [user,tasks]);
 
 
   const updateTask = useCallback(async (id: string, fields: { title?: string; due_date?: Date; notes?: string;time?: Date; parent_id?: string; start_date?: Date; end_date?: Date; recurrence_interval?: number; days_selected?: Weekday[] }) => {
@@ -652,7 +698,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         ));
       }
     }
-  }, [tasks]);
+  }, [user,tasks]);
 
   const updateSettings = useCallback((newSettings: SettingsData) => {
     setSettings(newSettings);
