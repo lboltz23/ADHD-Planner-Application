@@ -13,7 +13,7 @@ import { SettingsData } from './Settings';
 import { TaskCard } from './TaskCard';
 import AddTaskDialog from './AddTaskDialog';
 import { TaskTypeSelector } from './TaskTypeSelector';
-import { Calendar, Settings, Zap, Info, Plus } from 'lucide-react-native';
+import { Calendar, Settings, Zap, Info, Plus, Minus } from 'lucide-react-native';
 import { getFilterColor } from './taskColors';
 import InfoPopup from './Info';
 import { AppThemeColors, resolveThemePreference } from '../constants/theme';
@@ -134,6 +134,13 @@ export function Dashboard({
     else if (view === 'upcoming') setVisibleUpcoming(prev => prev + 7);
     else if (view === 'open') setVisibleOpen(prev => prev + 7);
     else if (view === 'repeating') setVisibleRepeating(prev => prev + 7);
+  };
+
+  const handleLoadLess = (view: string) => {
+    if (view === 'today') setVisibleToday(7);
+    else if (view === 'upcoming') setVisibleUpcoming(7);
+    else if (view === 'open') setVisibleOpen(7);
+    else if (view === 'repeating') setVisibleRepeating(7);
   };
 // Calculate today's progress
   const completedTodayTasks = todayTasks.filter((task) => task.completed)
@@ -404,6 +411,22 @@ export function Dashboard({
     fontSize: 15,
     fontWeight: '600',
   },
+  seeLessButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: isDark ? '#45a9f6' : colors.accent,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    marginTop: 8,
+    gap: 8,
+  },
+  seeLessText: {
+    color: '#ffffff',
+    fontSize: 15,
+    fontWeight: '600',
+  },
   });
 
   return (
@@ -606,6 +629,13 @@ export function Dashboard({
                     <Text style={styles.seeMoreText}>Show More Tasks</Text>
                   </TouchableOpacity>
                 )}
+                {visibleToday > 7 && todayTasks.length <= visibleToday && (
+                  <TouchableOpacity style={styles.seeLessButton} onPress={() => handleLoadLess('today')}>
+                    <Minus size={20} color="#ffffff" />
+                    <Text style={styles.seeLessText}>Show Less Tasks</Text>
+                  </TouchableOpacity>
+                )}
+
               </View>
             )}
           </View>
@@ -632,6 +662,12 @@ export function Dashboard({
                   <TouchableOpacity style={styles.seeMoreButton} onPress={() => handleLoadMore('upcoming')}>
                     <Plus size={20} color="#ffffff" />
                     <Text style={styles.seeMoreText}>Show More Tasks</Text>
+                  </TouchableOpacity>
+                )}
+                {visibleUpcoming > 7 && upcomingTasks.length <= visibleUpcoming && (
+                  <TouchableOpacity style={styles.seeLessButton} onPress={() => handleLoadLess('upcoming')}>
+                    <Minus size={20} color="#ffffff" />
+                    <Text style={styles.seeLessText}>Show Less Tasks</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -661,6 +697,12 @@ export function Dashboard({
                     <Text style={styles.seeMoreText}>Show More Tasks</Text>
                   </TouchableOpacity>
                 )}
+                {visibleOpen > 7 && openTasks.length <= visibleOpen && (
+                  <TouchableOpacity style={styles.seeLessButton} onPress={() => handleLoadLess('open')}>
+                    <Minus size={20} color="#ffffff" />
+                    <Text style={styles.seeLessText}>Show Less Tasks</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             )}
           </View>
@@ -686,6 +728,12 @@ export function Dashboard({
                   <TouchableOpacity style={styles.seeMoreButton} onPress={() => handleLoadMore('repeating')}>
                     <Plus size={20} color="#ffffff" />
                     <Text style={styles.seeMoreText}>Show More Tasks</Text>
+                  </TouchableOpacity>
+                )}
+                {visibleRepeating > 7 && repeatingTasks.length <= visibleRepeating && (
+                  <TouchableOpacity style={styles.seeLessButton} onPress={() => handleLoadLess('repeating')}>
+                    <Minus size={20} color="#ffffff" />
+                    <Text style={styles.seeLessText}>Show Less Tasks</Text>
                   </TouchableOpacity>
                 )}
               </View>
