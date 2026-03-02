@@ -129,6 +129,13 @@ export function Dashboard({
   const [visibleOpen, setVisibleOpen] = useState(7);
   const [visibleRepeating, setVisibleRepeating] = useState(7);
 
+  useEffect(() => {
+    setVisibleToday(7);
+    setVisibleUpcoming(7);
+    setVisibleOpen(7);
+    setVisibleRepeating(7);
+  }, [taskView]);
+
   const handleLoadMore = (view: string) => {
     if (view === 'today') setVisibleToday(prev => prev + 7);
     else if (view === 'upcoming') setVisibleUpcoming(prev => prev + 7);
