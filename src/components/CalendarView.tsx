@@ -272,6 +272,7 @@ export function WeeklyView({ tasks, onToggleTask, onEditTask, onDeleteTask, colo
                       <TaskCard
                         key={task.id}
                         task={task}
+                        tasks={tasks}
                         onToggle={onToggleTask}
                         onUpdate={onEditTask}
                         onDelete={onDeleteTask}

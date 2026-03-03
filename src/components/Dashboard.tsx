@@ -604,6 +604,7 @@ export function Dashboard({
                   <TaskCard
                     key={task.id}
                     task={task}
+                    tasks={tasks}
                     onToggle={onToggleTask}
                     onUpdate={onEditTask}
                     onDelete={onDeleteTask}
@@ -626,6 +627,7 @@ export function Dashboard({
                   <TaskCard
                     key={task.id}
                     task={task}
+                    tasks={tasks}
                     onToggle={onToggleTask}
                     onUpdate={onEditTask}
                     onDelete={onDeleteTask}
@@ -649,6 +651,7 @@ export function Dashboard({
                   <TaskCard
                     key={task.id}
                     task={task}
+                    tasks={tasks}
                     onToggle={onToggleTask}
                     onUpdate={onEditTask}
                     onDelete={onDeleteTask}
@@ -670,6 +673,7 @@ export function Dashboard({
                   <TaskCard
                     key={task.id}
                     task={task}
+                    tasks={tasks}
                     onToggle={onToggleTask}
                     onUpdate={onEditTask}
                     onDelete={onDeleteTask}

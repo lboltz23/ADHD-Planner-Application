@@ -19,6 +19,7 @@ import { useAppTheme } from "../hooks/use-app-theme";
 
 interface TaskCardProps {
   task: Task;
+  tasks?: Task[];
   onToggle: (id: string) => void;
   onUpdate: (id: string, fields: { title?: string; due_date?: Date; notes?: string }) => void;
   onDelete: (id: string) => void;
@@ -39,6 +40,7 @@ interface TaskStyle {
 
 export function TaskCard({
   task,
+  tasks = [],
   onToggle,
   onUpdate,
   onDelete,
@@ -184,9 +186,10 @@ export function TaskCard({
             },
           ]}>{task.title}</Text>
         </View>
-
+        <View style = {{alignItems:'center'}}>
         {showDate && <Text style={[styles.dateText, { color: colors.textMuted }]}>{formatDate(task.due_date)}</Text>}
         {showTime && <Text style={[styles.dateText, { color: colors.textMuted }]}>{formatTime(task.time)}</Text>}
+        </View>
       </TouchableOpacity>
 
       {/* Edit Task Dialog */}
@@ -194,11 +197,11 @@ export function TaskCard({
         isOpen={showEditDialog}
         onClose={() => setShowEditDialog(false)}
         task={task}
+        tasks={tasks}
         onSave={onUpdate}
         onDelete={onDelete}
         onToggle={onToggle}
         colorBlindMode={colorBlindMode}
-        isDarkMode={isDark}
       />
     </>
   );
