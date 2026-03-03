@@ -9,7 +9,6 @@ import NoteInput from "./NoteInput";
 import { confirm } from "./Confirmation";
 import RelatedTaskInput from "./RelatedTask";
 import DateRangePicker from "./DateRangePicker";
-import TimePicker from "./TimeInput";
 
 const ALL_WEEKDAYS: Weekday[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const WEEKDAY_ABBREVIATIONS: Record<Weekday, string> = {
@@ -27,7 +26,7 @@ export interface EditTaskProps {
   onClose: () => void;
   task: Task;
   tasks: Task[]; // Pass all tasks for related task selection
-  onSave: (id: string, fields: { title?: string; due_date?: Date; notes?: string; time?: Date; parent_id?: string; start_date?: Date; end_date?: Date; recurrence_interval?: number; days_selected?: Weekday[] }) => void;
+  onSave: (id: string, fields: { title?: string; due_date?: Date; notes?: string; parent_id?: string; start_date?: Date; end_date?: Date; recurrence_interval?: number; days_selected?: Weekday[] }) => void;
   onDelete: (id: string) => void;
   onToggle: (id: string) => void;
   colorBlindMode?: boolean;
@@ -45,7 +44,6 @@ export default function EditTask({
 }: EditTaskProps) {
   const [editedTitle, setEditedTitle] = useState(task.title);
   const [editedDate, setEditedDate] = useState(task.due_date);
-  const [editedTime, setEditedTime] = useState(task.time);
   const [editedStartDate, setEditedStartDate] = useState(task.start_date);
   const [editedEndDate, setEditedEndDate] = useState(task.end_date);
   const [editedInterval, setEditedInterval] = useState(task.recurrence_interval);
@@ -58,7 +56,6 @@ export default function EditTask({
     if (isOpen) {
       setEditedTitle(task.title);
       setEditedDate(task.due_date);
-      setEditedTime(task.time);
       setEditedStartDate(task.start_date);
       setEditedEndDate(task.end_date);
       setEditedInterval(task.recurrence_interval);
@@ -74,7 +71,6 @@ export default function EditTask({
         title: editedTitle.trim(),
         due_date: editedDate,
         notes: editedNotes,
-        time: editedTime
       };
 
       if (task.type === "related") {
@@ -147,7 +143,6 @@ export default function EditTask({
               <View style={styles.section}>
                 <TitleInput value={editedTitle} onChange={setEditedTitle} />
                 <NoteInput value = {editedNotes} onChange={setEditedNotes} />
-                <TimePicker time = {editedTime || new Date()} onTimeChange={setEditedTime}/>
                 {task.type === "related" ? (
                     <RelatedTaskInput
                       tasks={tasks}
