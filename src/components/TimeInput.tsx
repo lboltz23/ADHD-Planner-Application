@@ -33,17 +33,17 @@ export default function TimePicker({
   return (
     <View style={styles.dateInputRow}>
       <View style={styles.dateInputContainer}>
+        <Text style={[styles.label, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Time:  </Text>
         <View style = {{flexDirection: "row",justifyContent:"center",alignContent:"center",alignItems:"center"}}>
-          <Text style={[styles.label, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Time:  </Text>
         <TouchableOpacity
-          style={[styles.dateInput,{ backgroundColor: getAppColors(colorBlindMode, isDarkMode).inputBackground, borderColor: getAppColors(colorBlindMode, isDarkMode).border }]}
+          style={[styles.dateInput,{ backgroundColor: getAppColors(colorBlindMode, isDarkMode).inputBackground, borderColor: getAppColors(colorBlindMode, isDarkMode).border,flexDirection:"row" }]}
           onPress={() => setShowTime(true)}
         >
-          <Text style={time ? styles.dateText : styles.datePlaceholder}>
+          <Pencil size={16} color={getAppColors(colorBlindMode, isDarkMode).primary} style={styles.icon} />
+          <Text style={[time ? styles.dateText : styles.datePlaceholder,{paddingHorizontal:4}]}>
             {formatDate(time)}
           </Text>
         </TouchableOpacity>
-        <Pencil size={16} color={getAppColors(colorBlindMode, isDarkMode).primary} style={styles.icon} />
         <DateTimePickerModal
           isVisible={showTime}
           mode="time"
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: AppColors.border,
     borderRadius: 8,
-    paddingHorizontal: 12,
+    paddingHorizontal: 0,
     paddingVertical: 10,
     flex:1
   },
