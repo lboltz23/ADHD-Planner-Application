@@ -629,7 +629,6 @@ export function Dashboard({
                     onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
                     showTime={true}
-                    isDarkMode={isDark}
                   />
                 ))}
               </View>
@@ -653,7 +652,6 @@ export function Dashboard({
                     colorBlindMode={settings.colorBlindMode}
                     showDate={true}
                     showTime={true}
-                    isDarkMode={isDark}
                   />
                 ))}
               </View>

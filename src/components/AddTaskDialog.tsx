@@ -40,8 +40,9 @@ export default function AddTaskDialog({
   onAddTask,
   initialTaskType,
   initialTitle = "",
-  colorBlindMode = false,
   tasks = [],
+  colorBlindMode= false,
+  isDarkMode = false,
 }: AddTaskDialogProps) {
   const [taskTitle, setTaskTitle] = useState(initialTitle);
   const [selectedDate, setSelectedDate] = useState("");
