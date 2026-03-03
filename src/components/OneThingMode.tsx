@@ -13,6 +13,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
+  Vibration,
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -139,7 +140,6 @@ export function OneThingMode({
 
     // Use native alert sound on both iOS and Android
     try {
-      // For web and Expo, we can use the Web Audio API
       if (typeof window !== 'undefined' && window.AudioContext) {
         const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
         const oscillator = audioContext.createOscillator();
@@ -148,7 +148,7 @@ export function OneThingMode({
         oscillator.connect(gainNode);
         gainNode.connect(audioContext.destination);
         
-        oscillator.frequency.value = 880; // A5 note
+        oscillator.frequency.value = 880; 
         oscillator.type = 'sine';
         
         gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
@@ -165,6 +165,7 @@ export function OneThingMode({
   const showTimerAlert = (message: string) => {
     setAlertMessage(message);
     setShowAlertPopup(true);
+    Vibration.vibrate([500, 300, 200, 100, 500]);
     playSound();
 
     if (popupTimeoutRef.current) {
