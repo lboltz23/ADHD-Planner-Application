@@ -184,9 +184,10 @@ export function TaskCard({
             },
           ]}>{task.title}</Text>
         </View>
-
+        <View style = {{alignItems:'center'}}>
         {showDate && <Text style={[styles.dateText, { color: colors.textMuted }]}>{formatDate(task.due_date)}</Text>}
         {showTime && <Text style={[styles.dateText, { color: colors.textMuted }]}>{formatTime(task.time)}</Text>}
+        </View>
       </TouchableOpacity>
 
       {/* Edit Task Dialog */}
