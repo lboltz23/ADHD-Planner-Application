@@ -31,6 +31,7 @@ export interface EditTaskProps {
   onDelete: (id: string) => void;
   onToggle: (id: string) => void;
   colorBlindMode?: boolean;
+  isDarkMode?: boolean;
 }
 
 export default function EditTask({
@@ -42,6 +43,7 @@ export default function EditTask({
   onDelete,
   onToggle,
   colorBlindMode = false,
+  isDarkMode = false,
 }: EditTaskProps) {
   const [editedTitle, setEditedTitle] = useState(task.title);
   const [editedDate, setEditedDate] = useState(task.due_date);
