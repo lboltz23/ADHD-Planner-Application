@@ -80,7 +80,7 @@ export function Dashboard({
         taskDate.setHours(0, 0, 0, 0);
         return taskDate > today;
       })
-      .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
+      .sort((a, b) => new Date(b.due_date).getTime() - new Date(a.due_date).getTime())
       .slice(0, 5);
   }, [tasks]);
 
@@ -120,7 +120,7 @@ export function Dashboard({
   };
 
   const handleProgressBar = () => {
-    if (completedTodayTasks.length === 0)
+    if (completedTodayTasks === 0)
       return false;
     return true;
   }
