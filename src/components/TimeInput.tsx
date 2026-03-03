@@ -40,7 +40,12 @@ export default function TimePicker({
           onPress={() => setShowTime(true)}
         >
           <Pencil size={16} color={getAppColors(colorBlindMode, isDarkMode).primary} style={styles.icon} />
-          <Text style={[time ? styles.dateText : styles.datePlaceholder,{paddingHorizontal:4}]}>
+          <Text
+            style={[
+              time ? styles.dateText : styles.datePlaceholder,
+              { paddingHorizontal: 4, color: time ? getAppColors(colorBlindMode, isDarkMode).primary : getAppColors(colorBlindMode, isDarkMode).placeholder }
+            ]}
+          >
             {formatDate(time)}
           </Text>
         </TouchableOpacity>
@@ -48,7 +53,8 @@ export default function TimePicker({
           isVisible={showTime}
           mode="time"
           display="spinner"
-          themeVariant="light"
+          isDarkModeEnabled={isDarkMode}
+          themeVariant={isDarkMode ? "dark" : "light"}
           date={time || new Date()}
           minimumDate={new Date()}
           onConfirm={(date) => {

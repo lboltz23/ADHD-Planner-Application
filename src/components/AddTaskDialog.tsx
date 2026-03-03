@@ -186,7 +186,7 @@ export default function AddTaskDialog({
               <View style={styles.section}>
                 <TitleInput value={taskTitle} onChange={handleInputChange} />
                 <NoteInput value={notes} onChange={setNotes} />
-                <TimePicker time={editedTime} onTimeChange={setEditedTime}/>
+                <TimePicker time={editedTime} onTimeChange={setEditedTime} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode} />
                 <Text style={styles.label}>Select Date: </Text>
                 {/* Calendar */}
                 <Calendar
@@ -209,7 +209,7 @@ export default function AddTaskDialog({
               <View style={styles.section}>
                 <TitleInput value={taskTitle} onChange={handleInputChange} />
                 <NoteInput value={notes} onChange={setNotes} />
-                <TimePicker time={editedTime} onTimeChange={setEditedTime}/>
+                <TimePicker time={editedTime} onTimeChange={setEditedTime} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode} />
 
                 <DateRangePicker
                   startDate={startDate}
@@ -246,7 +246,7 @@ export default function AddTaskDialog({
               <View style={styles.section}>
                 <TitleInput value={taskTitle} onChange={handleInputChange} />
                 <NoteInput value={notes} onChange={setNotes} />
-                <TimePicker time={editedTime} onTimeChange={setEditedTime}/>
+                <TimePicker time={editedTime} onTimeChange={setEditedTime} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode} />
 
                 <RelatedTaskInput
                   tasks={tasks}
@@ -274,7 +274,7 @@ export default function AddTaskDialog({
               <View style={styles.section}>
                 <TitleInput value={taskTitle} onChange={handleInputChange} />
                 <NoteInput value={notes} onChange={setNotes} />
-                <TimePicker time={editedTime} onTimeChange={setEditedTime}/>
+                <TimePicker time={editedTime} onTimeChange={setEditedTime} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode} />
 
                 <DateRangePicker
                   startDate={startDate}

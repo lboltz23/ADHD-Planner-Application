@@ -200,6 +200,7 @@ export function TaskCard({
         onDelete={onDelete}
         onToggle={onToggle}
         colorBlindMode={colorBlindMode}
+        isDarkMode={isDark}
       />
     </>
   );
