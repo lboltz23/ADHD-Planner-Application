@@ -27,7 +27,7 @@ interface DashboardProps {
   tasks: Task[];
   onAddTask: (params: CreateTaskParams) => void;
   onToggleTask: (id: string) => void;
-  onEditTask: (id: string, fields: { title?: string; due_date?: Date; notes?: string }) => void;
+  onEditTask: (id: string, fields: { title?: string; due_date?: Date; notes?: string; parent_id?: string; start_date?: Date; end_date?: Date; recurrence_interval?: number; days_selected?: Weekday[] }) => void;
   onDeleteTask: (id: string) => void;
   settings: SettingsData;
   onTriggerConfetti?: () => void;
@@ -610,7 +610,6 @@ export function Dashboard({
                     onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
                     showTime={true}
-                    isDarkMode={isDark}
                   />
                 ))}
               </View>
@@ -634,7 +633,6 @@ export function Dashboard({
                     colorBlindMode={settings.colorBlindMode}
                     showDate={true}
                     showTime={true}
-                    isDarkMode={isDark}
                   />
                 ))}
               </View>
@@ -656,7 +654,6 @@ export function Dashboard({
                     onUpdate={onEditTask}
                     onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
-                    isDarkMode={isDark}
                   />
                 ))}
               </View>
@@ -678,8 +675,6 @@ export function Dashboard({
                     onUpdate={onEditTask}
                     onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
-                    showDate={true}
-                    isDarkMode={isDark}
                   />
                 ))}
               </View>
@@ -699,7 +694,6 @@ export function Dashboard({
           initialTitle={newTaskTitle}
           colorBlindMode={settings.colorBlindMode}
           tasks={tasks}
-          isDarkMode={isDark}
         />
 
 
