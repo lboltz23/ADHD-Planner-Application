@@ -2,18 +2,20 @@ import React, { useState, useEffect } from "react";
 import { View, Text, Modal, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
 import { getTaskTypeColor } from "./taskColors";
 import { Repeat, CheckSquare, Link as LinkIcon, Hourglass, X } from "lucide-react-native";
-
+import { getAppColors } from "../constants/theme";
 
 export interface EditTaskProps {
   isOpen: boolean;
   onClose: () => void;
   colorBlindMode?: boolean;
+  isDarkMode?: boolean;
 }
 
 export default function EditTask({
   isOpen,
   onClose,
   colorBlindMode = false,
+  isDarkMode = false,
 }: EditTaskProps) {
 
   return (
@@ -21,12 +23,12 @@ export default function EditTask({
       <Modal visible={isOpen} transparent animationType="fade">
         <View style={styles.overlay}>
           <ScrollView contentContainerStyle={styles.scrollContainer}>
-            <View style={styles.dialog}>
+            <View style={[styles.dialog, { backgroundColor: getAppColors(colorBlindMode, isDarkMode).inputBackground }]}>
               {/* Header */}
               <View style={styles.header}>
-                <Text style={styles.title}>What Are the Different Task Types?</Text>
+                <Text style={[styles.title, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>What Are the Different Task Types?</Text>
                 <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                  <X size={24} color="#6b5b7f" />
+                  <X size={24} color={getAppColors(colorBlindMode, isDarkMode).primary} />
                 </TouchableOpacity>
               </View>
 
@@ -34,9 +36,9 @@ export default function EditTask({
               <View style={[styles.section, { borderColor: getTaskTypeColor("basic", colorBlindMode) }]}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 }}>
                   <CheckSquare size={18} color={getTaskTypeColor("basic", colorBlindMode)} />
-                  <Text style={styles.label}>Basic</Text>
+                  <Text style={[styles.label, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Basic</Text>
                 </View>
-                <Text style={styles.description}>A one-time task with a due date.</Text>
+                <Text style={[styles.description, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>A one-time task with a due date.</Text>
                 <Text style={styles.example}>e.g. "Buy groceries on Friday"</Text>
               </View>
 
@@ -44,9 +46,9 @@ export default function EditTask({
               <View style={[styles.section, { borderColor: getTaskTypeColor("routine", colorBlindMode) }]}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 }}>
                   <Repeat size={18} color={getTaskTypeColor("routine", colorBlindMode)} />
-                  <Text style={styles.label}>Routine</Text>
+                  <Text style={[styles.label, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Routine</Text>
                 </View>
-                <Text style={styles.description}>Repeats on selected weekdays within a date range.</Text>
+                <Text style={[styles.description, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Repeats on selected weekdays within a date range.</Text>
                 <Text style={styles.example}>e.g. "Go to gym every Mon / Wed / Fri"</Text>
               </View>
 
@@ -54,9 +56,9 @@ export default function EditTask({
               <View style={[styles.section, { borderColor: getTaskTypeColor("long_interval", colorBlindMode) }]}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 }}>
                   <Hourglass size={18} color={getTaskTypeColor("long_interval", colorBlindMode)} />
-                  <Text style={styles.label}>Long Interval</Text>
+                  <Text style={[styles.label, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Long Interval</Text>
                 </View>
-                <Text style={styles.description}>Repeats at a monthly interval (e.g. every 3 months).</Text>
+                <Text style={[styles.description, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Repeats at a monthly interval (e.g. every 3 months).</Text>
                 <Text style={styles.example}>e.g. "Change air filter every 3 months"</Text>
               </View>
 
@@ -64,9 +66,9 @@ export default function EditTask({
               <View style={[styles.section, { borderColor: getTaskTypeColor("related", colorBlindMode) }]}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 }}>
                   <LinkIcon size={18} color={getTaskTypeColor("related", colorBlindMode)} />
-                  <Text style={styles.label}>Related</Text>
+                  <Text style={[styles.label, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Related</Text>
                 </View>
-                <Text style={styles.description}>A one-time task linked to a parent task, for breaking big tasks into smaller steps.</Text>
+                <Text style={[styles.description, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>A one-time task linked to a parent task, for breaking big tasks into smaller steps.</Text>
                 <Text style={styles.example}>e.g. "Buy paint" linked to "Renovate bedroom"</Text>
               </View>
 
@@ -91,7 +93,6 @@ const styles = StyleSheet.create({
     paddingVertical: 40,
   },
   dialog: {
-    backgroundColor: "white",
     borderRadius: 16,
     padding: 20,
     width: "100%",
