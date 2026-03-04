@@ -10,7 +10,6 @@ import DateRangePicker from "./DateRangePicker";
 import RelatedTaskInput from "./RelatedTask";
 import NoteInput from "./NoteInput";
 import TimePicker from "./TimeInput";
-import { useColorScheme } from '../hooks/use-color-scheme'
 import { getAppColors,AppThemeColors, resolveThemePreference } from "../constants/theme";
 
 const ALL_WEEKDAYS: Weekday[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -31,6 +30,7 @@ interface AddTaskDialogProps {
   initialTaskType: TaskType;
   initialTitle?: string;
   colorBlindMode?: boolean;
+  isDarkMode?: boolean
   tasks?: Task[];
 }
 
@@ -187,7 +187,7 @@ export default function AddTaskDialog({
                 <TitleInput value={taskTitle} onChange={handleInputChange} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode} />
                 <NoteInput value={notes} onChange={setNotes} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode} />
                 <TimePicker time={editedTime} onTimeChange={setEditedTime}/>
-                <Text style={[styles.label, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Select Date *</Text>
+                <Text style={[styles.label, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Select Date: </Text>
                 {/* Calendar */}
                 <Calendar
                   onDayPress={(day) => setSelectedDate(day.dateString)}

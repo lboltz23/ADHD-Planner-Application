@@ -298,7 +298,7 @@ export function Dashboard({
       padding: 16,
       marginBottom: 20,
       borderWidth: 1,
-      borderColor: getAppColors(settings.colorBlindMode).border,
+      borderColor: getAppColors(settings.colorBlindMode, isDark).border,
     },
     progressLabel: {
       fontSize: 16,
@@ -357,12 +357,12 @@ export function Dashboard({
     sectionTitle: {
       fontSize: 18,
       fontWeight: '600',
-      color: getAppColors(settings.colorBlindMode).primary,
+      color: getAppColors(settings.colorBlindMode, isDark).primary,
       marginBottom: 12,
     },
     noTasksMessage: {
       textAlign: 'center',
-      color: getAppColors(settings.colorBlindMode).placeholder,
+      color: getAppColors(settings.colorBlindMode, isDark).placeholder,
       fontSize: 14,
       paddingVertical: 16,
     },
