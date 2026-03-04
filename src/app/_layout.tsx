@@ -35,7 +35,7 @@ function RootLayoutContent() {
 
 export default function Layout() {
   return (
-    <SafeAreaProvider>
+    <SafeAreaProvider >
       <AppProvider>
         <RootLayoutContent />
       </AppProvider>
