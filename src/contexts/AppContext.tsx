@@ -685,7 +685,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (fields.time !== undefined) {
           setTasks(prev => prev.map(t => {
             if (t.parent_task_id === id && t.id.includes('_') && /\d{4}-\d{2}-\d{2}$/.test(t.id)) {
-              return { ...t, notes: fields.notes! };
+              return { ...t, time: fields.time! };
             }
             return t;
           }));
