@@ -430,24 +430,6 @@ export function Dashboard({
             </Text>
           </View>
           <View style={styles.headerRight}>
-            <View style={styles.streakBadge}>
-              <Text style={styles.streakBadgeText}>{streakCount}</Text>
-              <Text style={styles.streakBadgeLabel}>day</Text>
-            </View>
-            <TouchableOpacity
-              style={styles.iconButton}
-              onPress={onNavigateToSettings}
-            >
-              <Settings size={22} color= {settings.colorBlindMode? "#757575" : "#b8a4d9"} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.mainButton}
-              onPress={onNavigateToCalendar}
-            >
-              {/* Calendar Icon */}
-              <Calendar size={18} color="#ffffff" />
-              <Text style={styles.mainButtonText}>Calendar</Text>
-            </TouchableOpacity>
             <View style={styles.headerButtons}>
               <TouchableOpacity
                 style={styles.iconButton}

@@ -10,6 +10,8 @@ interface DateRangePickerProps {
   onEndDateChange: (date: Date) => void;
   startLabel?: string;
   endLabel?: string;
+  colorBlindMode?: boolean;
+  isDarkMode?: boolean;
 }
 
 export default function DateRangePicker({
