@@ -87,19 +87,18 @@ export function Dashboard({
     return tasks.filter((task) => {
       if (task.is_template) return false;
 
-      const taskDate = combineAsDate(task.due_date,task.time || new Date());
-
-      const isSameDay =
+      const taskDate = new Date(task.due_date);
+      return (
         taskDate.getFullYear() === now.getFullYear() &&
         taskDate.getMonth() === now.getMonth() &&
-        taskDate.getDate() === now.getDate();
-
-      now.setSeconds(0)
-      const isFutureTime = taskDate >= now;
-      return isSameDay && isFutureTime;
-    })  .sort((a, b) => new Date(combineAsDate(a.due_date,a.time || new Date())).getTime() - 
-                      new Date(combineAsDate(b.due_date,b.time || new Date())).getTime());
-  }, [tasks,taskRefresh]);
+        taskDate.getDate() === now.getDate()
+      );
+    }).sort((a, b) => {
+      const aTime = a.time ? combineAsDate(a.due_date, a.time).getTime() : new Date(a.due_date).setHours(0, 0, 0, 0);
+      const bTime = b.time ? combineAsDate(b.due_date, b.time).getTime() : new Date(b.due_date).setHours(0, 0, 0, 0);
+      return aTime - bTime;
+    });
+  }, [tasks, taskRefresh]);
 
   // Filter tasks from props for upcoming (next 5 tasks after today)
   const upcomingTasks = useMemo(() => {
