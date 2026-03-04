@@ -6,6 +6,7 @@ import { ArrowLeft, Settings, ChevronDown, Plus } from 'lucide-react-native';
 import { TaskCard } from './TaskCard';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Task } from '../types';
+import { Task } from '../types';
 import { SettingsData } from './Settings';
 import { ProgressCircle } from './ProgressCircle';
 import { AppThemeColors, resolveThemePreference, ThemeColors } from '../constants/theme';
@@ -276,9 +277,10 @@ export function WeeklyView({ tasks, onToggleTask, onEditTask, onDeleteTask, colo
                         onUpdate={onEditTask}
                         onDelete={onDeleteTask}
                         colorBlindMode={!!colorBlindMode}
-                        isDarkMode={isDark}
                         showTime={true}
                         isDarkMode={isDark}
+                        
+                        
                       />
                     ))
                   )}

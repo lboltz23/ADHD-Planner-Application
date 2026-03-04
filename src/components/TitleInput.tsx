@@ -46,6 +46,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 20,
+    fontSize: 20,
     fontWeight: "600",
     marginBottom: 4,
     textAlign: "left",
@@ -60,6 +61,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   icon: {
+    marginLeft: 8,
     marginLeft: 8,
   },
 });

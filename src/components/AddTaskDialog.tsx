@@ -10,6 +10,7 @@ import DateRangePicker from "./DateRangePicker";
 import RelatedTaskInput from "./RelatedTask";
 import NoteInput from "./NoteInput";
 import { getAppColors, AppThemeColors, resolveThemePreference } from "../constants/theme";
+import TimePicker from "./TimeInput";
 import { useColorScheme } from '../hooks/use-color-scheme';
 import TimePicker from "./TimeInput";
 

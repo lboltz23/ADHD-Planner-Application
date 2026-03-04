@@ -1,16 +1,29 @@
 // src/contexts/AppContext.tsx
 import React, { createContext, useContext, useState, useCallback, useMemo, useEffect, ReactNode } from 'react';
 import { Task, CreateTaskParams, Weekday, UpdateTaskParams, toLocalDateString, toLocalTimeString, combineAsDate } from '../types';
+import { Task, CreateTaskParams, Weekday, UpdateTaskParams, toLocalDateString, toLocalTimeString, combineAsDate } from '../types';
 import { SettingsData } from '../components/Settings';
 import { supabase } from '@/lib/supabaseClient';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
-import { preventAutoHideAsync } from 'expo-router/build/utils/splash';
 
 // Parse a date string from Supabase as a LOCAL date (avoids UTC timezone shift)
 function parseLocalDate(dateStr: string): Date {
   const [y, m, d] = dateStr.split('T')[0].split('-').map(Number);
   return new Date(y, m - 1, d);
+}
+
+function parseLocalTime(dateStr: string): Date {
+  const timePart = dateStr.split('T')[1];
+
+  if (!timePart) {
+    throw new Error("No time found in date string");
+  }
+
+  const cleanTime = timePart.split('.')[0]; // remove milliseconds if present
+  const [h, m, s] = cleanTime.split(':').map(Number);
+
+  return new Date(1970, 0, 1, h || 0, m || 0, s || 0);
 }
 
 function parseLocalTime(dateStr: string): Date {
@@ -43,6 +56,7 @@ interface AppContextType {
   settings: SettingsData;
   addTask: (params: CreateTaskParams) => void;
   toggleTask: (id: string) => void;
+  updateTask: (id: string, fields: { title?: string; due_date?: Date; notes?: string; time?: Date; parent_id?: string; start_date?: Date; end_date?: Date; recurrence_interval?: number; days_selected?: Weekday[] }) => void;
   updateTask: (id: string, fields: { title?: string; due_date?: Date; notes?: string; time?: Date; parent_id?: string; start_date?: Date; end_date?: Date; recurrence_interval?: number; days_selected?: Weekday[] }) => void;
   deleteTask: (id: string) => void;
   updateSettings: (newSettings: SettingsData) => void;
@@ -79,11 +93,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!template.start_date) return [];
     const startDate = new Date(template.start_date);
     // If no end date, generate a rolling 3-month window from today
+    const startDate = new Date(template.start_date);
+    // If no end date, generate a rolling 3-month window from today
     const endDate = template.end_date
+      ? new Date(template.end_date)
       ? new Date(template.end_date)
       : new Date(new Date().getFullYear(), new Date().getMonth() + 3, new Date().getDate());
     const daysSelected = template.days_selected as Weekday[] | undefined;
     const intervalMonths = template.recurrence_interval as number | undefined;
+    const createdAt = new Date(template.created_at);
+    const updatedAt = new Date(template.updated_at);
     const createdAt = new Date(template.created_at);
     const updatedAt = new Date(template.updated_at);
     const completedDates: string[] = template.completed_dates || [];
@@ -92,6 +111,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const scheduledDays = generateScheduledDays(startDate, endDate, daysSelected, intervalMonths);
 
     return scheduledDays
+      .filter((scheduledDate) => !excludedDates.includes(toLocalDateString(scheduledDate)))
       .filter((scheduledDate) => !excludedDates.includes(toLocalDateString(scheduledDate)))
       .map((scheduledDate) => {
       const dateStr = toLocalDateString(scheduledDate);
@@ -102,6 +122,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         user_id: template.user_id,
         title: template.title,
         due_date: scheduledDate,
+        time: scheduledDate,
         time: scheduledDate,
         completed: isCompleted,
         type: template.type as Task['type'],
@@ -146,6 +167,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 overridesByTemplate.set(row.parent_task_id, new Map());
               }
               const dateStr = row.due_date ? toLocalDateString(new Date(row.due_date)) : '';
+              const dateStr = row.due_date ? toLocalDateString(new Date(row.due_date)) : '';
               overridesByTemplate.get(row.parent_task_id)!.set(dateStr, row);
             }
           });
@@ -156,6 +178,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
             // Check if this is a recurring template
             if (row.is_template && row.start_date && row.end_date) {
+            if (row.is_template && row.start_date && row.end_date) {
               // Add the template itself for the Repeating view
               allTasks.push({
                 id: row.id,
@@ -165,12 +188,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 updated_at: new Date(row.updated_at),
                 due_date: parseLocalDate(row.due_date),
                 time:parseLocalTime(row.due_date),
+                time:parseLocalTime(row.due_date),
                 completed: false,
                 type: row.type as Task['type'],
                 notes: row.notes,
                 is_template: true,
                 days_selected: row.days_selected,
                 recurrence_interval: row.recurrence_interval,
+                start_date: new Date(row.start_date),
+                end_date: new Date(row.end_date),
                 start_date: new Date(row.start_date),
                 end_date: new Date(row.end_date),
               });
@@ -211,6 +237,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 created_at: new Date(row.created_at),
                 updated_at: new Date(row.updated_at),
                 due_date: parseLocalDate(row.due_date),
+                time:parseLocalTime(row.due_date),
                 time:parseLocalTime(row.due_date),
                 completed: row.completed || false,
                 type: row.type as Task['type'],
@@ -263,8 +290,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
     } else {
       // Default to daily if nothing specified
+      // Default to daily if nothing specified
       while (current <= end) {
         scheduledDays.push(new Date(current));
+        current.setDate(current.getDate() + 1);
         current.setDate(current.getDate() + 1);
       }
     }
@@ -273,6 +302,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const addTask = useCallback(async (params: CreateTaskParams) => {
+    const { title, time, due_date, type, days_selected, recurrence_interval, notes, start_date, end_date, parent_task_id } = params;
     const { title, time, due_date, type, days_selected, recurrence_interval, notes, start_date, end_date, parent_task_id } = params;
     const baseId = uuidv4();
     const now = new Date();
@@ -292,6 +322,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         days_selected: days_selected,
         recurrence_interval: recurrence_interval,
         due_date: toLocalDateString(start_date || due_date) + toLocalTimeString(time || due_date),
+        due_date: toLocalDateString(start_date || due_date) + toLocalTimeString(time || due_date),
         completed: false,
       };
 
@@ -304,6 +335,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           id: baseId,
           user_id: DEFAULT_USER_ID,
           title,
+          time: time || due_date,
           time: time || due_date,
           due_date: start_date || due_date,
           completed: false,
@@ -332,6 +364,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         user_id: DEFAULT_USER_ID,
         title,
         time:time,
+        time:time,
         due_date: due_date,
         completed: false,
         type,
@@ -346,6 +379,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.from('tasks').insert({
         id: newTask.id,
         title: newTask.title,
+        due_date: toLocalDateString(newTask.due_date) + toLocalTimeString(newTask.time || new Date()),
         due_date: toLocalDateString(newTask.due_date) + toLocalTimeString(newTask.time || new Date()),
         completed: newTask.completed,
         type: newTask.type,
@@ -459,11 +493,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const newTitle = fields.title ?? task.title;
     const newDate = fields.due_date ?? task.due_date;
     const newTime = fields.time ?? task.time;
+    const newTime = fields.time ?? task.time;
     const newNotes = fields.notes ?? task.notes;
 
     // Build the Supabase update payload (only changed fields)
     const supabaseUpdate: Record<string, any> = { updated_at: new Date().toISOString() };
     if (fields.title !== undefined) supabaseUpdate.title = fields.title;
+    if (fields.due_date !== undefined || fields.time !== undefined) {
+        const baseDate = fields.due_date ?? task.due_date;
+        const baseTime = fields.time ?? task.time ?? task.due_date;
+
+        supabaseUpdate.due_date =
+          toLocalDateString(baseDate) +
+          toLocalTimeString(baseTime);
+      }
     if (fields.due_date !== undefined || fields.time !== undefined) {
         const baseDate = fields.due_date ?? task.due_date;
         const baseTime = fields.time ?? task.time ?? task.due_date;
@@ -513,6 +556,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         type: task.type,
         due_date: toLocalDateString(newDate),
         time: toLocalTimeString(newTime || newDate),
+        time: toLocalTimeString(newTime || newDate),
         completed: task.completed,
         user_id: task.user_id,
         is_template: false,
@@ -524,6 +568,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error('Error inserting recurring instance override:', error);
+        // Revert
         // Revert
         setTasks(prev => prev.map(t =>
           t.id === id ? { ...t, title: task.title, due_date: task.due_date, notes: task.notes } : t
@@ -565,6 +610,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      // Propagate title change to in-memory instances
+      if (fields.title !== undefined) {
+        setTasks(prev => prev.map(t => {
+          if (t.parent_task_id === id && t.id.includes('_') && /\d{4}-\d{2}-\d{2}$/.test(t.id)) {
+            return { ...t, title: fields.title! };
+          }
+          return t;
+        }));
       // Propagate title change to in-memory instances
       if (fields.title !== undefined) {
         setTasks(prev => prev.map(t => {
@@ -658,6 +711,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             updated_at: new Date(row.updated_at),
             due_date: dueDate,
             time: parseLocalTime(row.due_date),
+            time: parseLocalTime(row.due_date),
             completed: row.completed || false,
             type: row.type as Task['type'],
             notes: row.notes,
@@ -687,6 +741,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
               created_at: new Date(override.created_at),
               updated_at: new Date(override.updated_at),
               due_date: parseLocalDate(override.due_date),
+              time: parseLocalTime(override.due_date),
               time: parseLocalTime(override.due_date),
               completed: override.completed || false,
               type: override.type as Task['type'],
