@@ -39,28 +39,28 @@ export function TaskTypeSelector({
           label: "Basic",
           icon: CheckSquare,
           color: getTaskTypeColor("basic", true),
-          bgColor: isDark ? "#3a2d1f" : "#f5f5f5",
+          bgColor: isDark ? colors.surface : "#f5f5f5",
         },
         {
           value: "routine",
           label: "Routine",
           icon: Repeat,
           color: getTaskTypeColor("routine", true),
-          bgColor: isDark ? "#1f2d3a" : "#f5f5f5",
+          bgColor: isDark ? colors.surface : "#f5f5f5",
         },
         {
           value: "related",
           label: "Related",
           icon: LinkIcon,
           color: getTaskTypeColor("related", true),
-          bgColor: isDark ? "#1f3a35" : "#f5f5f5",
+          bgColor: isDark ? colors.surface : "#f5f5f5",
         },
-        {
+        {          
           value: "long_interval",
           label: "Long-Interval",
           icon: Hourglass,
           color: getTaskTypeColor("long_interval", true),
-          bgColor: isDark ? "#3a1f2d" : "#f5f5f5",
+          bgColor: isDark ? colors.surface : "#f5f5f5",
         }
       ];
     }

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useMemo, useCallback} from 'react';
+import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -19,7 +19,6 @@ import InfoPopup from './Info';
 import { AppThemeColors, resolveThemePreference } from '../constants/theme';
 import { useColorScheme } from '../hooks/use-color-scheme';
 import { useFocusEffect } from 'expo-router';
-
 // Dashboard Props
 interface DashboardProps {
   onNavigateToCalendar: () => void;
@@ -28,7 +27,7 @@ interface DashboardProps {
   tasks: Task[];
   onAddTask: (params: CreateTaskParams) => void;
   onToggleTask: (id: string) => void;
-  onEditTask: (id: string, fields: { title?: string; due_date?: Date; notes?: string }) => void;
+  onEditTask: (id: string, fields: { title?: string; due_date?: Date; notes?: string; parent_id?: string; start_date?: Date; end_date?: Date; recurrence_interval?: number; days_selected?: Weekday[] }) => void;
   onDeleteTask: (id: string) => void;
   settings: SettingsData;
   onTriggerConfetti?: () => void;
@@ -54,6 +53,7 @@ export function Dashboard({
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [selectedType, setSelectedType] = useState<TaskType>('basic');
   const [taskView, setTaskView] = useState<'today' | 'upcoming' | 'repeating' | 'open'>('today');
+  const [taskRefresh, setTaskRefresh] = useState(0);
   const [showAddTaskDialog, setShowAddTaskDialog] = useState(false);
   const [taskRefrsh, setTaskRefresh] = useState(0);
   const [showInfo, setShowInfo] = useState(false);
@@ -72,14 +72,15 @@ export function Dashboard({
       setTaskRefresh(cur => cur +1);
     },60000);
     return () => clearInterval(interval)
-  },[])
 
-  // Refresh tasks when closing creator moda;
+    },[])
+  
+
   useEffect(() => {
     if(!showAddTaskDialog){
-      setTaskRefresh(cur=>cur+1)
+      setTaskRefresh(cur => cur + 1); // Refresh task lists when add task dialog is closed (after adding a task)
     }
-  },[showAddTaskDialog])
+  }, [showAddTaskDialog]);
   // Filter tasks from props for today
   const todayTasks = useMemo(() => {
     const now = new Date();
@@ -94,13 +95,12 @@ export function Dashboard({
         taskDate.getMonth() === now.getMonth() &&
         taskDate.getDate() === now.getDate();
 
-      now.setSeconds(0);
+      now.setSeconds(0)
       const isFutureTime = taskDate >= now;
-      
       return isSameDay && isFutureTime;
     })  .sort((a, b) => new Date(combineAsDate(a.due_date,a.time || new Date())).getTime() - 
                       new Date(combineAsDate(b.due_date,b.time || new Date())).getTime());
-  }, [tasks,taskRefrsh]);
+  }, [tasks,taskRefresh]);
 
   // Filter tasks from props for upcoming (next 5 tasks after today)
   const upcomingTasks = useMemo(() => {
@@ -128,14 +128,14 @@ export function Dashboard({
     return tasks
       .filter((task) => {
         if (task.is_template || task.type === 'routine' ||  task.type === 'long_interval') return false;
-        const taskDate = combineAsDate(task.due_date,task.time || new Date());
-        today.setSeconds(0);
+        const taskDate =combineAsDate(task.due_date,task.time || new Date());
+        today.setSeconds(0)
         return taskDate < today;
       })
-      .sort((a, b) => new Date(combineAsDate(b.due_date,b.time || new Date())).getTime() - 
-                      new Date(combineAsDate(a.due_date,a.time || new Date())).getTime())
+      .sort((a, b) => new Date(combineAsDate(a.due_date,a.time || new Date())).getTime() - 
+                      new Date(combineAsDate(b.due_date,b.time || new Date())).getTime())      
       .slice(0, 7);
-  }, [tasks,taskRefrsh]);
+  }, [tasks, taskRefresh]);
  
   const handleAddTask = () => {
     if (newTaskTitle.trim() && !showAddTaskDialog) {
@@ -513,6 +513,11 @@ export function Dashboard({
               onChangeText={setNewTaskTitle}
               onSubmitEditing={handleAddTask}
               placeholderTextColor={colors.textMuted}
+
+              autoCapitalize="none"
+              textContentType="none"
+              autoComplete="off"
+              importantForAutofill="no"
             />
             <TouchableOpacity
               style={styles.addButton}
@@ -602,12 +607,12 @@ export function Dashboard({
                   <TaskCard
                     key={task.id}
                     task={task}
+                    tasks={tasks}
                     onToggle={onToggleTask}
                     onUpdate={onEditTask}
                     onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
                     showTime={true}
-                    isDarkMode={isDark}
                   />
                 ))}
               </View>
@@ -624,13 +629,13 @@ export function Dashboard({
                   <TaskCard
                     key={task.id}
                     task={task}
+                    tasks={tasks}
                     onToggle={onToggleTask}
                     onUpdate={onEditTask}
                     onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
                     showDate={true}
                     showTime={true}
-                    isDarkMode={isDark}
                   />
                 ))}
               </View>
@@ -647,11 +652,11 @@ export function Dashboard({
                   <TaskCard
                     key={task.id}
                     task={task}
+                    tasks={tasks}
                     onToggle={onToggleTask}
                     onUpdate={onEditTask}
                     onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
-                    isDarkMode={isDark}
                   />
                 ))}
               </View>
@@ -668,12 +673,11 @@ export function Dashboard({
                   <TaskCard
                     key={task.id}
                     task={task}
+                    tasks={tasks}
                     onToggle={onToggleTask}
                     onUpdate={onEditTask}
                     onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
-                    showDate={true}
-                    isDarkMode={isDark}
                   />
                 ))}
               </View>
@@ -693,7 +697,6 @@ export function Dashboard({
           initialTitle={newTaskTitle}
           colorBlindMode={settings.colorBlindMode}
           tasks={tasks}
-          isDarkMode={isDark}
         />
 
 

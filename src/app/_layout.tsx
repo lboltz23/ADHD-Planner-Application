@@ -35,6 +35,9 @@ function RootLayoutContent() {
         <Stack.Screen name="CalendarView" />
         <Stack.Screen name="OneThingMode" />
         <Stack.Screen name="Settings" />
+        <Stack.Screen name="login" />
+        <Stack.Screen name="signup" />
+        <Stack.Screen name ="ResetPass"/>
       </Stack>
       <ConfettiOverlay trigger={confettiTrigger} />
     </View>
@@ -43,7 +46,7 @@ function RootLayoutContent() {
 
 export default function Layout() {
   return (
-    <SafeAreaProvider>
+    <SafeAreaProvider >
       <AppProvider>
         <RootLayoutContent />
       </AppProvider>
