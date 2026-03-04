@@ -151,7 +151,7 @@ export default function EditTask({
               <View style={[styles.section, { borderColor: getAppColors(colorBlindMode, isDarkMode).border }]}>
                 <TitleInput value={editedTitle} onChange={setEditedTitle} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode} />
                 <NoteInput value = {editedNotes} onChange={setEditedNotes} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode} />
-                <TimePicker time = {editedTime || new Date()} onTimeChange={setEditedTime}/>
+                <TimePicker time = {editedTime || new Date()} onTimeChange={setEditedTime} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode}/>
                 {task.type === "related" ? (
                     <RelatedTaskInput
                       tasks={tasks}
