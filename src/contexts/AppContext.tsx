@@ -5,7 +5,6 @@ import { SettingsData } from '../components/Settings';
 import { supabase } from '@/lib/supabaseClient';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
-import { preventAutoHideAsync } from 'expo-router/build/utils/splash';
 import { User } from '@supabase/supabase-js';
 import { router } from 'expo-router';
 import * as Linking from 'expo-linking'
@@ -50,7 +49,6 @@ interface AppContextType {
   login: () => void;
   confettiTrigger: number;
   triggerConfetti: () => void;
-  fetchTasksForMonth: (year: number, month: number) => Promise<Task[]>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -684,6 +682,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
             return t;
           }));
         }
+        if (fields.time !== undefined) {
+          setTasks(prev => prev.map(t => {
+            if (t.parent_task_id === id && t.id.includes('_') && /\d{4}-\d{2}-\d{2}$/.test(t.id)) {
+              return { ...t, notes: fields.notes! };
+            }
+            return t;
+          }));
+        }
       }
     } else {
       // Regular non-recurring task — update directly
@@ -705,6 +711,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setConfettiTrigger(prev => prev + 1);
   }, []);
 
+  
   const deleteTask = useCallback(async (id: string) => {
     const task = tasks.find(t => t.id === id);
     if (!task) return;
