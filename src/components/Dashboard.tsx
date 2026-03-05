@@ -50,7 +50,6 @@ export function Dashboard({
   const colors = AppThemeColors[resolvedTheme];
   const isDark = resolvedTheme === 'dark';
 
-  const [newTaskTitle, setNewTaskTitle] = useState('');
   const [selectedType, setSelectedType] = useState<TaskType>('basic');
   const [taskView, setTaskView] = useState<'today' | 'upcoming' | 'repeating' | 'open'>('today');
   const [showAddTaskDialog, setShowAddTaskDialog] = useState(false);
@@ -103,14 +102,13 @@ export function Dashboard({
   }, [tasks]);
  
   const handleAddTask = () => {
-    if (newTaskTitle.trim() && !showAddTaskDialog) {
+    if (!showAddTaskDialog) {
       setShowAddTaskDialog(true);
     }
   };
 
   const handleCreateTask = (params: CreateTaskParams) => {
     onAddTask(params);
-    setNewTaskTitle('');  // Clear the input field
     setShowAddTaskDialog(false);
   };
 
@@ -120,7 +118,7 @@ export function Dashboard({
   };
 
   const handleProgressBar = () => {
-    if (completedTodayTasks.length === 0)
+    if (completedTodayTasks === 0)
       return false;
     return true;
   }
@@ -469,16 +467,6 @@ export function Dashboard({
               colorBlindMode={settings.colorBlindMode}
             />
           </View>
-
-          <View style={styles.taskInputContainer}>
-            <TextInput
-              style={styles.taskInput}
-              placeholder="Add a new task..."
-              value={newTaskTitle}
-              onChangeText={setNewTaskTitle}
-              onSubmitEditing={handleAddTask}
-              placeholderTextColor={colors.textMuted}
-            />
             <TouchableOpacity
               style={styles.addButton}
               onPress={handleAddTask}
@@ -487,7 +475,7 @@ export function Dashboard({
               <Text style={{ fontSize: 24, color: '#ffffff' }}>+</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        
             
         {/* Task View Filter Buttons */}
         <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 8, marginBottom: 20 }}>
@@ -657,7 +645,6 @@ export function Dashboard({
           onClose={handleCloseDialog}
           onAddTask={handleCreateTask}
           initialTaskType={selectedType}
-          initialTitle={newTaskTitle}
           colorBlindMode={settings.colorBlindMode}
           tasks={tasks}
           isDarkMode={isDark}
