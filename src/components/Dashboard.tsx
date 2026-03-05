@@ -120,7 +120,7 @@ export function Dashboard({
   };
 
   const handleProgressBar = () => {
-    if (completedTodayTasks.length === 0)
+    if (completedTodayTasks === 0)
       return false;
     return true;
   }
