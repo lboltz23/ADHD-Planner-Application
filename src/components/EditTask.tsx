@@ -141,9 +141,9 @@ export default function EditTask({
               {/* Header */}
               <View style={styles.header}>
                 <View style={[styles.typeIndicator, { backgroundColor: typeColor }]} />
-                <Text style={styles.title}>Edit Task</Text>
+                <Text style={[styles.title, { color: isDarkMode ? "white" : "#6b5b7f" }]}>Edit Task</Text>
                 <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                  <X size={24} color="#6b5b7f" />
+                  <X size={24} color={isDarkMode ? "white" : "#6b5b7f"} />
                 </TouchableOpacity>
               </View>
 

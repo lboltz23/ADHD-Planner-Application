@@ -52,7 +52,7 @@ export default function DateRangePicker({
           isVisible={showStartPicker}
           mode="date"
           display="spinner"
-          themeVariant="light"
+          themeVariant={isDarkMode ? "dark" : "light"}
           date={startDate || new Date()}
           minimumDate={new Date()}
           onConfirm={(date) => {
@@ -76,7 +76,7 @@ export default function DateRangePicker({
           isVisible={showEndPicker}
           mode="date"
           display="spinner"
-          themeVariant="light"
+          themeVariant={isDarkMode ? "dark" : "light"}
           date={endDate || startDate || new Date()}
           minimumDate={startDate || new Date()}
           onConfirm={(date) => {
