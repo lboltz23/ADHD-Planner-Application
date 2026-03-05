@@ -171,7 +171,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             if (!row.is_template && row.parent_task_id && row.type !== 'related') return;
 
             // Check if this is a recurring template
-            if (row.is_template && row.start_date && row.end_date) {
+            if (row.is_template && row.start_date) {
               // Add the template itself for the Repeating view
               allTasks.push({
                 id: row.id,
