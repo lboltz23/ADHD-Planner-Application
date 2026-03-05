@@ -13,6 +13,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
+  Vibration,
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -162,6 +163,7 @@ export function OneThingMode({
 
   const showTimerAlert = (message: string) => {
     setAlertMessage(message);
+    Vibration.vibrate([500, 300, 200, 100, 500]);
     setShowAlertPopup(true);
     playSound();
 
