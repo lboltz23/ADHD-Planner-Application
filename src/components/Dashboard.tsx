@@ -307,7 +307,8 @@ export function Dashboard({
       color: colors.text,
     },
     addButton: {
-      backgroundColor: colors.accentSoft,
+      backgroundColor: settings.colorBlindMode
+        ? '#209ce5ff' : colors.accentSoft,
       borderRadius: 6,
       padding: 8,
       justifyContent: 'center',
@@ -472,7 +473,7 @@ export function Dashboard({
               onPress={handleAddTask}
               activeOpacity={0.9}
             >
-              <Text style={{ fontSize: 24, color: '#ffffff' }}>+</Text>
+              <Text style={{ fontSize:30,color: '#ffffff' }}>+</Text>
             </TouchableOpacity>
           </View>
         
