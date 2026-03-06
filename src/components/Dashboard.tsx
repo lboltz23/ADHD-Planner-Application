@@ -71,7 +71,6 @@ export function Dashboard({
       setTaskRefresh(cur => cur +1);
     },60000);
     return () => clearInterval(interval)
-
     },[])
   
 
@@ -88,11 +87,19 @@ export function Dashboard({
       if (task.is_template) return false;
 
       const taskDate = new Date(task.due_date);
-      return (
+      const isToday = (
         taskDate.getFullYear() === now.getFullYear() &&
         taskDate.getMonth() === now.getMonth() &&
         taskDate.getDate() === now.getDate()
       );
+      if (!isToday) return false;
+
+      // If a specific time is set and it has passed, it belongs in "open" instead
+      if (task.time) {
+        const taskDateTime = combineAsDate(task.due_date, task.time);
+        return taskDateTime >= now;
+      }
+      return true;
     }).sort((a, b) => {
       const aTime = a.time ? combineAsDate(a.due_date, a.time).getTime() : new Date(a.due_date).setHours(0, 0, 0, 0);
       const bTime = b.time ? combineAsDate(b.due_date, b.time).getTime() : new Date(b.due_date).setHours(0, 0, 0, 0);
@@ -120,14 +127,12 @@ export function Dashboard({
   }, [tasks, taskRefresh]);
 
   const openTasks = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const now = new Date();
     return tasks
       .filter((task) => {
         if (task.is_template || task.type === 'routine' ||  task.type === 'long_interval' || task.completed) return false;
-        const taskDate =combineAsDate(task.due_date,task.time || new Date());
-        today.setSeconds(0)
-        return taskDate < today;
+        const taskDate = combineAsDate(task.due_date, task.time || new Date());
+        return taskDate < now;
       })
       .sort((a, b) => new Date(combineAsDate(a.due_date,a.time || new Date())).getTime() - 
                       new Date(combineAsDate(b.due_date,b.time || new Date())).getTime())      
