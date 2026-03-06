@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, Modal, TouchableOpacity, StyleSheet, ScrollView, TextInput } from "react-native";
-import { X, Trash2, CheckCircle2, Link as LinkIcon } from "lucide-react-native";
+import { X, Trash2, CheckCircle2, Link as LinkIcon, Save } from "lucide-react-native";
 import { Calendar } from "react-native-calendars";
 import { Task, toLocalDateString, Weekday } from "../types";
 import { getTaskTypeColor, getEnhancedTaskTypeColor } from "./taskColors";
@@ -9,6 +9,9 @@ import NoteInput from "./NoteInput";
 import { confirm } from "./Confirmation";
 import RelatedTaskInput from "./RelatedTask";
 import DateRangePicker from "./DateRangePicker";
+import TimePicker from "./TimeInput";
+import { getAppColors } from "../constants/theme";
+
 
 const ALL_WEEKDAYS: Weekday[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const WEEKDAY_ABBREVIATIONS: Record<Weekday, string> = {
@@ -26,10 +29,11 @@ export interface EditTaskProps {
   onClose: () => void;
   task: Task;
   tasks: Task[]; // Pass all tasks for related task selection
-  onSave: (id: string, fields: { title?: string; due_date?: Date; notes?: string; parent_id?: string; start_date?: Date; end_date?: Date; recurrence_interval?: number; days_selected?: Weekday[] }) => void;
+  onSave: (id: string, fields: { title?: string; due_date?: Date; notes?: string; time?: Date; parent_id?: string; start_date?: Date; end_date?: Date; recurrence_interval?: number; days_selected?: Weekday[] }) => void;
   onDelete: (id: string) => void;
   onToggle: (id: string) => void;
   colorBlindMode?: boolean;
+  isDarkMode?: boolean;
 }
 
 export default function EditTask({
@@ -41,9 +45,11 @@ export default function EditTask({
   onDelete,
   onToggle,
   colorBlindMode = false,
+  isDarkMode = false,
 }: EditTaskProps) {
   const [editedTitle, setEditedTitle] = useState(task.title);
   const [editedDate, setEditedDate] = useState(task.due_date);
+  const [editedTime, setEditedTime] = useState(task.time);
   const [editedStartDate, setEditedStartDate] = useState(task.start_date);
   const [editedEndDate, setEditedEndDate] = useState(task.end_date);
   const [editedInterval, setEditedInterval] = useState(task.recurrence_interval);
@@ -56,6 +62,7 @@ export default function EditTask({
     if (isOpen) {
       setEditedTitle(task.title);
       setEditedDate(task.due_date);
+      setEditedTime(task.time);
       setEditedStartDate(task.start_date);
       setEditedEndDate(task.end_date);
       setEditedInterval(task.recurrence_interval);
@@ -71,6 +78,7 @@ export default function EditTask({
         title: editedTitle.trim(),
         due_date: editedDate,
         notes: editedNotes,
+        time: editedTime
       };
 
       if (task.type === "related") {
@@ -129,30 +137,33 @@ export default function EditTask({
       <Modal visible={isOpen} transparent animationType="fade">
         <View style={styles.overlay}>
           <ScrollView contentContainerStyle={styles.scrollContainer}>
-            <View style={styles.dialog}>
+            <View style={[styles.dialog, { backgroundColor: isDarkMode ? '#1b2133' : 'white', borderColor: getAppColors(colorBlindMode, isDarkMode).border }]}>
               {/* Header */}
               <View style={styles.header}>
                 <View style={[styles.typeIndicator, { backgroundColor: typeColor }]} />
-                <Text style={styles.title}>Edit Task</Text>
+                <Text style={[styles.title, { color: isDarkMode ? "white" : "#6b5b7f" }]}>Edit Task</Text>
                 <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                  <X size={24} color="#6b5b7f" />
+                  <X size={24} color={isDarkMode ? "white" : "#6b5b7f"} />
                 </TouchableOpacity>
               </View>
 
               {/* Content */}
-              <View style={styles.section}>
-                <TitleInput value={editedTitle} onChange={setEditedTitle} />
-                <NoteInput value = {editedNotes} onChange={setEditedNotes} />
+              <View style={[styles.section, { borderColor: getAppColors(colorBlindMode, isDarkMode).border }]}>
+                <TitleInput value={editedTitle} onChange={setEditedTitle} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode} />
+                <NoteInput value = {editedNotes} onChange={setEditedNotes} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode} />
+                <TimePicker time = {editedTime || new Date()} onTimeChange={setEditedTime} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode}/>
                 {task.type === "related" ? (
                     <RelatedTaskInput
                       tasks={tasks}
                       selectedTaskId={editedParentId || task.parent_task_id || ""}
                       onSelect={setEditedParentId}
+                      colorBlindMode={colorBlindMode}
+                      isDarkMode={isDarkMode}
                       />
                 ) : null}
                 {task.type === "basic" || task.type === "related" || task.is_template === false ? (
                   <>
-                    <Text style={styles.label}>Due Date</Text>
+                    <Text style={[styles.label, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Due Date</Text>
                     <Calendar
                       onDayPress={handleDateSelect}
                       markedDates={{
@@ -177,23 +188,25 @@ export default function EditTask({
                       endDate={editedEndDate || new Date()}
                       onStartDateChange={setEditedStartDate}
                       onEndDateChange={setEditedEndDate}
+                      isDarkMode={isDarkMode}
+                      colorBlindMode={colorBlindMode}
                     />
 
-                   <Text style={styles.label}>Repeat On (select days) *</Text>
+                   <Text style={[styles.label, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Repeat On (select days) *</Text>
                    <View style={styles.frequencyRow}>
                     {ALL_WEEKDAYS.map((day) => (
                     <TouchableOpacity
                       key={day}
                       style={[
-                        styles.frequencyButton,
-                        editedDaysSelected.includes(day) && styles.frequencyButtonActive,
+                        [styles.frequencyButton, { borderColor: getAppColors(colorBlindMode, isDarkMode).border, backgroundColor: getAppColors(colorBlindMode, isDarkMode).inputBackground }],
+                        editedDaysSelected.includes(day) && [styles.frequencyButtonActive, { backgroundColor: getAppColors(colorBlindMode, isDarkMode).border }],
                       ]}
                       onPress={() => toggleDay(day)}
                     >
                       <Text
                         style={[
-                          styles.frequencyText,
-                          editedDaysSelected.includes(day) && styles.frequencyTextActive,
+                          [styles.frequencyText, { color: getAppColors(colorBlindMode, isDarkMode).primary }],
+                          editedDaysSelected.includes(day) && [styles.frequencyTextActive, { color: getAppColors(colorBlindMode, isDarkMode).primary }],
                         ]}
                       >
                         {WEEKDAY_ABBREVIATIONS[day]}
@@ -210,16 +223,18 @@ export default function EditTask({
                     endDate={editedEndDate || new Date()}
                     onStartDateChange={setEditedStartDate}
                     onEndDateChange={setEditedEndDate}
+                    isDarkMode={isDarkMode}
+                    colorBlindMode={colorBlindMode}
                   />
 
                 <View style={styles.inputRow}>
-                  <Text style={styles.label}>Interval (months):</Text>
+                  <Text style={[styles.label, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Interval (months):</Text>
                   <TextInput
-                    style={styles.dateInput}
+                    style={[styles.dateInput, { backgroundColor: getAppColors(colorBlindMode, isDarkMode).inputBackground, borderColor: getAppColors(colorBlindMode, isDarkMode).border, color: getAppColors(colorBlindMode, isDarkMode).primary }]}
                     value={editedInterval ? String(editedInterval) : ""}
                     onChangeText={(text) => setEditedInterval(text ? parseInt(text, 10) || undefined : undefined)}
                     placeholder="e.g., 3"
-                    placeholderTextColor="#999"
+                    placeholderTextColor={getAppColors(colorBlindMode, isDarkMode).placeholder}
                     keyboardType="numeric"
                   />
                 </View>
@@ -436,7 +451,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: "#e5d9f2",
-    backgroundColor: "#f8f6fb",
     alignItems: "center",
   },
   frequencyButtonActive: {
@@ -446,7 +460,6 @@ const styles = StyleSheet.create({
   frequencyText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#6b5b7f",
   },
   frequencyTextActive: {
     color: "#ffffff",
@@ -465,5 +478,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     fontSize: 14,
     color: "#6b5b7f",
+    marginLeft: 8,
   },
 });
