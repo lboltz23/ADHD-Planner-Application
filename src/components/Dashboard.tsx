@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -8,17 +8,18 @@ import {
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Task, TaskType, CreateTaskParams, Weekday } from '../types';
+import { Task, TaskType, CreateTaskParams, Weekday, combineAsDate } from '../types';
 import { SettingsData } from './Settings';
 import { TaskCard } from './TaskCard';
 import AddTaskDialog from './AddTaskDialog';
 import { TaskTypeSelector } from './TaskTypeSelector';
-import { Calendar, Settings, Zap, Info } from 'lucide-react-native';
+import { Calendar, Settings, Zap, Info, Plus, Minus } from 'lucide-react-native';
 import { getFilterColor } from './taskColors';
+import { getAppColors } from '../constants/theme';
 import InfoPopup from './Info';
 import { AppThemeColors, resolveThemePreference } from '../constants/theme';
 import { useColorScheme } from '../hooks/use-color-scheme';
-
+import { useFocusEffect } from 'expo-router';
 // Dashboard Props
 interface DashboardProps {
   onNavigateToCalendar: () => void;
@@ -52,21 +53,58 @@ export function Dashboard({
 
   const [selectedType, setSelectedType] = useState<TaskType>('basic');
   const [taskView, setTaskView] = useState<'today' | 'upcoming' | 'repeating' | 'open'>('today');
+  const [taskRefresh, setTaskRefresh] = useState(0);
   const [showAddTaskDialog, setShowAddTaskDialog] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
   // Ref to track previous progress for confetti trigger
   const previousProgressRef = useRef(0);
 
+  useFocusEffect(
+    useCallback(() => {
+      setTaskRefresh(cur => cur +1);
+    },[])
+  )
+
+  useEffect(()=>{
+    const interval = setInterval(() => {
+      setTaskRefresh(cur => cur +1);
+    },60000);
+    return () => clearInterval(interval)
+    },[])
+  
+
+  useEffect(() => {
+    if(!showAddTaskDialog){
+      setTaskRefresh(cur => cur + 1); // Refresh task lists when add task dialog is closed (after adding a task)
+    }
+  }, [showAddTaskDialog]);
   // Filter tasks from props for today
   const todayTasks = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const now = new Date();
+
     return tasks.filter((task) => {
       if (task.is_template) return false;
+
       const taskDate = new Date(task.due_date);
-      return taskDate.toDateString() === today.toDateString();
+      const isToday = (
+        taskDate.getFullYear() === now.getFullYear() &&
+        taskDate.getMonth() === now.getMonth() &&
+        taskDate.getDate() === now.getDate()
+      );
+      if (!isToday) return false;
+
+      // If a specific time is set and it has passed, it belongs in "open" instead
+      if (task.time) {
+        const taskDateTime = combineAsDate(task.due_date, task.time);
+        return taskDateTime >= now;
+      }
+      return true;
+    }).sort((a, b) => {
+      const aTime = a.time ? combineAsDate(a.due_date, a.time).getTime() : new Date(a.due_date).setHours(0, 0, 0, 0);
+      const bTime = b.time ? combineAsDate(b.due_date, b.time).getTime() : new Date(b.due_date).setHours(0, 0, 0, 0);
+      return aTime - bTime;
     });
-  }, [tasks]);
+  }, [tasks, taskRefresh]);
 
   // Filter tasks from props for upcoming (next 5 tasks after today)
   const upcomingTasks = useMemo(() => {
@@ -79,27 +117,27 @@ export function Dashboard({
         taskDate.setHours(0, 0, 0, 0);
         return taskDate > today;
       })
-      .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
+      .sort((a, b) => new Date(combineAsDate(a.due_date,a.time || new Date())).getTime() - 
+                    new Date(combineAsDate(b.due_date,b.time || new Date())).getTime())      
       .slice(0, 5);
-  }, [tasks]);
+  }, [tasks, taskRefresh]);
 
   const repeatingTasks = useMemo(() => {
     return tasks.filter((task) => task.is_template === true);
-  }, [tasks]);
+  }, [tasks, taskRefresh]);
 
   const openTasks = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const now = new Date();
     return tasks
       .filter((task) => {
         if (task.is_template || task.type === 'routine' ||  task.type === 'long_interval' || task.completed) return false;
-        const taskDate = new Date(task.due_date);
-        taskDate.setHours(0, 0, 0, 0);
-        return taskDate < today;
+        const taskDate = combineAsDate(task.due_date, task.time || new Date());
+        return taskDate < now;
       })
-      .sort((a, b) => new Date(b.due_date).getTime() - new Date(a.due_date).getTime())
+      .sort((a, b) => new Date(combineAsDate(a.due_date,a.time || new Date())).getTime() - 
+                      new Date(combineAsDate(b.due_date,b.time || new Date())).getTime())      
       .slice(0, 7);
-  }, [tasks]);
+  }, [tasks, taskRefresh]);
  
   const handleAddTask = () => {
     if (!showAddTaskDialog) {
@@ -123,6 +161,31 @@ export function Dashboard({
     return true;
   }
 
+  const [visibleToday, setVisibleToday] = useState(7);
+  const [visibleUpcoming, setVisibleUpcoming] = useState(7);
+  const [visibleOpen, setVisibleOpen] = useState(7);
+  const [visibleRepeating, setVisibleRepeating] = useState(7);
+
+  useEffect(() => {
+    setVisibleToday(7);
+    setVisibleUpcoming(7);
+    setVisibleOpen(7);
+    setVisibleRepeating(7);
+  }, [taskView]);
+
+  const handleLoadMore = (view: string) => {
+    if (view === 'today') setVisibleToday(prev => prev + 7);
+    else if (view === 'upcoming') setVisibleUpcoming(prev => prev + 7);
+    else if (view === 'open') setVisibleOpen(prev => prev + 7);
+    else if (view === 'repeating') setVisibleRepeating(prev => prev + 7);
+  };
+
+  const handleLoadLess = (view: string) => {
+    if (view === 'today') setVisibleToday(7);
+    else if (view === 'upcoming') setVisibleUpcoming(7);
+    else if (view === 'open') setVisibleOpen(7);
+    else if (view === 'repeating') setVisibleRepeating(7);
+  };
 // Calculate today's progress
   const completedTodayTasks = todayTasks.filter((task) => task.completed)
     .length;
@@ -215,14 +278,14 @@ export function Dashboard({
       alignItems: 'center',
     },
     iconButton: {
-      backgroundColor: colors.surfaceMuted,
+      backgroundColor: settings.colorBlindMode ? "#EBEBEB":'#f2ecfa',
       padding: 10,
       borderRadius: 8,
     },
     mainButton: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: colors.accent,
+      backgroundColor: settings.colorBlindMode ? '#EE3377' : '#b8a4d9',
       paddingVertical: 10,
       paddingHorizontal: 14,
       borderRadius: 8,
@@ -263,27 +326,27 @@ export function Dashboard({
       padding: 16,
       marginBottom: 20,
       borderWidth: 1,
-      borderColor: colors.border,
+      borderColor: getAppColors(settings.colorBlindMode, isDark).border,
     },
     progressLabel: {
       fontSize: 16,
       fontWeight: '600',
-      color: isDark ? '#a7bbeb' : colors.heading,
+      color: settings.colorBlindMode ? '#3D3D3D' : '#6b5b7f',
       marginBottom: 4,
     },
     progressSub: {
       fontSize: 13,
-      color: colors.textMuted,
+      color: settings.colorBlindMode ? '#3D3D3D' :'#8e7fb2',
       marginBottom: 12,
     },
     progressBarBackground: {
-      backgroundColor: isDark ? '#2f374a' : '#e0d7f5',
+      backgroundColor: settings.colorBlindMode ? '#88CCEE' : '#e0d7f5',
       height: 8,
       borderRadius: 4,
       overflow: 'hidden',
     },
     progressBarFill: {
-      backgroundColor: isDark ? '#a7bbeb' : colors.accent,
+      backgroundColor: settings.colorBlindMode ? '#33BBEE' : '#b8a4d9',
       height: '100%',
     },
     addTaskCard: {
@@ -299,7 +362,7 @@ export function Dashboard({
       flex: 1,
       backgroundColor: colors.inputBackground,
       borderWidth: 1,
-      borderColor: colors.border,
+      borderColor: getAppColors(settings.colorBlindMode, isDark).border,
       borderRadius: 8,
       paddingHorizontal: 12,
       paddingVertical: 8,
@@ -323,12 +386,12 @@ export function Dashboard({
     sectionTitle: {
       fontSize: 18,
       fontWeight: '600',
-      color: colors.heading,
+      color: getAppColors(settings.colorBlindMode, isDark).primary,
       marginBottom: 12,
     },
     noTasksMessage: {
       textAlign: 'center',
-      color: colors.textMuted,
+      color: getAppColors(settings.colorBlindMode, isDark).placeholder,
       fontSize: 14,
       paddingVertical: 16,
     },
@@ -339,7 +402,7 @@ export function Dashboard({
       backgroundColor: colors.surface,
       borderRadius: 8,
       borderWidth: 1,
-      borderColor: colors.border,
+      borderColor: getAppColors(settings.colorBlindMode, isDark).border,
       padding: 10,
       marginBottom: 20,
     },
@@ -377,6 +440,38 @@ export function Dashboard({
       fontWeight: '600',
       color: isDark ? '#ffd089' : '#ff9500',
     },
+    seeMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: isDark ? '#45a9f6' : colors.accent,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    marginTop: 8,
+    gap: 8,
+  },
+  seeMoreText: {
+    color: '#ffffff',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  seeLessButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: isDark ? '#45a9f6' : colors.accent,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    marginTop: 8,
+    gap: 8,
+  },
+  seeLessText: {
+    color: '#ffffff',
+    fontSize: 15,
+    fontWeight: '600',
+  },
   });
 
   return (
@@ -552,7 +647,7 @@ export function Dashboard({
               <Text style={styles.noTasksMessage}>No tasks for today</Text>
             ) : (
               <View style={styles.tasksList}>
-                {todayTasks.map((task) => (
+                {todayTasks.slice(0, visibleToday).map((task) => (
                   <TaskCard
                     key={task.id}
                     task={task}
@@ -561,9 +656,22 @@ export function Dashboard({
                     onUpdate={onEditTask}
                     onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
-                    isDarkMode={isDark}
+                    showTime={true}
                   />
                 ))}
+                {todayTasks.length > visibleToday && (
+                  <TouchableOpacity style={styles.seeMoreButton} onPress={() => handleLoadMore('today')}>
+                    <Plus size={20} color="#ffffff" />
+                    <Text style={styles.seeMoreText}>Show More Tasks</Text>
+                  </TouchableOpacity>
+                )}
+                {visibleToday > 7 && todayTasks.length <= visibleToday && (
+                  <TouchableOpacity style={styles.seeLessButton} onPress={() => handleLoadLess('today')}>
+                    <Minus size={20} color="#ffffff" />
+                    <Text style={styles.seeLessText}>Show Less Tasks</Text>
+                  </TouchableOpacity>
+                )}
+
               </View>
             )}
           </View>
@@ -574,7 +682,7 @@ export function Dashboard({
               <Text style={styles.noTasksMessage}>No upcoming tasks</Text>
             ) : (
               <View style={styles.tasksList}>
-                {upcomingTasks.map((task) => (
+                {upcomingTasks.slice(0, visibleUpcoming).map((task) => (
                   <TaskCard
                     key={task.id}
                     task={task}
@@ -584,9 +692,21 @@ export function Dashboard({
                     onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
                     showDate={true}
-                    isDarkMode={isDark}
+                    showTime={true}
                   />
                 ))}
+                {upcomingTasks.length > visibleUpcoming && (
+                  <TouchableOpacity style={styles.seeMoreButton} onPress={() => handleLoadMore('upcoming')}>
+                    <Plus size={20} color="#ffffff" />
+                    <Text style={styles.seeMoreText}>Show More Tasks</Text>
+                  </TouchableOpacity>
+                )}
+                {visibleUpcoming > 7 && upcomingTasks.length <= visibleUpcoming && (
+                  <TouchableOpacity style={styles.seeLessButton} onPress={() => handleLoadLess('upcoming')}>
+                    <Minus size={20} color="#ffffff" />
+                    <Text style={styles.seeLessText}>Show Less Tasks</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             )}
           </View>
@@ -597,7 +717,7 @@ export function Dashboard({
               <Text style={styles.noTasksMessage}>No open tasks</Text>
             ) : (
               <View style={styles.tasksList}>
-                {openTasks.map((task) => (
+                {openTasks.slice(0, visibleOpen).map((task) => (
                   <TaskCard
                     key={task.id}
                     task={task}
@@ -606,9 +726,20 @@ export function Dashboard({
                     onUpdate={onEditTask}
                     onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
-                    isDarkMode={isDark}
                   />
                 ))}
+                {openTasks.length > visibleOpen && (
+                  <TouchableOpacity style={styles.seeMoreButton} onPress={() => handleLoadMore('open')}>
+                    <Plus size={20} color="#ffffff" />
+                    <Text style={styles.seeMoreText}>Show More Tasks</Text>
+                  </TouchableOpacity>
+                )}
+                {visibleOpen > 7 && openTasks.length <= visibleOpen && (
+                  <TouchableOpacity style={styles.seeLessButton} onPress={() => handleLoadLess('open')}>
+                    <Minus size={20} color="#ffffff" />
+                    <Text style={styles.seeLessText}>Show Less Tasks</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             )}
           </View>
@@ -619,7 +750,7 @@ export function Dashboard({
               <Text style={styles.noTasksMessage}>No repeating tasks</Text>
             ) : (
               <View style={styles.tasksList}>
-                {repeatingTasks.map((task) => (
+                {repeatingTasks.slice(0, visibleRepeating).map((task) => (
                   <TaskCard
                     key={task.id}
                     task={task}
@@ -629,8 +760,21 @@ export function Dashboard({
                     onDelete={onDeleteTask}
                     colorBlindMode={settings.colorBlindMode}
                     isDarkMode={isDark}
+                    showDate={true}
                   />
                 ))}
+                {repeatingTasks.length > visibleRepeating && (
+                  <TouchableOpacity style={styles.seeMoreButton} onPress={() => handleLoadMore('repeating')}>
+                    <Plus size={20} color="#ffffff" />
+                    <Text style={styles.seeMoreText}>Show More Tasks</Text>
+                  </TouchableOpacity>
+                )}
+                {visibleRepeating > 7 && repeatingTasks.length <= visibleRepeating && (
+                  <TouchableOpacity style={styles.seeLessButton} onPress={() => handleLoadLess('repeating')}>
+                    <Minus size={20} color="#ffffff" />
+                    <Text style={styles.seeLessText}>Show Less Tasks</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             )}
           </View>
