@@ -13,7 +13,7 @@ import { useApp } from '../contexts/AppContext';
 
 interface WeeklyViewProps {
   onToggleTask: (id: string) => void;
-  onEditTask: (id: string, fields: { title?: string; due_date?: Date; notes?: string; parent_id?: string; start_date?: Date; end_date?: Date; recurrence_interval?: number; days_selected?: Weekday[] }) => void;
+  onEditTask: (id: string, fields: { title?: string; due_date?: Date; time?: Date; notes?: string; parent_id?: string; start_date?: Date; end_date?: Date; recurrence_interval?: number; days_selected?: Weekday[] }) => void;
   onDeleteTask: (id: string) => void;
   colorBlindMode?: boolean;
   onNavigateBack: () => void;
@@ -247,6 +247,7 @@ export function WeeklyView({ onToggleTask, onEditTask, onDeleteTask, colorBlindM
                         onUpdate={onEditTask}
                         onDelete={onDeleteTask}
                         colorBlindMode={!!colorBlindMode}
+                        showTime={true}
                         isDarkMode={isDark}
                       />
                     ))
