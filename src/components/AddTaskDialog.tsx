@@ -28,7 +28,6 @@ interface AddTaskDialogProps {
   onClose: () => void;
   onAddTask: (params: CreateTaskParams) => void;
   initialTaskType: TaskType;
-  initialTitle?: string;
   colorBlindMode?: boolean;
   isDarkMode?: boolean
   tasks?: Task[];
@@ -39,12 +38,11 @@ export default function AddTaskDialog({
   onClose,
   onAddTask,
   initialTaskType,
-  initialTitle = "",
   tasks = [],
   colorBlindMode= false,
   isDarkMode = false,
 }: AddTaskDialogProps) {
-  const [taskTitle, setTaskTitle] = useState(initialTitle);
+  const [taskTitle, setTaskTitle] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
   const [editedTime, setEditedTime] = useState<Date | null>(null);
   const [startDate, setStartDate] = useState<Date | null>(null);
@@ -60,9 +58,6 @@ export default function AddTaskDialog({
       prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
     );
   };
-  useEffect(() => {
-    setTaskTitle(initialTitle);
-  }, [initialTitle]);
 
   const handleCreateTask = () => {
     // Validation
@@ -135,11 +130,7 @@ export default function AddTaskDialog({
   };
 
   const resetForm = () => {
-    if (initialTitle) {
-      setTaskTitle(initialTitle);
-    } else {
-      setTaskTitle("");
-    }
+    setTaskTitle("");
     setSelectedDate("");
     setStartDate(null);
     setEndDate(null);
