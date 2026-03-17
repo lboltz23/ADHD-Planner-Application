@@ -55,7 +55,6 @@ export function Dashboard({
   const [taskView, setTaskView] = useState<'today' | 'upcoming' | 'repeating' | 'open'>('today');
   const [taskRefresh, setTaskRefresh] = useState(0);
   const [showAddTaskDialog, setShowAddTaskDialog] = useState(false);
-  const [taskRefrsh, setTaskRefresh] = useState(0);
   const [showInfo, setShowInfo] = useState(false);
   // Ref to track previous progress for confetti trigger
   const previousProgressRef = useRef(0);
@@ -116,11 +115,11 @@ export function Dashboard({
       .sort((a, b) => new Date(combineAsDate(a.due_date,a.time || new Date())).getTime() - 
                       new Date(combineAsDate(b.due_date,b.time || new Date())).getTime())
       .slice(0, 5);
-  }, [tasks,taskRefrsh]);
+  }, [tasks,taskRefresh]);
 
   const repeatingTasks = useMemo(() => {
     return tasks.filter((task) => task.is_template === true);
-  }, [tasks,taskRefrsh]);
+  }, [tasks,taskRefresh]);
 
   const openTasks = useMemo(() => {
     const today = new Date();
