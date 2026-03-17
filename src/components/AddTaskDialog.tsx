@@ -148,7 +148,12 @@ export default function AddTaskDialog({
 
   const handleInputChange = (text: string) => {
     setTaskTitle(text);
-  }
+  };
+  const handleIntervalChange = (text: string) => {
+    if (/^\d*$/.test(text)) {
+      setIntervalMonths(text);
+    }
+  };
 
   const getTypeColor = () => {
     return getTaskTypeColor(initialTaskType, colorBlindMode);
@@ -282,12 +287,13 @@ export default function AddTaskDialog({
                 />
 
                 <View style={styles.inputRow}>
-                  <Text style={[styles.label, { color: isDarkMode ? "white" : "#6b5b7f" }]}>Interval(months): </Text>
+                  <Text style={[styles.label, { color: isDarkMode ? "white" : "#6b5b7f" }]}>Interval (in months): </Text>
                   <TextInput
                     style={styles.dateInput}
                     value={intervalMonths}
-                    onChangeText={setIntervalMonths}
-                    placeholder="e.g., 3"
+                    onChangeText={handleIntervalChange}
+                    //onChangeText={setIntervalMonths}
+                    placeholder="1"
                     placeholderTextColor="#999"
                     keyboardType="numeric"
                   />
