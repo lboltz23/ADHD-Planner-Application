@@ -51,7 +51,6 @@ export function Dashboard({
   const colors = AppThemeColors[resolvedTheme];
   const isDark = resolvedTheme === 'dark';
 
-  const [newTaskTitle, setNewTaskTitle] = useState('');
   const [selectedType, setSelectedType] = useState<TaskType>('basic');
   const [taskView, setTaskView] = useState<'today' | 'upcoming' | 'repeating' | 'open'>('today');
   const [taskRefresh, setTaskRefresh] = useState(0);
@@ -118,8 +117,8 @@ export function Dashboard({
         taskDate.setHours(0, 0, 0, 0);
         return taskDate > today;
       })
-      .sort((a, b) => new Date(combineAsDate(a.due_date,a.time || new Date())).getTime() - 
-                    new Date(combineAsDate(b.due_date,b.time || new Date())).getTime())      
+      .sort((a, b) => new Date(combineAsDate(b.due_date,b.time || new Date())).getTime() - 
+                    new Date(combineAsDate(a.due_date,a.time || new Date())).getTime())      
       .slice(0, 5);
   }, [tasks, taskRefresh]);
 
@@ -141,14 +140,13 @@ export function Dashboard({
   }, [tasks, taskRefresh]);
  
   const handleAddTask = () => {
-    if (newTaskTitle.trim() && !showAddTaskDialog) {
+    if (!showAddTaskDialog) {
       setShowAddTaskDialog(true);
     }
   };
 
   const handleCreateTask = (params: CreateTaskParams) => {
     onAddTask(params);
-    setNewTaskTitle('');  // Clear the input field
     setShowAddTaskDialog(false);
   };
 
@@ -372,7 +370,8 @@ export function Dashboard({
       color: colors.text,
     },
     addButton: {
-      backgroundColor: settings.colorBlindMode ? "#757575" : "#96d7efff",
+      backgroundColor: settings.colorBlindMode
+        ? '#209ce5ff' : colors.accentSoft,
       borderRadius: 6,
       padding: 8,
       justifyContent: 'center',
@@ -564,30 +563,15 @@ export function Dashboard({
               colorBlindMode={settings.colorBlindMode}
             />
           </View>
-
-          <View style={styles.taskInputContainer}>
-            <TextInput
-              style={styles.taskInput}
-              placeholder="Add a new task..."
-              value={newTaskTitle}
-              onChangeText={setNewTaskTitle}
-              onSubmitEditing={handleAddTask}
-              placeholderTextColor={colors.textMuted}
-
-              autoCapitalize="none"
-              textContentType="none"
-              autoComplete="off"
-              importantForAutofill="no"
-            />
             <TouchableOpacity
               style={styles.addButton}
               onPress={handleAddTask}
               activeOpacity={0.9}
             >
-              <Text style={{ fontSize: 24, color: '#ffffff' }}>+</Text>
+              <Text style={{ fontSize:30,color: '#ffffff' }}>+</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        
             
         {/* Task View Filter Buttons */}
         <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 8, marginBottom: 20 }}>
@@ -806,7 +790,6 @@ export function Dashboard({
           onClose={handleCloseDialog}
           onAddTask={handleCreateTask}
           initialTaskType={selectedType}
-          initialTitle={newTaskTitle}
           colorBlindMode={settings.colorBlindMode}
           tasks={tasks}
           isDarkMode={isDark}
