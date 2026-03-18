@@ -65,9 +65,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     colorBlindMode: false,
   });
 
-  const [streakCount, setStreakCount] = useState<number>(0);
-  const [lastLoginDate, setLastLoginDate] = useState<Date | null>(null);
+  //const [streakCount, setStreakCount] = useState<number>(0);
+  //const [lastLoginDate, setLastLoginDate] = useState<Date | null>(null);
   const [user, setUser] = useState<User | null>(null)
+  const [streak, setStreak] = useState<{ current_streak: number; longest_streak: number; last_login?: string }>({
+    current_streak: 0,
+    longest_streak: 0,
+    last_login: undefined,
+  });
 
   const [confettiTrigger, setConfettiTrigger] = useState(0);
 
@@ -503,7 +508,62 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSettings(newSettings);
   }, []);
 
-  const updateTask = useCallback(async (id: string, fields: { title?: string; due_date?: Date; notes?: string;time?: Date; parent_id?: string; start_date?: Date; end_date?: Date; recurrence_interval?: number; days_selected?: Weekday[] }) => {
+  const triggerConfetti = useCallback(() => {
+    setConfettiTrigger(prev => prev + 1);
+  }, []);
+
+const fetchStreak = useCallback(async () => {
+  if (!user) return;
+
+  try {
+    const { data, error } = await supabase
+      .from('streaks')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      console.error(error);
+      return;
+    }
+
+    if (data) {   // Existing streak found, set it in state
+      
+      setStreak({
+        current_streak: data.current_streak || 0,
+        longest_streak: data.longest_streak || 0,
+        last_login: data.last_login || undefined,
+      });
+    } else {    // If there's no existing streak, create a new one with default values
+   
+      const now = new Date().toISOString();
+
+      const { error: insertError } = await supabase
+        .from('streaks')
+        .insert({
+          user_id: user.id,
+          current_streak: 0,
+          longest_streak: 0,
+          last_login: now,
+        });
+
+      if (insertError) {
+        console.error('Error creating new streak:', insertError);
+        return;
+      }
+
+      setStreak({
+        current_streak: 0,
+        longest_streak: 0,
+        last_login: now,
+      });
+    }
+  } catch (err) {
+    console.error('Failed to fetch streak:', err);
+  }
+}, [user]);
+
+  const updateTask = useCallback(async (id: string, fields: { title?: string; due_date?: Date; notes?: string }) => {
     const task = tasks.find(t => t.id === id);
     if (!task) return;
 
@@ -706,9 +766,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [user,tasks]);
   
-  const triggerConfetti = useCallback(() => {
-    setConfettiTrigger(prev => prev + 1);
-  }, []);
+    // const triggerConfetti = useCallback(() => {
+    //   setConfettiTrigger(prev => prev + 1);
+    // }, []);
 
   
   const deleteTask = useCallback(async (id: string) => {
@@ -837,25 +897,88 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [tasks]);
 
-  const updateStreak = () => {
-    const today = new Date();
-    if (lastLoginDate) {
-      const diffTime = Math.abs(today.getTime() - lastLoginDate.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      if (diffDays === 1) {
-        setStreakCount(prev => prev + 1);
-      } else if (diffDays > 1) {
-        setStreakCount(1);
-      }
-    } else {
-      setStreakCount(1);
-    }
-    setLastLoginDate(today);
+const updateStreak = useCallback(async (overrideStreak?: typeof streak) => {
+  if (!user) return;
+
+  const base = overrideStreak || streak;
+
+  const toDateOnly = (d: Date) =>
+    new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+  const today = toDateOnly(new Date());
+  const lastLogin = base.last_login
+    ? toDateOnly(new Date(base.last_login))
+    : null;
+
+  let diffDays = lastLogin
+    ? Math.floor((today.getTime() - lastLogin.getTime()) / (1000 * 60 * 60 * 24))
+    : 0;
+
+  let newCurrent = 1;
+  let newLongest = base.longest_streak;
+
+  if (diffDays === 1) newCurrent = base.current_streak + 1;
+  else if (diffDays === 0) return;
+
+  if (newCurrent > newLongest) newLongest = newCurrent;
+
+  const nowISO = new Date().toISOString();
+
+  const updated = {
+    current_streak: newCurrent,
+    longest_streak: newLongest,
+    last_login: nowISO,
   };
 
-  const login = () => {
-    updateStreak();
-  };
+  setStreak(updated);
+
+  await supabase.from('streaks').upsert({
+    user_id: user.id,
+    ...updated,
+  });
+
+}, [user]);
+
+const login = useCallback(async () => {
+  if (!user) return;
+
+  const { data, error } = await supabase
+    .from('streaks')
+    .select('*')
+    .eq('user_id', user.id)
+    .single();
+
+  if (error && error.code !== 'PGRST116') {
+    console.error(error);
+    return;
+  }
+
+  let freshStreak;
+
+  if (data) {
+    freshStreak = {
+      current_streak: data.current_streak || 0,
+      longest_streak: data.longest_streak || 0,
+      last_login: data.last_login || undefined,
+    };
+  } else {    // If there's no existing streak, create a new one with default values
+    freshStreak = {
+      current_streak: 0,
+      longest_streak: 0,
+      last_login: undefined,
+    };
+  }
+
+  setStreak(freshStreak);
+  await updateStreak(freshStreak);
+
+}, [user, updateStreak]);
+
+useEffect(() => {
+  if (user) {
+    login();
+  }
+}, [user, login]);
 
   // Call login() whenever the user logs in
 
@@ -869,7 +992,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         updateTask,
         deleteTask,
         updateSettings,
-        streakCount,
+        streakCount: streak.current_streak,
         login,
         confettiTrigger,
         triggerConfetti,
