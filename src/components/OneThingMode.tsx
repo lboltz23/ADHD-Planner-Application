@@ -13,6 +13,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
+  Vibration,
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -84,24 +85,22 @@ export function OneThingMode({
   useEffect(() => {
     if (isRunning && timeInSeconds > 0) {
       intervalRef.current = setInterval(() => {
-        setTimeInSeconds((prev) => {
-          const newTime = prev - 1;
-          const initialSeconds = settings.defaultTimerMinutes * 60;
+        const newTime = timeInSeconds - 1;
+        const initialSeconds = settings.defaultTimerMinutes * 60;
 
-          // Check for key intervals
-          checkKeyIntervals(newTime, initialSeconds);
+        // Check for key intervals
+        checkKeyIntervals(newTime, initialSeconds);
 
-          if (newTime <= 0) {
-            setIsRunning(false);
-            setHasCompleted(true);
-            if (settings.confettiEnabled && onTriggerConfetti) {
-              onTriggerConfetti();
-            }
-            triggerPulseAnimation();
-            return 0;
+        setTimeInSeconds(newTime <= 0 ? 0 : newTime);
+
+        if (newTime <= 0) {
+          setIsRunning(false);
+          setHasCompleted(true);
+          if (settings.confettiEnabled && onTriggerConfetti) {
+            onTriggerConfetti();
           }
-          return newTime;
-        });
+          triggerPulseAnimation();
+        }
       }, 1000);
     } else {
       if (intervalRef.current) {
@@ -164,6 +163,7 @@ export function OneThingMode({
 
   const showTimerAlert = (message: string) => {
     setAlertMessage(message);
+    Vibration.vibrate([500, 300, 200, 100, 500]);
     setShowAlertPopup(true);
     playSound();
 
