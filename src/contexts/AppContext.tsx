@@ -7,7 +7,9 @@ import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
 import { User } from '@supabase/supabase-js';
 import { router } from 'expo-router';
-import * as Linking from 'expo-linking'
+import * as Linking from 'expo-linking';
+import * as ExpoNotifications from 'expo-notifications';
+import { scheduleTimedNotification } from '@/lib/Notifications';
 
 // Parse a date string from Supabase as a LOCAL date (avoids UTC timezone shift)
 function parseLocalDate(dateStr: string): Date {
@@ -58,6 +60,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const [settings, setSettings] = useState<SettingsData>({
     defaultTimerMinutes: 25,
+    notifications: false,
     soundEnabled: true,
     confettiEnabled: true,
     theme: "auto",
@@ -136,8 +139,102 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return () => subscription.remove()
   }, [])
 
+  const getNextLongIntervalOccurrence = (
+    startDate: Date,
+    intervalMonths: number,
+    timeOfDay: Date,
+    endDate?: Date
+  ): Date | null => {
+    if (!intervalMonths || intervalMonths <= 0) {
+      return null;
+    }
+
+    const now = new Date();
+    const candidate = new Date(startDate);
+    candidate.setHours(timeOfDay.getHours(), timeOfDay.getMinutes(), 0, 0);
+
+    const effectiveEndDate = endDate ? new Date(endDate) : undefined;
+    if (effectiveEndDate) {
+      effectiveEndDate.setHours(timeOfDay.getHours(), timeOfDay.getMinutes(), 0, 0);
+    }
+
+    while (candidate <= now) {
+      candidate.setMonth(candidate.getMonth() + intervalMonths);
+    }
+
+    if (effectiveEndDate && candidate > effectiveEndDate) {
+      return null;
+    }
+
+    return candidate;
+  };
+
+  const reconcileLongIntervalNotifications = async (rows: any[], userId: string) => {
+    try {
+      const scheduledNotifications = await ExpoNotifications.getAllScheduledNotificationsAsync();
+      const scheduledIds = new Set(scheduledNotifications.map((item) => item.identifier));
+
+      for (const row of rows) {
+        if (!row.is_template || row.type !== 'long_interval') {
+          continue;
+        }
+
+        const intervalMonths = row.recurrence_interval as number | null;
+        if (!intervalMonths || intervalMonths <= 0) {
+          continue;
+        }
+
+        if (!row.start_date && !row.due_date) {
+          continue;
+        }
+
+        const startDate = row.start_date ? parseLocalDate(row.start_date) : parseLocalDate(row.due_date);
+        const timeOfDay = row.due_date ? parseLocalTime(row.due_date) : new Date(1970, 0, 1, 23, 59, 0);
+        const endDate = row.end_date ? parseLocalDate(row.end_date) : undefined;
+
+        const nextOccurrence = getNextLongIntervalOccurrence(startDate, intervalMonths, timeOfDay, endDate);
+        if (!nextOccurrence) {
+          continue;
+        }
+
+        const hasValidNotification = !!row.notification_id && scheduledIds.has(row.notification_id);
+        if (hasValidNotification) {
+          continue;
+        }
+
+        const secondsUntil = Math.floor((nextOccurrence.getTime() - Date.now()) / 1000);
+        if (secondsUntil <= 0) {
+          continue;
+        }
+
+        const notificationId = await scheduleTimedNotification('Planable', row.title, secondsUntil, true);
+
+        const { error: updateError } = await supabase
+          .from('tasks')
+          .update({ notification_id: notificationId })
+          .eq('id', row.id)
+          .eq('user_id', userId);
+
+        if (updateError) {
+          console.error('Error updating long interval notification_id:', updateError);
+          continue;
+        }
+
+        setTasks((prev) => prev.map((task) => (
+          task.id === row.id ? { ...task, notification_id: notificationId } : task
+        )));
+      }
+    } catch (error) {
+      console.error('Error reconciling long interval notifications:', error);
+    }
+  };
+
   const loadTasks = async (user_id:string | undefined) => {
-      try {      
+      if (!user_id) {
+        return;
+      }
+
+      try {
         const { data, error } = await supabase
           .from('tasks')
           .select('*')
@@ -184,6 +281,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 completed: false,
                 type: row.type as Task['type'],
                 notes: row.notes,
+                notification_id: row.notification_id || undefined,
                 is_template: true,
                 days_selected: row.days_selected,
                 recurrence_interval: row.recurrence_interval,
@@ -211,6 +309,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                     completed: override.completed || false,
                     type: override.type as Task['type'],
                     notes: override.notes,
+                    notification_id: override.notification_id || undefined,
                     is_template: false,
                     parent_task_id: override.parent_task_id,
                   });
@@ -231,6 +330,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 completed: row.completed || false,
                 type: row.type as Task['type'],
                 notes: row.notes,
+                notification_id: row.notification_id || undefined,
                 is_template: false,
                 parent_task_id: row.parent_task_id || undefined,
               });
@@ -238,6 +338,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           });
 
           setTasks(allTasks);
+          await reconcileLongIntervalNotifications(data, user_id);
         }
       } catch (error) {
         console.error('Failed to load tasks:', error);
@@ -320,7 +421,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const addTask = useCallback(async (params: CreateTaskParams) => {
-    const { title,time, due_date, type, days_selected, recurrence_interval, notes, start_date, end_date, parent_task_id } = params;
+    const { title,time, due_date, type, notification_id, days_selected, recurrence_interval, notes, start_date, end_date, parent_task_id } = params;
     const baseId = uuidv4();
     const now = new Date();
     if (!user){ throw new Error("Authentication required. Please create an account.");}
@@ -339,6 +440,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         end_date: end_date ? toLocalDateString(end_date) : null,
         days_selected: days_selected,
         recurrence_interval: recurrence_interval,
+        notification_id,
         due_date: toLocalDateString(start_date || due_date) + toLocalTimeString(time || due_date), // Store combined date and time for easier instance generation
         completed: false,
       };
@@ -357,6 +459,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           completed: false,
           type,
           notes,
+          notification_id,
           created_at: now,
           updated_at: now,
           is_template: true,
@@ -384,6 +487,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         completed: false,
         type,
         notes,
+        notification_id,
         created_at: now,
         updated_at: now,
         is_template: false,
@@ -398,6 +502,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         completed: newTask.completed,
         type: newTask.type,
         notes: newTask.notes,
+        notification_id: newTask.notification_id,
         user_id: user.id,
         is_template: false,
         parent_task_id: newTask.parent_task_id,

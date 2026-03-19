@@ -6,6 +6,17 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ConfettiOverlay } from '../components/ConfettiOverlay';
 import { AppProvider, useApp } from '../contexts/AppContext';
 import { useAppTheme } from '../hooks/use-app-theme';
+import * as Notifications from "expo-notifications"
+import { useEffect } from 'react';
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 function RootLayoutContent() {
   const { confettiTrigger } = useApp();

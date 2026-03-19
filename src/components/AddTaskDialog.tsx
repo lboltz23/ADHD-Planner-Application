@@ -10,7 +10,19 @@ import DateRangePicker from "./DateRangePicker";
 import RelatedTaskInput from "./RelatedTask";
 import NoteInput from "./NoteInput";
 import TimePicker from "./TimeInput";
-import { getAppColors,AppThemeColors, resolveThemePreference } from "../constants/theme";
+import { getAppColors, AppThemeColors, resolveThemePreference } from "../constants/theme";
+import { useColorScheme } from '../hooks/use-color-scheme';
+import { scheduleTimedNotification, scheduleWeeklyNotification } from '../../lib/Notifications';
+
+const WEEKDAY_TO_NUMBER: Record<string, 1 | 2 | 3 | 4 | 5 | 6 | 7> = {
+  Sunday: 1,
+  Monday: 2,
+  Tuesday: 3,
+  Wednesday: 4,
+  Thursday: 5,
+  Friday: 6,
+  Saturday: 7,
+};
 
 const ALL_WEEKDAYS: Weekday[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const WEEKDAY_ABBREVIATIONS: Record<Weekday, string> = {
@@ -59,12 +71,15 @@ export default function AddTaskDialog({
     );
   };
 
-  const handleCreateTask = () => {
+  const handleCreateTask = async () => {
     // Validation
     if (!taskTitle.trim()) {
       alert("Please enter a task title");
       return;
     }
+
+    let scheduledDateTime: Date | null = null;
+    let notificationId: string | undefined;
 
     // Different validation based on task type
     if (initialTaskType === "routine" || initialTaskType === "long_interval") {
@@ -86,12 +101,32 @@ export default function AddTaskDialog({
         return;
       }
 
+      const notifTime = editedTime || new Date(new Date().setHours(23, 59, 0, 0));
+      scheduledDateTime = new Date(effectiveStartDate);
+      scheduledDateTime.setHours(notifTime.getHours(), notifTime.getMinutes(), 0, 0);
+
+      if (initialTaskType === "routine" && selectedDays.length > 0) {
+        const notificationIds = await Promise.all(
+          selectedDays.map((day) => {
+            const weekdayNum = WEEKDAY_TO_NUMBER[day];
+            return scheduleWeeklyNotification("Planable", taskTitle, weekdayNum, notifTime.getHours(), notifTime.getMinutes(), true);
+          })
+        );
+        notificationId = JSON.stringify(notificationIds);
+      } else {
+        const secondsUntil = Math.floor((scheduledDateTime.getTime() - Date.now()) / 1000);
+        if (secondsUntil > 0) {
+          notificationId = await scheduleTimedNotification("Planable", taskTitle, secondsUntil, true);
+        }
+      }
+
       // Use startDate as the primary task date
       onAddTask({
         title: taskTitle,
         due_date: effectiveStartDate,
         time: editedTime || new Date(new Date().setHours(23, 59, 0, 0)),
         type: initialTaskType,
+        notification_id: notificationId,
         days_selected: initialTaskType === "routine" ? selectedDays : undefined,
         recurrence_interval: interval,
         notes,
@@ -114,11 +149,22 @@ export default function AddTaskDialog({
       // Convert selected date string to Date object in local timezone (not UTC) to avoid timezone issues
       const [year, month, day] = selectedDate.split('-').map(Number);
       const dueDate = new Date(year, month - 1, day);
+
+      const notifTime = editedTime || new Date(new Date().setHours(23, 59, 0, 0));
+      scheduledDateTime = new Date(dueDate);
+      scheduledDateTime.setHours(notifTime.getHours(), notifTime.getMinutes(), 0, 0);
+
+      const secondsUntil = Math.floor((scheduledDateTime.getTime() - Date.now()) / 1000);
+      if (secondsUntil > 0) {
+        notificationId = await scheduleTimedNotification("Planable", taskTitle, secondsUntil, true);
+      }
+
       onAddTask({
         title: taskTitle,
         due_date: dueDate,
         time: editedTime || new Date(new Date().setHours(23, 59, 0, 0)),
         type: initialTaskType,
+        notification_id: notificationId,
         parent_task_id: initialTaskType === "related" ? parentTaskId : undefined,
         notes: notes,
       });

@@ -17,6 +17,8 @@ import {
   Eye,
 } from 'lucide-react-native';
 import Slider  from '@react-native-community/slider';
+import * as Notifications from "expo-notifications";
+import { disableNotifications, requestNotificationPermission,scheduleTimedNotification} from '@/lib/Notifications';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { User } from '@supabase/supabase-js';
@@ -28,6 +30,7 @@ import { useColorScheme } from '../hooks/use-color-scheme';
 export interface SettingsData {
   defaultTimerMinutes: number;
   soundEnabled: boolean;
+  notifications: boolean;
   confettiEnabled: boolean;
   theme: "auto" | "light" | "dark";
   defaultTaskView: "all" | "routine" | "basic" | "related" | "long_interval" ;
@@ -258,6 +261,7 @@ export function Settings({
 
   //Add sign in and out stuff
 
+
   return (
     <View style={[styles.container,{paddingTop:insets.top,}]}>
       <ScrollView style={[styles.scrollContent,]} showsVerticalScrollIndicator={false}>
@@ -423,6 +427,46 @@ export function Settings({
           iconColor="#ffc9d4"
           themeColors={colors}
         >
+          <View style={styles.settingRow}>
+            <View style={styles.settingLabel}>
+              <Text style={styles.settingLabelText}>Enable Notifications</Text>
+              <Text style={styles.settingSubtext}>
+                Send notifications to remind you of your tasks and during One Thing Mode.
+              </Text>
+            </View>
+            <Switch
+              value={settings.notifications}
+              onValueChange={(checked) =>
+                {updateSetting('notifications', checked);
+                  if (checked){
+                    requestNotificationPermission();
+                  } else {
+                    disableNotifications();
+                  }
+                }
+              }
+              trackColor={{ false: '#e5d9f2', true: '#ffc9d4' }}
+              thumbColor="#fff"
+            />
+          </View>
+          <View style={styles.settingRow}>
+            <View style={styles.settingLabel}>
+              <Text style={styles.settingLabelText}>Send Noti</Text>
+              <Text style={styles.settingSubtext}>
+                Test
+              </Text>
+            </View>
+            <Switch
+              value={settings.notifications}
+              onValueChange={(checked) =>
+                {
+                  scheduleTimedNotification("Test", "Testing Notifications",1,settings.soundEnabled);
+                }
+              }
+              trackColor={{ false: '#e5d9f2', true: '#ffc9d4' }}
+              thumbColor="#fff"
+            />
+          </View>
           <View style={styles.settingRow}>
             <View style={styles.settingLabel}>
               <Text style={styles.settingLabelText}>Sound Effects</Text>
