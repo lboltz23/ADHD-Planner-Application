@@ -23,7 +23,7 @@ function RootLayoutContent() {
   const { colors, isDark } = useAppTheme();
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }} >
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <Stack
         screenOptions={{
@@ -35,8 +35,8 @@ function RootLayoutContent() {
         <Stack.Screen name="CalendarView" />
         <Stack.Screen name="OneThingMode" />
         <Stack.Screen name="Settings" />
-        <Stack.Screen name="login" />
-        <Stack.Screen name="signup" />
+          <Stack.Screen name="login" />
+          <Stack.Screen name="signup" />
         <Stack.Screen name ="ResetPass"/>
       </Stack>
       <ConfettiOverlay trigger={confettiTrigger} />

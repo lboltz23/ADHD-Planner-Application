@@ -21,11 +21,12 @@ interface TaskCardProps {
   task: Task;
   tasks?: Task[];
   onToggle: (id: string) => void;
-  onUpdate: (id: string, fields: { title?: string; due_date?: Date; notes?: string; parent_id?: string; start_date?: Date; end_date?: Date; recurrence_interval?: number; days_selected?: Weekday[] }) => void;
+  onUpdate: (id: string, fields: { title?: string; due_date?: Date; time?: Date; notes?: string; parent_id?: string; start_date?: Date; end_date?: Date; recurrence_interval?: number; days_selected?: Weekday[] }) => void;
   onDelete: (id: string) => void;
   showDate?: boolean;
   showTime?: boolean;
   colorBlindMode?: boolean;
+  isDarkMode?: boolean
 }
 
 interface TaskStyle {
@@ -46,6 +47,7 @@ export function TaskCard({
   showDate,
   showTime,
   colorBlindMode = false,
+  isDarkMode = false,
 }: TaskCardProps) {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const { colors, isDark } = useAppTheme();
@@ -122,12 +124,11 @@ export function TaskCard({
   };
 
   const formatTime = (date: Date | undefined): string => {
-    if (!date) return "Select time";
+    if (!date) return "";
     return date.toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
       hour12: true,
-      timeZoneName: "short",
     });
   }
 

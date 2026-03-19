@@ -37,6 +37,8 @@ export default function SettingsScreen() {
         subscription.subscription.unsubscribe()
       }
     }, [])
+  const handleBack = useSafeBack();
+  const { colors } = useAppTheme();
 
       useEffect(() =>{
         const GetUsername = async () =>{
@@ -49,8 +51,6 @@ export default function SettingsScreen() {
           setUsername(null);
         }
       },[user])
-  const handleBack = useSafeBack();
-  const { colors } = useAppTheme();
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
