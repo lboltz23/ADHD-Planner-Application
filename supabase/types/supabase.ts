@@ -83,6 +83,7 @@ export type Database = {
           id: string
           is_template: boolean | null
           notes: string | null
+          notification_id: string | null
           parent_task_id: string | null
           recurrence_interval: number | null
           start_date: string | null
@@ -101,6 +102,7 @@ export type Database = {
           id?: string
           is_template?: boolean | null
           notes?: string | null
+          notification_id?: string | null
           parent_task_id?: string | null
           recurrence_interval?: number | null
           start_date?: string | null
@@ -119,6 +121,7 @@ export type Database = {
           id?: string
           is_template?: boolean | null
           notes?: string | null
+          notification_id?: string | null
           parent_task_id?: string | null
           recurrence_interval?: number | null
           start_date?: string | null

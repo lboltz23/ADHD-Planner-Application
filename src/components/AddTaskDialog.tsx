@@ -76,7 +76,7 @@ export default function AddTaskDialog({
     setTaskTitle(initialTitle);
   }, [initialTitle]);
 
-  const handleCreateTask = () => {
+  const handleCreateTask = async () => {
     // Validation
     if (!taskTitle.trim()) {
       alert("Please enter a task title");
@@ -84,6 +84,7 @@ export default function AddTaskDialog({
     }
 
     let scheduledDateTime: Date | null = null;
+    let notificationId: string | undefined;
 
     // Different validation based on task type
     if (initialTaskType === "routine" || initialTaskType === "long_interval") {
@@ -109,12 +110,28 @@ export default function AddTaskDialog({
       scheduledDateTime = new Date(effectiveStartDate);
       scheduledDateTime.setHours(notifTime.getHours(), notifTime.getMinutes(), 0, 0);
 
+      if (initialTaskType === "routine" && selectedDays.length > 0) {
+        const notificationIds = await Promise.all(
+          selectedDays.map((day) => {
+            const weekdayNum = WEEKDAY_TO_NUMBER[day];
+            return scheduleWeeklyNotification("Planable", taskTitle, weekdayNum, notifTime.getHours(), notifTime.getMinutes(), true);
+          })
+        );
+        notificationId = JSON.stringify(notificationIds);
+      } else {
+        const secondsUntil = Math.floor((scheduledDateTime.getTime() - Date.now()) / 1000);
+        if (secondsUntil > 0) {
+          notificationId = await scheduleTimedNotification("Planable", taskTitle, secondsUntil, true);
+        }
+      }
+
       // Use startDate as the primary task date
       onAddTask({
         title: taskTitle,
         due_date: effectiveStartDate,
         time: editedTime || new Date(new Date().setHours(23, 59, 0, 0)),
         type: initialTaskType,
+        notification_id: notificationId,
         days_selected: initialTaskType === "routine" ? selectedDays : undefined,
         recurrence_interval: interval,
         notes,
@@ -142,30 +159,20 @@ export default function AddTaskDialog({
       scheduledDateTime = new Date(dueDate);
       scheduledDateTime.setHours(notifTime.getHours(), notifTime.getMinutes(), 0, 0);
 
+      const secondsUntil = Math.floor((scheduledDateTime.getTime() - Date.now()) / 1000);
+      if (secondsUntil > 0) {
+        notificationId = await scheduleTimedNotification("Planable", taskTitle, secondsUntil, true);
+      }
+
       onAddTask({
         title: taskTitle,
         due_date: dueDate,
         time: editedTime || new Date(new Date().setHours(23, 59, 0, 0)),
         type: initialTaskType,
+        notification_id: notificationId,
         parent_task_id: initialTaskType === "related" ? parentTaskId : undefined,
         notes: notes,
       });
-    }
-
-    // Schedule notifications
-    if (initialTaskType === "routine" && selectedDays.length > 0) {
-      const notifTime = editedTime || new Date(new Date().setHours(23, 59, 0, 0));
-      selectedDays.forEach((day) => {
-        const weekdayNum = WEEKDAY_TO_NUMBER[day];
-        if (weekdayNum) {
-          scheduleWeeklyNotification("Planable", taskTitle, weekdayNum, notifTime.getHours(), notifTime.getMinutes(), true);
-        }
-      });
-    } else if (scheduledDateTime) {
-      const secondsUntil = Math.floor((scheduledDateTime.getTime() - Date.now()) / 1000);
-      if (secondsUntil > 0) {
-        scheduleTimedNotification("Planable", taskTitle, secondsUntil, true);
-      }
     }
 
     // Reset form and close dialog

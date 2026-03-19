@@ -34,10 +34,10 @@ export async function requestNotificationPermission() {
 
 
 // Local Notifications
-export async function scheduleTimedNotification(title:string,body:string,seconds:number,sound:boolean) {
+export async function scheduleTimedNotification(title:string,body:string,seconds:number,sound:boolean): Promise<string> {
   await ensureAndroidNotificationChannels();
 
-  await Notifications.scheduleNotificationAsync({
+  const id = await Notifications.scheduleNotificationAsync({
     content: {
       title: title,
       body: body,
@@ -53,6 +53,8 @@ export async function scheduleTimedNotification(title:string,body:string,seconds
       repeats: false,
     },
   });
+
+  return id;
 }
 
 

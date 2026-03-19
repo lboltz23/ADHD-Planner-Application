@@ -7,6 +7,7 @@ export interface Task {
   id: string;
   user_id: string;
   title: string;
+  notification_id?: string;
   type: TaskType;
   due_date: Date;
   time?: Date;
@@ -28,6 +29,7 @@ export interface Task {
 export interface CreateTaskParams {
   title: string;
   type: TaskType;
+  notification_id?: string;
   notes?: string;
   time?: Date;
 
