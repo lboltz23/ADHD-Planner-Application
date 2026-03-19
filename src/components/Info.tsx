@@ -4,19 +4,19 @@ import { getTaskTypeColor } from "./taskColors";
 import { Repeat, CheckSquare, Link as LinkIcon, Hourglass, X } from "lucide-react-native";
 import { getAppColors } from "../constants/theme";
 
-export interface EditTaskProps {
+export interface InfoProps {
   isOpen: boolean;
   onClose: () => void;
   colorBlindMode?: boolean;
   isDarkMode?: boolean;
 }
 
-export default function EditTask({
+export default function InfoTask({
   isOpen,
   onClose,
   colorBlindMode = false,
   isDarkMode = false,
-}: EditTaskProps) {
+}: InfoProps) {
 
   return (
     <>
