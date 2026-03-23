@@ -130,7 +130,7 @@ export function Dashboard({
     const now = new Date();
     return tasks
       .filter((task) => {
-        if (task.is_template || task.type === 'routine' ||  task.type === 'long_interval' || task.completed) return false;
+        if (task.is_template || task.type === 'routine' || task.completed) return false;
         const taskDate = combineAsDate(task.due_date, task.time || new Date());
         return taskDate < now;
       })
