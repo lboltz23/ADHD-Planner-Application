@@ -117,8 +117,8 @@ export function Dashboard({
         taskDate.setHours(0, 0, 0, 0);
         return taskDate > today;
       })
-      .sort((a, b) => new Date(combineAsDate(b.due_date,b.time || new Date())).getTime() - 
-                    new Date(combineAsDate(a.due_date,a.time || new Date())).getTime())      
+      .sort((a, b) => new Date(combineAsDate(a.due_date,a.time || new Date())).getTime() - 
+                    new Date(combineAsDate(b.due_date,b.time || new Date())).getTime())      
       .slice(0, 5);
   }, [tasks, taskRefresh]);
 
