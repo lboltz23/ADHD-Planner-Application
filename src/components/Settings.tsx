@@ -451,24 +451,6 @@ export function Settings({
           </View>
           <View style={styles.settingRow}>
             <View style={styles.settingLabel}>
-              <Text style={styles.settingLabelText}>Send Noti</Text>
-              <Text style={styles.settingSubtext}>
-                Test
-              </Text>
-            </View>
-            <Switch
-              value={settings.notifications}
-              onValueChange={(checked) =>
-                {
-                  scheduleTimedNotification("Test", "Testing Notifications",1,settings.soundEnabled);
-                }
-              }
-              trackColor={{ false: '#e5d9f2', true: '#ffc9d4' }}
-              thumbColor="#fff"
-            />
-          </View>
-          <View style={styles.settingRow}>
-            <View style={styles.settingLabel}>
               <Text style={styles.settingLabelText}>Sound Effects</Text>
               <Text style={styles.settingSubtext}>
                 Play sounds for timer and completions
