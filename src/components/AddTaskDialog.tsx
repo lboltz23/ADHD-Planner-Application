@@ -40,6 +40,8 @@ interface AddTaskDialogProps {
   onClose: () => void;
   onAddTask: (params: CreateTaskParams) => void;
   initialTaskType: TaskType;
+  notificationsEnabled?: boolean;
+  soundEnabled?: boolean;
   colorBlindMode?: boolean;
   isDarkMode?: boolean
   tasks?: Task[];
@@ -50,6 +52,8 @@ export default function AddTaskDialog({
   onClose,
   onAddTask,
   initialTaskType,
+  notificationsEnabled = false,
+  soundEnabled = true,
   tasks = [],
   colorBlindMode= false,
   isDarkMode = false,
@@ -105,18 +109,18 @@ export default function AddTaskDialog({
       scheduledDateTime = new Date(effectiveStartDate);
       scheduledDateTime.setHours(notifTime.getHours(), notifTime.getMinutes(), 0, 0);
 
-      if (initialTaskType === "routine" && selectedDays.length > 0) {
+      if (notificationsEnabled && initialTaskType === "routine" && selectedDays.length > 0) {
         const notificationIds = await Promise.all(
           selectedDays.map((day) => {
             const weekdayNum = WEEKDAY_TO_NUMBER[day];
-            return scheduleWeeklyNotification("Planable", taskTitle, weekdayNum, notifTime.getHours(), notifTime.getMinutes(), true);
+            return scheduleWeeklyNotification("Planable", taskTitle, weekdayNum, notifTime.getHours(), notifTime.getMinutes(), soundEnabled);
           })
         );
         notificationId = JSON.stringify(notificationIds);
-      } else {
+      } else if (notificationsEnabled) {
         const secondsUntil = Math.floor((scheduledDateTime.getTime() - Date.now()) / 1000);
         if (secondsUntil > 0) {
-          notificationId = await scheduleTimedNotification("Planable", taskTitle, secondsUntil, true);
+          notificationId = await scheduleTimedNotification("Planable", taskTitle, secondsUntil, soundEnabled);
         }
       }
 
@@ -155,8 +159,8 @@ export default function AddTaskDialog({
       scheduledDateTime.setHours(notifTime.getHours(), notifTime.getMinutes(), 0, 0);
 
       const secondsUntil = Math.floor((scheduledDateTime.getTime() - Date.now()) / 1000);
-      if (secondsUntil > 0) {
-        notificationId = await scheduleTimedNotification("Planable", taskTitle, secondsUntil, true);
+      if (notificationsEnabled && secondsUntil > 0) {
+        notificationId = await scheduleTimedNotification("Planable", taskTitle, secondsUntil, soundEnabled);
       }
 
       onAddTask({

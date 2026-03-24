@@ -791,6 +791,8 @@ export function Dashboard({
           onClose={handleCloseDialog}
           onAddTask={handleCreateTask}
           initialTaskType={selectedType}
+          notificationsEnabled={settings.notifications}
+          soundEnabled={settings.soundEnabled}
           colorBlindMode={settings.colorBlindMode}
           tasks={tasks}
           isDarkMode={isDark}
