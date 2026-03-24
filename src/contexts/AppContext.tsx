@@ -9,7 +9,7 @@ import { User } from '@supabase/supabase-js';
 import { router } from 'expo-router';
 import * as Linking from 'expo-linking';
 import * as ExpoNotifications from 'expo-notifications';
-import { scheduleTimedNotification } from '@/lib/Notifications';
+import { cancelNotification, scheduleTimedNotification, scheduleWeeklyNotification } from '@/lib/Notifications';
 
 // Parse a date string from Supabase as a LOCAL date (avoids UTC timezone shift)
 function parseLocalDate(dateStr: string): Date {
@@ -37,6 +37,16 @@ const DAY_NUMBER_TO_WEEKDAY: Record<number, Weekday> = {
   4: "Thursday",
   5: "Friday",
   6: "Saturday",
+};
+
+const WEEKDAY_TO_NUMBER: Record<Weekday, 1 | 2 | 3 | 4 | 5 | 6 | 7> = {
+  Sunday: 1,
+  Monday: 2,
+  Tuesday: 3,
+  Wednesday: 4,
+  Thursday: 5,
+  Friday: 6,
+  Saturday: 7,
 };
 
 interface AppContextType {
@@ -167,6 +177,108 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
 
     return candidate;
+  };
+
+  const parseNotificationIds = (notificationId?: string | null) => {
+    if (!notificationId) {
+      return [] as string[];
+    }
+
+    try {
+      const parsed = JSON.parse(notificationId);
+      if (Array.isArray(parsed)) {
+        return parsed.filter((value): value is string => typeof value === 'string' && value.length > 0);
+      }
+    } catch {
+      // notification_id can also be a plain string for single reminders.
+    }
+
+    return [notificationId];
+  };
+
+  const cancelStoredNotifications = async (notificationId?: string | null) => {
+    const ids = parseNotificationIds(notificationId);
+    if (ids.length === 0) {
+      return;
+    }
+
+    await Promise.all(ids.map(async (scheduledId) => {
+      try {
+        await cancelNotification(scheduledId);
+      } catch (error) {
+        console.error(`Error canceling notification ${scheduledId}:`, error);
+      }
+    }));
+  };
+
+  const scheduleNotificationForTask = async (taskToSchedule: {
+    title: string;
+    type: Task['type'];
+    due_date: Date;
+    time?: Date;
+    is_template?: boolean;
+    days_selected?: Weekday[];
+    recurrence_interval?: number;
+    start_date?: Date;
+    end_date?: Date;
+  }) => {
+    const reminderTime = taskToSchedule.time ?? taskToSchedule.due_date;
+
+    if (taskToSchedule.is_template && taskToSchedule.type === 'routine') {
+      const selectedDays = taskToSchedule.days_selected ?? [];
+      if (selectedDays.length === 0) {
+        return undefined;
+      }
+
+      const notificationIds = await Promise.all(selectedDays.map((day) => (
+        scheduleWeeklyNotification(
+          'Planable',
+          taskToSchedule.title,
+          WEEKDAY_TO_NUMBER[day],
+          reminderTime.getHours(),
+          reminderTime.getMinutes(),
+          true,
+        )
+      )));
+
+      return notificationIds.length > 0 ? JSON.stringify(notificationIds) : undefined;
+    }
+
+    if (taskToSchedule.is_template && taskToSchedule.type === 'long_interval') {
+      const startDate = taskToSchedule.start_date ?? taskToSchedule.due_date;
+      const intervalMonths = taskToSchedule.recurrence_interval;
+
+      if (!intervalMonths || intervalMonths <= 0) {
+        return undefined;
+      }
+
+      const nextOccurrence = getNextLongIntervalOccurrence(
+        startDate,
+        intervalMonths,
+        reminderTime,
+        taskToSchedule.end_date,
+      );
+
+      if (!nextOccurrence) {
+        return undefined;
+      }
+
+      const secondsUntil = Math.floor((nextOccurrence.getTime() - Date.now()) / 1000);
+      if (secondsUntil <= 0) {
+        return undefined;
+      }
+
+      return scheduleTimedNotification('Planable', taskToSchedule.title, secondsUntil, true);
+    }
+
+    const scheduledDateTime = combineAsDate(taskToSchedule.due_date, reminderTime);
+    const secondsUntil = Math.floor((scheduledDateTime.getTime() - Date.now()) / 1000);
+
+    if (secondsUntil <= 0) {
+      return undefined;
+    }
+
+    return scheduleTimedNotification('Planable', taskToSchedule.title, secondsUntil, true);
   };
 
   const reconcileLongIntervalNotifications = async (rows: any[], userId: string) => {
@@ -660,6 +772,36 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     const isRecurringInstance = task.parent_task_id && !task.is_template && task.type !== 'related';
     const isInMemoryInstance = isRecurringInstance && id.includes('_') && /\d{4}-\d{2}-\d{2}$/.test(id);
+    const scheduleChanged =
+      fields.time !== undefined ||
+      fields.due_date !== undefined ||
+      (task.is_template && (
+        fields.days_selected !== undefined ||
+        fields.start_date !== undefined ||
+        fields.end_date !== undefined ||
+        fields.recurrence_interval !== undefined
+      ));
+
+    let replacementNotificationId = task.notification_id;
+    let scheduledReplacementNotificationId: string | undefined;
+
+    if (scheduleChanged && !isInMemoryInstance) {
+      scheduledReplacementNotificationId = await scheduleNotificationForTask({
+        title: newTitle,
+        type: task.type,
+        due_date: newDate,
+        time: newTime,
+        is_template: task.is_template,
+        days_selected: newDaysSelected,
+        recurrence_interval: newInterval,
+        start_date: newStartDate,
+        end_date: newEndDate,
+      });
+
+      replacementNotificationId = scheduledReplacementNotificationId;
+      supabaseUpdate.notification_id = replacementNotificationId ?? null;
+      localUpdate.notification_id = replacementNotificationId;
+    }
 
     // Optimistically update UI
     setTasks(prev => prev.map(t =>
@@ -680,6 +822,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         user_id: task.user_id,
         is_template: false,
         parent_task_id: task.parent_task_id,
+        notification_id: replacementNotificationId ?? null,
         notes: newNotes || null,
         start_date: newStartDate ? toLocalDateString(newStartDate) : null,
         end_date: newEndDate ? toLocalDateString(newEndDate) : null,
@@ -690,17 +833,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error('Error inserting recurring instance override:', error);
+        if (scheduledReplacementNotificationId) {
+          await cancelStoredNotifications(scheduledReplacementNotificationId);
+        }
         // Revert
         setTasks(prev => prev.map(t =>
-          t.id === id ? { ...t, title: task.title, due_date: task.due_date, notes: task.notes } : t
+          t.id === id ? task : t
         ));
         return;
+      }
+
+      if (scheduleChanged) {
+        await cancelStoredNotifications(task.notification_id);
       }
 
       // Replace the synthetic instance with the persisted one
       setTasks(prev => prev.map(t =>
         t.id === id
-          ? { ...t, id: newId, created_at: now, updated_at: now }
+          ? {
+              ...t,
+              id: newId,
+              created_at: now,
+              updated_at: now,
+              notification_id: replacementNotificationId,
+            }
           : t
       ));
     } else if (isRecurringInstance) {
@@ -712,9 +868,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error('Error updating recurring instance override:', error);
+        if (scheduledReplacementNotificationId) {
+          await cancelStoredNotifications(scheduledReplacementNotificationId);
+        }
         setTasks(prev => prev.map(t =>
-          t.id === id ? { ...t, title: task.title, due_date: task.due_date, notes: task.notes } : t
+          t.id === id ? task : t
         ));
+        return;
+      }
+
+      if (scheduleChanged) {
+        await cancelStoredNotifications(task.notification_id);
       }
     } else if (task.is_template) {
       // Template — update and propagate title to in-memory instances
@@ -725,17 +889,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error('Error updating template:', error);
+        if (scheduledReplacementNotificationId) {
+          await cancelStoredNotifications(scheduledReplacementNotificationId);
+        }
         setTasks(prev => prev.map(t =>
-          t.id === id ? { ...t, title: task.title, due_date: task.due_date, notes: task.notes } : t
+          t.id === id ? task : t
         ));
         return;
       }
-      // Check if any schedule fields changed ΓÇö if so, regenerate all in-memory instances
-      const scheduleChanged =
-       fields.start_date !== undefined ||
-       fields.end_date !== undefined ||
-       fields.days_selected !== undefined ||
-       fields.recurrence_interval !== undefined;
+
+      if (scheduleChanged) {
+        await cancelStoredNotifications(task.notification_id);
+      }
       
       if (scheduleChanged) {
         // Build an updated template object for instance generation
@@ -804,12 +969,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error('Error updating task:', error);
+        if (scheduledReplacementNotificationId) {
+          await cancelStoredNotifications(scheduledReplacementNotificationId);
+        }
         setTasks(prev => prev.map(t =>
-          t.id === id ? { ...t, title: task.title, due_date: task.due_date, notes: task.notes } : t
+          t.id === id ? task : t
         ));
+        return;
+      }
+
+      if (scheduleChanged) {
+        await cancelStoredNotifications(task.notification_id);
       }
     }
-  }, [user,tasks]);
+  }, [tasks]);
   
   const triggerConfetti = useCallback(() => {
     setConfettiTrigger(prev => prev + 1);
@@ -892,8 +1065,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
           .update({ excluded_dates: [...currentDates, dateStr] })
           .eq('id', task.parent_task_id);
       }
+
+      await cancelStoredNotifications(task.notification_id);
       return;
     }
+
+    const templateChildNotifications = task.is_template
+      ? tasks
+          .filter(t => t.parent_task_id === id && !t.id.includes('_') && /\d{4}-\d{2}-\d{2}$/.test(t.id) === false)
+          .map(t => t.notification_id)
+      : [];
 
     // Unlink related tasks that reference this as their parent
     const relatedChildren = tasks.filter(t => t.parent_task_id === id && t.type === 'related');
@@ -939,7 +1120,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       console.error('Error deleting task:', error);
       // Revert — add the task back to local state
       setTasks(prev => [...prev, task]);
+      return;
     }
+
+    await cancelStoredNotifications(task.notification_id);
+    await Promise.all(templateChildNotifications.map((notificationId) => cancelStoredNotifications(notificationId)));
   }, [tasks]);
 
   const updateStreak = () => {
