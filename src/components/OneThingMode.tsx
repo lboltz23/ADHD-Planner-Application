@@ -22,7 +22,6 @@ import { SettingsData } from './Settings';
 import { getTaskTypeColor } from './taskColors';
 import { AppThemeColors, resolveThemePreference } from '../constants/theme';
 import { useColorScheme } from '../hooks/use-color-scheme';
-import { cancelNotification, scheduleTimedNotification } from '@/lib/Notifications';
 
 interface OneThingModeProps {
   onNavigateBack: () => void;
@@ -56,18 +55,12 @@ export function OneThingMode({
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const popupTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const timerNotificationIdRef = useRef<string | null>(null);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (popupTimeoutRef.current) {
         clearTimeout(popupTimeoutRef.current);
-      }
-
-      if (timerNotificationIdRef.current) {
-        void cancelNotification(timerNotificationIdRef.current);
-        timerNotificationIdRef.current = null;
       }
     };
   }, []);
@@ -103,7 +96,6 @@ export function OneThingMode({
         if (newTime <= 0) {
           setIsRunning(false);
           setHasCompleted(true);
-          void cancelTimerNotification();
           if (settings.confettiEnabled && onTriggerConfetti) {
             onTriggerConfetti();
           }
@@ -136,39 +128,6 @@ export function OneThingMode({
         useNativeDriver: true,
       }),
     ]).start();
-  };
-
-  const cancelTimerNotification = async () => {
-    if (!timerNotificationIdRef.current) {
-      return;
-    }
-
-    try {
-      await cancelNotification(timerNotificationIdRef.current);
-    } catch (error) {
-      console.error('Error canceling One Thing Mode notification:', error);
-    } finally {
-      timerNotificationIdRef.current = null;
-    }
-  };
-
-  const scheduleTimerNotification = async (secondsRemaining: number) => {
-    await cancelTimerNotification();
-
-    if (!settings.notifications || secondsRemaining <= 0) {
-      return;
-    }
-
-    try {
-      timerNotificationIdRef.current = await scheduleTimedNotification(
-        'Planable',
-        'One Thing Mode timer finished.',
-        secondsRemaining,
-        settings.soundEnabled,
-      );
-    } catch (error) {
-      console.error('Error scheduling One Thing Mode notification:', error);
-    }
   };
 
   const playSound = () => {
@@ -240,22 +199,13 @@ export function OneThingMode({
       setShownIntervals(new Set());
       setIsRunning(true);
       setHasCompleted(false);
-      void scheduleTimerNotification(settings.defaultTimerMinutes * 60);
     } else {
-      const nextRunningState = !isRunning;
-      setIsRunning(nextRunningState);
+      setIsRunning(!isRunning);
       setHasCompleted(false);
-
-      if (nextRunningState) {
-        void scheduleTimerNotification(timeInSeconds);
-      } else {
-        void cancelTimerNotification();
-      }
     }
   };
 
   const resetTimer = () => {
-    void cancelTimerNotification();
     setIsRunning(false);
     setTimeInSeconds(settings.defaultTimerMinutes * 60);
     setHasCompleted(false);
@@ -264,7 +214,6 @@ export function OneThingMode({
 
   const handleCompleteTask = () => {
     if (selectedTaskId) {
-      void cancelTimerNotification();
       onToggleTask(selectedTaskId);
       if (settings.confettiEnabled && onTriggerConfetti) {
         onTriggerConfetti();

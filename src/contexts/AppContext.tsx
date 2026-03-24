@@ -9,7 +9,7 @@ import { User } from '@supabase/supabase-js';
 import { router } from 'expo-router';
 import * as Linking from 'expo-linking';
 import * as ExpoNotifications from 'expo-notifications';
-import { cancelNotification, disableNotifications, requestNotificationPermission, scheduleTimedNotification, scheduleWeeklyNotification } from '@/lib/Notifications';
+import { scheduleTimedNotification } from '@/lib/Notifications';
 
 // Parse a date string from Supabase as a LOCAL date (avoids UTC timezone shift)
 function parseLocalDate(dateStr: string): Date {
@@ -39,16 +39,6 @@ const DAY_NUMBER_TO_WEEKDAY: Record<number, Weekday> = {
   6: "Saturday",
 };
 
-const WEEKDAY_TO_NUMBER: Record<Weekday, 1 | 2 | 3 | 4 | 5 | 6 | 7> = {
-  Sunday: 1,
-  Monday: 2,
-  Tuesday: 3,
-  Wednesday: 4,
-  Thursday: 5,
-  Friday: 6,
-  Saturday: 7,
-};
-
 interface AppContextType {
   tasks: Task[];
   settings: SettingsData;
@@ -56,7 +46,7 @@ interface AppContextType {
   toggleTask: (id: string) => void;
   updateTask: (id: string, fields: { title?: string; due_date?: Date; notes?: string; time?: Date; parent_id?: string; start_date?: Date; end_date?: Date; recurrence_interval?: number; days_selected?: Weekday[] }) => void;
   deleteTask: (id: string) => void;
-  updateSettings: (newSettings: SettingsData) => Promise<void>;
+  updateSettings: (newSettings: SettingsData) => void;
   streakCount: number;
   login: () => void;
   confettiTrigger: number;
@@ -179,221 +169,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return candidate;
   };
 
-  const parseNotificationIds = (notificationId?: string | null) => {
-    if (!notificationId) {
-      return [] as string[];
-    }
-
-    try {
-      const parsed = JSON.parse(notificationId);
-      if (Array.isArray(parsed)) {
-        return parsed.filter((value): value is string => typeof value === 'string' && value.length > 0);
-      }
-    } catch {
-      // Single notifications are stored as plain strings.
-    }
-
-    return [notificationId];
-  };
-
-  const isSyntheticRecurringInstance = (task: Task) => (
-    !!task.parent_task_id &&
-    !task.is_template &&
-    task.type !== 'related' &&
-    task.id.includes('_') &&
-    /\d{4}-\d{2}-\d{2}$/.test(task.id)
-  );
-
-  const ownsPersistedNotification = (task: Task) => !isSyntheticRecurringInstance(task);
-
-  const cancelStoredNotifications = async (notificationId?: string | null) => {
-    const notificationIds = parseNotificationIds(notificationId);
-    if (notificationIds.length === 0) {
-      return;
-    }
-
-    await Promise.all(notificationIds.map(async (scheduledId) => {
-      try {
-        await cancelNotification(scheduledId);
-      } catch (error) {
-        console.error(`Error canceling notification ${scheduledId}:`, error);
-      }
-    }));
-  };
-
-  const scheduleNotificationForTask = async (taskToSchedule: {
-    title: string;
-    type: Task['type'];
-    due_date: Date;
-    time?: Date;
-    is_template?: boolean;
-    days_selected?: Weekday[];
-    recurrence_interval?: number;
-    start_date?: Date;
-    end_date?: Date;
-    notificationsEnabled?: boolean;
-    soundEnabled?: boolean;
-  }) => {
-    const notificationsEnabled = taskToSchedule.notificationsEnabled ?? settings.notifications;
-    const soundEnabled = taskToSchedule.soundEnabled ?? settings.soundEnabled;
-
-    if (!notificationsEnabled) {
-      return undefined;
-    }
-
-    const reminderTime = taskToSchedule.time ?? taskToSchedule.due_date;
-
-    if (taskToSchedule.is_template && taskToSchedule.type === 'routine') {
-      const selectedDays = taskToSchedule.days_selected ?? [];
-      if (selectedDays.length === 0) {
-        return undefined;
-      }
-
-      const notificationIds = await Promise.all(selectedDays.map((day) => (
-        scheduleWeeklyNotification(
-          'Planable',
-          taskToSchedule.title,
-          WEEKDAY_TO_NUMBER[day],
-          reminderTime.getHours(),
-          reminderTime.getMinutes(),
-          soundEnabled,
-        )
-      )));
-
-      return notificationIds.length > 0 ? JSON.stringify(notificationIds) : undefined;
-    }
-
-    if (taskToSchedule.is_template && taskToSchedule.type === 'long_interval') {
-      const startDate = taskToSchedule.start_date ?? taskToSchedule.due_date;
-      const intervalMonths = taskToSchedule.recurrence_interval;
-
-      if (!intervalMonths || intervalMonths <= 0) {
-        return undefined;
-      }
-
-      const nextOccurrence = getNextLongIntervalOccurrence(
-        startDate,
-        intervalMonths,
-        reminderTime,
-        taskToSchedule.end_date,
-      );
-
-      if (!nextOccurrence) {
-        return undefined;
-      }
-
-      const secondsUntil = Math.floor((nextOccurrence.getTime() - Date.now()) / 1000);
-      if (secondsUntil <= 0) {
-        return undefined;
-      }
-
-      return scheduleTimedNotification('Planable', taskToSchedule.title, secondsUntil, soundEnabled);
-    }
-
-    const scheduledDateTime = combineAsDate(taskToSchedule.due_date, reminderTime);
-    const secondsUntil = Math.floor((scheduledDateTime.getTime() - Date.now()) / 1000);
-
-    if (secondsUntil <= 0) {
-      return undefined;
-    }
-
-    return scheduleTimedNotification('Planable', taskToSchedule.title, secondsUntil, soundEnabled);
-  };
-
-  const syncTaskNotifications = async (notificationsEnabled: boolean) => {
-    if (!user) {
-      return notificationsEnabled;
-    }
-
-    const persistedTasks = tasks.filter(ownsPersistedNotification);
-
-    if (!notificationsEnabled) {
-      await disableNotifications();
-
-      const persistedIds = persistedTasks.map((task) => task.id);
-      if (persistedIds.length > 0) {
-        const { error } = await supabase
-          .from('tasks')
-          .update({ notification_id: null })
-          .in('id', persistedIds)
-          .eq('user_id', user.id);
-
-        if (error) {
-          console.error('Error clearing notification ids:', error);
-        }
-      }
-
-      setTasks((prev) => prev.map((task) => (
-        ownsPersistedNotification(task)
-          ? { ...task, notification_id: undefined }
-          : task
-      )));
-
-      return false;
-    }
-
-    const permissionGranted = await requestNotificationPermission();
-    if (!permissionGranted) {
-      return false;
-    }
-
-    const notificationUpdates = new Map<string, string | undefined>();
-
-    for (const task of persistedTasks) {
-      const shouldSchedule = task.is_template || !task.completed;
-      const nextNotificationId = shouldSchedule
-        ? await scheduleNotificationForTask({
-            title: task.title,
-            type: task.type,
-            due_date: task.due_date,
-            time: task.time,
-            is_template: task.is_template,
-            days_selected: task.days_selected,
-            recurrence_interval: task.recurrence_interval,
-            start_date: task.start_date,
-            end_date: task.end_date,
-            notificationsEnabled: true,
-            soundEnabled: settings.soundEnabled,
-          })
-        : undefined;
-
-      const { error } = await supabase
-        .from('tasks')
-        .update({ notification_id: nextNotificationId ?? null })
-        .eq('id', task.id)
-        .eq('user_id', user.id);
-
-      if (error) {
-        console.error(`Error updating notification for task ${task.id}:`, error);
-        if (nextNotificationId) {
-          await cancelStoredNotifications(nextNotificationId);
-        }
-        continue;
-      }
-
-      if (task.notification_id && task.notification_id !== nextNotificationId) {
-        await cancelStoredNotifications(task.notification_id);
-      }
-
-      notificationUpdates.set(task.id, nextNotificationId);
-    }
-
-    if (notificationUpdates.size > 0) {
-      setTasks((prev) => prev.map((task) => (
-        notificationUpdates.has(task.id)
-          ? { ...task, notification_id: notificationUpdates.get(task.id) }
-          : task
-      )));
-    }
-
-    return true;
-  };
-
   const reconcileLongIntervalNotifications = async (rows: any[], userId: string) => {
-    if (!settings.notifications) {
-      return;
-    }
-
     try {
       const scheduledNotifications = await ExpoNotifications.getAllScheduledNotificationsAsync();
       const scheduledIds = new Set(scheduledNotifications.map((item) => item.identifier));
@@ -431,7 +207,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           continue;
         }
 
-        const notificationId = await scheduleTimedNotification('Planable', row.title, secondsUntil, settings.soundEnabled);
+        const notificationId = await scheduleTimedNotification('Planable', row.title, secondsUntil, true);
 
         const { error: updateError } = await supabase
           .from('tasks')
@@ -828,20 +604,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [user,tasks]);
 
-  const updateSettings = useCallback(async (newSettings: SettingsData) => {
-    const notificationsChanged = newSettings.notifications !== settings.notifications;
-
-    if (!notificationsChanged) {
-      setSettings(newSettings);
-      return;
-    }
-
-    const notificationsEnabled = await syncTaskNotifications(newSettings.notifications);
-    setSettings({
-      ...newSettings,
-      notifications: notificationsEnabled,
-    });
-  }, [settings, syncTaskNotifications]);
+  const updateSettings = useCallback((newSettings: SettingsData) => {
+    setSettings(newSettings);
+  }, []);
 
   const updateTask = useCallback(async (id: string, fields: { title?: string; due_date?: Date; notes?: string;time?: Date; parent_id?: string; start_date?: Date; end_date?: Date; recurrence_interval?: number; days_selected?: Weekday[] }) => {
     const task = tasks.find(t => t.id === id);
@@ -895,36 +660,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     const isRecurringInstance = task.parent_task_id && !task.is_template && task.type !== 'related';
     const isInMemoryInstance = isRecurringInstance && id.includes('_') && /\d{4}-\d{2}-\d{2}$/.test(id);
-    const scheduleChanged =
-      fields.time !== undefined ||
-      fields.due_date !== undefined ||
-      (task.is_template && (
-        fields.days_selected !== undefined ||
-        fields.start_date !== undefined ||
-        fields.end_date !== undefined ||
-        fields.recurrence_interval !== undefined
-      ));
-
-    let replacementNotificationId = task.notification_id;
-    let scheduledReplacementNotificationId: string | undefined;
-
-    if (scheduleChanged && !isInMemoryInstance) {
-      scheduledReplacementNotificationId = await scheduleNotificationForTask({
-        title: newTitle,
-        type: task.type,
-        due_date: newDate,
-        time: newTime,
-        is_template: task.is_template,
-        days_selected: newDaysSelected,
-        recurrence_interval: newInterval,
-        start_date: newStartDate,
-        end_date: newEndDate,
-      });
-
-      replacementNotificationId = scheduledReplacementNotificationId;
-      supabaseUpdate.notification_id = replacementNotificationId ?? null;
-      localUpdate.notification_id = replacementNotificationId;
-    }
 
     // Optimistically update UI
     setTasks(prev => prev.map(t =>
@@ -945,7 +680,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         user_id: task.user_id,
         is_template: false,
         parent_task_id: task.parent_task_id,
-        notification_id: replacementNotificationId ?? null,
         notes: newNotes || null,
         start_date: newStartDate ? toLocalDateString(newStartDate) : null,
         end_date: newEndDate ? toLocalDateString(newEndDate) : null,
@@ -956,30 +690,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error('Error inserting recurring instance override:', error);
-        if (scheduledReplacementNotificationId) {
-          await cancelStoredNotifications(scheduledReplacementNotificationId);
-        }
         // Revert
         setTasks(prev => prev.map(t =>
-          t.id === id ? task : t
+          t.id === id ? { ...t, title: task.title, due_date: task.due_date, notes: task.notes } : t
         ));
         return;
-      }
-
-      if (scheduleChanged) {
-        await cancelStoredNotifications(task.notification_id);
       }
 
       // Replace the synthetic instance with the persisted one
       setTasks(prev => prev.map(t =>
         t.id === id
-          ? {
-              ...t,
-              id: newId,
-              created_at: now,
-              updated_at: now,
-              notification_id: replacementNotificationId,
-            }
+          ? { ...t, id: newId, created_at: now, updated_at: now }
           : t
       ));
     } else if (isRecurringInstance) {
@@ -991,17 +712,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error('Error updating recurring instance override:', error);
-        if (scheduledReplacementNotificationId) {
-          await cancelStoredNotifications(scheduledReplacementNotificationId);
-        }
         setTasks(prev => prev.map(t =>
-          t.id === id ? task : t
+          t.id === id ? { ...t, title: task.title, due_date: task.due_date, notes: task.notes } : t
         ));
-        return;
-      }
-
-      if (scheduleChanged) {
-        await cancelStoredNotifications(task.notification_id);
       }
     } else if (task.is_template) {
       // Template — update and propagate title to in-memory instances
@@ -1012,18 +725,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error('Error updating template:', error);
-        if (scheduledReplacementNotificationId) {
-          await cancelStoredNotifications(scheduledReplacementNotificationId);
-        }
         setTasks(prev => prev.map(t =>
-          t.id === id ? task : t
+          t.id === id ? { ...t, title: task.title, due_date: task.due_date, notes: task.notes } : t
         ));
         return;
       }
-
-      if (scheduleChanged) {
-        await cancelStoredNotifications(task.notification_id);
-      }
+      // Check if any schedule fields changed ΓÇö if so, regenerate all in-memory instances
+      const scheduleChanged =
+       fields.start_date !== undefined ||
+       fields.end_date !== undefined ||
+       fields.days_selected !== undefined ||
+       fields.recurrence_interval !== undefined;
       
       if (scheduleChanged) {
         // Build an updated template object for instance generation
@@ -1092,20 +804,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error('Error updating task:', error);
-        if (scheduledReplacementNotificationId) {
-          await cancelStoredNotifications(scheduledReplacementNotificationId);
-        }
         setTasks(prev => prev.map(t =>
-          t.id === id ? task : t
+          t.id === id ? { ...t, title: task.title, due_date: task.due_date, notes: task.notes } : t
         ));
-        return;
-      }
-
-      if (scheduleChanged) {
-        await cancelStoredNotifications(task.notification_id);
       }
     }
-  }, [settings, tasks]);
+  }, [user,tasks]);
   
   const triggerConfetti = useCallback(() => {
     setConfettiTrigger(prev => prev + 1);
@@ -1118,17 +822,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     const isRecurringInstance = task.parent_task_id && !task.is_template && task.type !== 'related';
     const isInMemoryInstance = isRecurringInstance && id.includes('_') && /\d{4}-\d{2}-\d{2}$/.test(id);
-    const notificationIdsToCancel = new Set<string>();
-
-    parseNotificationIds(task.notification_id).forEach((notificationId) => notificationIdsToCancel.add(notificationId));
-
-    if (task.is_template) {
-      tasks
-        .filter((candidate) => candidate.parent_task_id === id && ownsPersistedNotification(candidate))
-        .forEach((candidate) => {
-          parseNotificationIds(candidate.notification_id).forEach((notificationId) => notificationIdsToCancel.add(notificationId));
-        });
-    }
 
     // Optimistically update UI
     setTasks(prev => prev.filter(t => {
@@ -1199,8 +892,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
           .update({ excluded_dates: [...currentDates, dateStr] })
           .eq('id', task.parent_task_id);
       }
-
-      await Promise.all(Array.from(notificationIdsToCancel).map((notificationId) => cancelStoredNotifications(notificationId)));
       return;
     }
 
@@ -1248,10 +939,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       console.error('Error deleting task:', error);
       // Revert — add the task back to local state
       setTasks(prev => [...prev, task]);
-      return;
     }
-
-    await Promise.all(Array.from(notificationIdsToCancel).map((notificationId) => cancelStoredNotifications(notificationId)));
   }, [tasks]);
 
   const updateStreak = () => {

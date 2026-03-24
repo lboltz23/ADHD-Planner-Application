@@ -17,7 +17,8 @@ import {
   Eye,
 } from 'lucide-react-native';
 import Slider  from '@react-native-community/slider';
-import { scheduleTimedNotification } from '@/lib/Notifications';
+import * as Notifications from "expo-notifications";
+import { disableNotifications, requestNotificationPermission,scheduleTimedNotification} from '@/lib/Notifications';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { User } from '@supabase/supabase-js';
@@ -39,7 +40,7 @@ export interface SettingsData {
 interface SettingsProps {
   onNavigateBack: () => void;
   settings: SettingsData;
-  onUpdateSettings: (settings: SettingsData) => Promise<void>;
+  onUpdateSettings: (settings: SettingsData) => void;
   user : User | null;
   username: {
     username:string | null;
@@ -129,11 +130,11 @@ export function Settings({
   const resolvedTheme = resolveThemePreference(settings.theme, systemScheme);
   const colors = AppThemeColors[resolvedTheme];
 
-  const updateSetting = async <K extends keyof SettingsData>(
+  const updateSetting = <K extends keyof SettingsData>(
     key: K,
     value: SettingsData[K]
   ) => {
-    await onUpdateSettings({
+    onUpdateSettings({
       ...settings,
       [key]: value,
     });
@@ -435,9 +436,15 @@ export function Settings({
             </View>
             <Switch
               value={settings.notifications}
-              onValueChange={(checked) => {
-                void updateSetting('notifications', checked);
-              }}
+              onValueChange={(checked) =>
+                {updateSetting('notifications', checked);
+                  if (checked){
+                    requestNotificationPermission();
+                  } else {
+                    disableNotifications();
+                  }
+                }
+              }
               trackColor={{ false: '#e5d9f2', true: '#ffc9d4' }}
               thumbColor="#fff"
             />
