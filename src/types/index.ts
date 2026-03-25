@@ -7,6 +7,7 @@ export interface Task {
   id: string;
   user_id: string;
   title: string;
+  notification_id?: string;
   type: TaskType;
   due_date: Date;
   time?: Date;
@@ -16,7 +17,7 @@ export interface Task {
 
   start_date?: Date; // For routine tasks
   end_date?: Date;   // For routine tasks
-  notes?: string;
+  notes?: string; 
   days_selected?: Weekday[]; // For routine tasks
   recurrence_interval?: number; // For long interval tasks
   parent_task_id?: string; // For templates, refers to the template task ID
@@ -28,6 +29,7 @@ export interface Task {
 export interface CreateTaskParams {
   title: string;
   type: TaskType;
+  notification_id?: string;
   notes?: string;
   time?: Date;
 

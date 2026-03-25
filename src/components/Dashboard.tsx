@@ -59,6 +59,7 @@ export function Dashboard({
   // Ref to track previous progress for confetti trigger
   const previousProgressRef = useRef(0);
 
+  // Refresh tasks when focused on page
   useFocusEffect(
     useCallback(() => {
       setTaskRefresh(cur => cur +1);
@@ -124,7 +125,7 @@ export function Dashboard({
 
   const repeatingTasks = useMemo(() => {
     return tasks.filter((task) => task.is_template === true);
-  }, [tasks, taskRefresh]);
+  }, [tasks,taskRefresh]);
 
   const openTasks = useMemo(() => {
     const now = new Date();
