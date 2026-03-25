@@ -37,6 +37,7 @@
           "iosUrlScheme": "com.googleusercontent.apps._some_id_here_"
         }
       ],
+      "expo-notifications",
       "expo-router",
       [
         "expo-splash-screen",
