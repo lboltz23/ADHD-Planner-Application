@@ -53,7 +53,7 @@ export function Dashboard({
 
   const [selectedType, setSelectedType] = useState<TaskType>('basic');
   const [taskView, setTaskView] = useState<'today' | 'upcoming' | 'repeating' | 'open'>('today');
-  const [taskRefresh, setTaskRefresh] = useState(0);
+  const [now, setNow] = useState(() => new Date());
   const [showAddTaskDialog, setShowAddTaskDialog] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
   // Ref to track previous progress for confetti trigger
@@ -62,26 +62,25 @@ export function Dashboard({
   // Refresh tasks when focused on page
   useFocusEffect(
     useCallback(() => {
-      setTaskRefresh(cur => cur +1);
+      setNow(new Date());
     },[])
   )
 
   useEffect(()=>{
     const interval = setInterval(() => {
-      setTaskRefresh(cur => cur +1);
+      setNow(new Date());
     },60000);
     return () => clearInterval(interval)
     },[])
-  
+
 
   useEffect(() => {
     if(!showAddTaskDialog){
-      setTaskRefresh(cur => cur + 1); // Refresh task lists when add task dialog is closed (after adding a task)
+      setNow(new Date()); // Refresh task lists when add task dialog is closed (after adding a task)
     }
   }, [showAddTaskDialog]);
   // Filter tasks from props for today
   const todayTasks = useMemo(() => {
-    const now = new Date();
 
     return tasks.filter((task) => {
       if (task.is_template) return false;
@@ -105,11 +104,11 @@ export function Dashboard({
       const bTime = b.time ? combineAsDate(b.due_date, b.time).getTime() : new Date(b.due_date).setHours(0, 0, 0, 0);
       return aTime - bTime;
     });
-  }, [tasks, taskRefresh]);
+  }, [tasks, now]);
 
   // Filter tasks from props for upcoming (next 5 tasks after today)
   const upcomingTasks = useMemo(() => {
-    const today = new Date();
+    const today = new Date(now);
     today.setHours(0, 0, 0, 0);
     return tasks
       .filter((task) => {
@@ -118,27 +117,24 @@ export function Dashboard({
         taskDate.setHours(0, 0, 0, 0);
         return taskDate > today;
       })
-      .sort((a, b) => new Date(combineAsDate(b.due_date,b.time || new Date())).getTime() - 
-                    new Date(combineAsDate(a.due_date,a.time || new Date())).getTime())      
-      .slice(0, 5);
-  }, [tasks, taskRefresh]);
+      .sort((a, b) => new Date(combineAsDate(b.due_date,b.time || now)).getTime() -
+                    new Date(combineAsDate(a.due_date,a.time || now)).getTime());
+  }, [tasks, now]);
 
   const repeatingTasks = useMemo(() => {
     return tasks.filter((task) => task.is_template === true);
-  }, [tasks,taskRefresh]);
+  }, [tasks]);
 
   const openTasks = useMemo(() => {
-    const now = new Date();
     return tasks
       .filter((task) => {
         if (task.is_template || task.type === 'routine' ||  task.type === 'long_interval' || task.completed) return false;
-        const taskDate = combineAsDate(task.due_date, task.time || new Date());
+        const taskDate = combineAsDate(task.due_date, task.time || now);
         return taskDate < now;
       })
-      .sort((a, b) => new Date(combineAsDate(a.due_date,a.time || new Date())).getTime() - 
-                      new Date(combineAsDate(b.due_date,b.time || new Date())).getTime())      
-      .slice(0, 7);
-  }, [tasks, taskRefresh]);
+      .sort((a, b) => new Date(combineAsDate(a.due_date,a.time || now)).getTime() -
+                      new Date(combineAsDate(b.due_date,b.time || now)).getTime());
+  }, [tasks, now]);
  
   const handleAddTask = () => {
     if (!showAddTaskDialog) {
