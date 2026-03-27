@@ -26,10 +26,6 @@
       "output": "static",
       "favicon": "./src/assets/images/favicon.png"
     },
-    "web": {
-      "output": "static",
-      "favicon": "./src/assets/images/favicon.png"
-    },
     "plugins": [
       [
         "@react-native-google-signin/google-signin",
@@ -37,6 +33,7 @@
           "iosUrlScheme": "com.googleusercontent.apps._some_id_here_"
         }
       ],
+      "expo-notifications",
       "expo-router",
       [
         "expo-splash-screen",

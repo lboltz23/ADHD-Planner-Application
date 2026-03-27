@@ -22,6 +22,7 @@ import { SettingsData } from './Settings';
 import { getTaskTypeColor } from './taskColors';
 import { AppThemeColors, resolveThemePreference } from '../constants/theme';
 import { useColorScheme } from '../hooks/use-color-scheme';
+import { scheduleTimedNotification, cancelNotification } from '@/lib/Notifications';
 
 interface OneThingModeProps {
   onNavigateBack: () => void;
@@ -52,6 +53,7 @@ export function OneThingMode({
   const [showAlertPopup, setShowAlertPopup] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [shownIntervals, setShownIntervals] = useState<Set<number>>(new Set());
+  const [notificationId, setNotificationId] = useState<string | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const popupTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -192,10 +194,19 @@ export function OneThingMode({
     });
   };
 
-  const toggleTimer = () => {
+  const toggleTimer = async () => {
     // If timer is at 0, reset and start it
+    console.log(timeInSeconds);
     if (timeInSeconds === 0) {
-      setTimeInSeconds(settings.defaultTimerMinutes * 60);
+      const initialSeconds = settings.defaultTimerMinutes * 60;
+      setTimeInSeconds(initialSeconds);
+      if (selectedTask) {
+        const id = await scheduleTimedNotification("One Thing Mode Reminder", selectedTask.title, initialSeconds, settings.soundEnabled);
+        setNotificationId(id);
+        console.log(`Scheduled notification with ID: ${id}`);
+      } else {
+        console.warn('No task selected for notification');
+      }
       setShownIntervals(new Set());
       setIsRunning(true);
       setHasCompleted(false);
@@ -207,9 +218,13 @@ export function OneThingMode({
 
   const resetTimer = () => {
     setIsRunning(false);
-    setTimeInSeconds(settings.defaultTimerMinutes * 60);
+    setTimeInSeconds(0);
     setHasCompleted(false);
     setShownIntervals(new Set());
+    if (notificationId) {
+      cancelNotification(notificationId);
+      setNotificationId(null);
+    }
   };
 
   const handleCompleteTask = () => {
