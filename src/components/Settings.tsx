@@ -467,57 +467,6 @@ export function Settings({
           </View>
         </SettingsSection>
 
-        {/* Task View Settings */}
-        <SettingsSection
-          icon={Layout}
-          title="Task View"
-          subtitle="Default task filter on dashboard"
-          iconColor="#ffd89b"
-          themeColors={colors}
-        >
-          <View style={styles.settingRow}>
-            <View style={styles.settingLabel}>
-              <Text style={styles.settingLabelText}>Default Task Filter</Text>
-              <Text style={styles.settingSubtext}>
-                Show specific task types by default
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.selectOptions}>
-            {viewOptions.map((option, index) => (
-              <TouchableOpacity
-                key={option}
-                onPress={() => updateSetting('defaultTaskView', option)}
-                style={[
-                  styles.selectOption,
-                  index === viewOptions.length - 1 && {
-                    borderBottomWidth: 0,
-                  },
-                  settings.defaultTaskView === option && {
-                    backgroundColor: colors.surfaceMuted,
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.selectOptionText,
-                    settings.defaultTaskView === option && {
-                      fontWeight: '600',
-                      color: '#ffd89b',
-                    },
-                  ]}
-                >
-                  {option
-                    .split(/(?=[A-Z])/)
-                    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-                    .join(' ')}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </SettingsSection>
-
         {/* About Section */}
         <View style={styles.aboutSection}>
           <Text style={styles.aboutText}>Planner App v1.0</Text>
