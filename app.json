@@ -51,6 +51,19 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "766cc34a-930d-4b76-9120-ad4221fdfd4b"
+      }
+    },
+    "owner": "lacey.boltz23",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/766cc34a-930d-4b76-9120-ad4221fdfd4b"
     }
   }
 }
