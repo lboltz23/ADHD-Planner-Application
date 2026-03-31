@@ -9,7 +9,13 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    
+    "test": "node ./scripts/run-jest-with-evidence.js --coverage --coverageReporters=text --coverageReporters=text-summary --coverageReporters=json-summary --logHeapUsage",
+    "test:unit": "node ./scripts/run-jest-with-evidence.js testing/unit --coverage --coverageReporters=text --coverageReporters=text-summary --coverageReporters=json-summary --logHeapUsage",
+    "test:integration": "node ./scripts/run-jest-with-evidence.js testing/integration",
+    "test:watch": "node ./scripts/run-jest-with-evidence.js --watch",
+    "test:ci": "node ./scripts/run-jest-with-evidence.js --ci --coverage"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
@@ -65,7 +71,13 @@
     "@types/uuid": "^10.0.0",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
-    "typescript": "~5.9.2"
+    "typescript": "~5.9.2",
+
+    "jest": "^29.7.0",
+    "jest-expo": "^54.0.0",
+    "@testing-library/react-native": "^12.4.5",
+    "@testing-library/jest-native": "^5.4.3",
+    "react-test-renderer": "19.1.0"
   },
   "private": true
 }
