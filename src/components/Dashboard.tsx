@@ -5,7 +5,8 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View, 
+  Switch,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Task, TaskType, CreateTaskParams, Weekday, combineAsDate } from '../types';
@@ -58,7 +59,7 @@ export function Dashboard({
   const [showInfo, setShowInfo] = useState(false);
   // Ref to track previous progress for confetti trigger
   const previousProgressRef = useRef(0);
-
+  const [showRoutine, setShowRoutine] = useState(true);
   // Refresh tasks when focused on page
   useFocusEffect(
     useCallback(() => {
@@ -113,13 +114,18 @@ export function Dashboard({
     return tasks
       .filter((task) => {
         if (task.is_template) return false;
+        if (!showRoutine && task.type == "routine"){
+          return false;
+        if(!showRoutine && task.type == "long_interval"){
+          return false;
+        }
         const taskDate = new Date(task.due_date);
         taskDate.setHours(0, 0, 0, 0);
         return taskDate > today;
       })
       .sort((a, b) => new Date(combineAsDate(a.due_date,a.time || now)).getTime() -
                     new Date(combineAsDate(b.due_date,b.time || now)).getTime());
-  }, [tasks, now]);
+  }, [tasks, now, showRoutine]);
 
   const repeatingTasks = useMemo(() => {
     return tasks.filter((task) => task.is_template === true);
@@ -158,6 +164,11 @@ export function Dashboard({
     return true;
   }
 
+  const isEnabled = (checked: boolean) => {
+    if(checked){
+    setShowRoutine( previous => !previous)
+    }
+  }
   const [visibleToday, setVisibleToday] = useState(7);
   const [visibleUpcoming, setVisibleUpcoming] = useState(7);
   const [visibleOpen, setVisibleOpen] = useState(7);
@@ -469,6 +480,23 @@ export function Dashboard({
     fontSize: 15,
     fontWeight: '600',
   },
+  filterText: {
+    color: getAppColors(settings.colorBlindMode, isDark).primary,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  filterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginBottom: 12,
+    backgroundColor: colors.surface,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: getAppColors(settings.colorBlindMode, isDark).border,
+  },
   });
 
   return (
@@ -674,6 +702,17 @@ export function Dashboard({
           </View>
         ) : taskView === 'upcoming' ? (
           <View style={styles.section}>
+            <View style={styles.filterRow}>
+            <Text style={styles.filterText}> Show Routine Tasks </Text>
+            <Switch
+                value={showRoutine}
+                onValueChange={(checked) =>
+                    setShowRoutine(checked)
+                  }
+                trackColor={{ false: colors.border, true: colors.accent }}
+                thumbColor="#fff"           
+            />
+            </View>
             <Text style={styles.sectionTitle}>Upcoming</Text>
             {upcomingTasks.length === 0 ? (
               <Text style={styles.noTasksMessage}>No upcoming tasks</Text>
