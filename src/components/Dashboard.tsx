@@ -83,7 +83,7 @@ export function Dashboard({
   // Filter tasks from props for today
   const todayTasks = useMemo(() => {
 
-    return tasks.filter((task) => task.title.toLowerCase().includes(taskSearch.toLowerCase())).filter((task) => {
+    return tasks.filter((task) => {
       if (task.is_template) return false;
 
       const taskDate = new Date(task.due_date);
@@ -112,7 +112,6 @@ export function Dashboard({
     const today = new Date(now);
     today.setHours(0, 0, 0, 0);
     return tasks
-      .filter((task) => task.title.toLowerCase().includes(taskSearch.toLowerCase()))
       .filter((task) => {
         if (task.is_template) return false;
         const taskDate = new Date(task.due_date);
@@ -125,13 +124,11 @@ export function Dashboard({
 
   const repeatingTasks = useMemo(() => {
     return tasks
-    .filter((task) => task.title.toLowerCase().includes(taskSearch.toLowerCase()))
     .filter((task) => task.is_template === true);
   }, [tasks,taskSearch]);
 
   const openTasks = useMemo(() => {
     return tasks
-      .filter((task) => task.title.toLowerCase().includes(taskSearch.toLowerCase()))
       .filter((task) => {
         if (task.is_template || task.type === 'routine' ||  task.type === 'long_interval' || task.completed) return false;
         const taskDate = combineAsDate(task.due_date, task.time || now);
@@ -675,7 +672,8 @@ export function Dashboard({
               <Text style={styles.noTasksMessage}>No tasks for today</Text>
             ) : (
               <View style={[styles.tasksList,{paddingBottom: 80}]}>
-                {todayTasks.slice(0, visibleToday).map((task) => (
+                {todayTasks.filter((task) => task.title.toLowerCase().includes(taskSearch.toLowerCase()))
+                .slice(0, visibleToday).map((task) => (
                   <TaskCard
                     key={task.id}
                     task={task}
@@ -710,7 +708,8 @@ export function Dashboard({
               <Text style={styles.noTasksMessage}>No upcoming tasks</Text>
             ) : (
               <View style={styles.tasksList}>
-                {upcomingTasks.slice(0, visibleUpcoming).map((task) => (
+                {upcomingTasks.filter((task) => task.title.toLowerCase().includes(taskSearch.toLowerCase()))
+                .slice(0, visibleUpcoming).map((task) => (
                   <TaskCard
                     key={task.id}
                     task={task}
@@ -745,7 +744,8 @@ export function Dashboard({
               <Text style={styles.noTasksMessage}>No open tasks</Text>
             ) : (
               <View style={styles.tasksList}>
-                {openTasks.slice(0, visibleOpen).map((task) => (
+                {openTasks.filter((task) => task.title.toLowerCase().includes(taskSearch.toLowerCase()))
+                .slice(0, visibleOpen).map((task) => (
                   <TaskCard
                     key={task.id}
                     task={task}
@@ -778,7 +778,8 @@ export function Dashboard({
               <Text style={styles.noTasksMessage}>No repeating tasks</Text>
             ) : (
               <View style={styles.tasksList}>
-                {repeatingTasks.slice(0, visibleRepeating).map((task) => (
+                {repeatingTasks.filter((task) => task.title.toLowerCase().includes(taskSearch.toLowerCase()))
+                .slice(0, visibleRepeating).map((task) => (
                   <TaskCard
                     key={task.id}
                     task={task}
