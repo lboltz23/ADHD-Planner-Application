@@ -704,7 +704,7 @@ export function Dashboard({
         ) : taskView === 'upcoming' ? (
           <View style={styles.section}>
             <View style={styles.filterRow}>
-            <Text style={styles.filterText}> Show Routine Tasks </Text>
+            <Text style={styles.filterText}> Show Repeating Tasks </Text>
             <Switch
                 value={showRoutine}
                 onValueChange={(checked) =>
