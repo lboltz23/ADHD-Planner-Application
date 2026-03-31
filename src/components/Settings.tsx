@@ -313,7 +313,7 @@ export function Settings({
               style={{ height: 40 }}
               minimumValue={0.5}
               maximumValue={60}
-              step={5}
+              step={0.5}
               value={settings.defaultTimerMinutes}
               onValueChange={(value) =>
                 updateSetting('defaultTimerMinutes', value)

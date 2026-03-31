@@ -9,6 +9,7 @@ import { User } from '@supabase/supabase-js';
 import { router } from 'expo-router';
 import * as Linking from 'expo-linking';
 import * as ExpoNotifications from 'expo-notifications';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { cancelNotification, scheduleTimedNotification, scheduleWeeklyNotification } from '@/lib/Notifications';
 
 // Parse a date string from Supabase as a LOCAL date (avoids UTC timezone shift)
@@ -64,6 +65,32 @@ interface AppContextType {
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
+
+const SETTINGS_STORAGE_KEY = "user_settings";
+
+const mapDbToSettings = (data: any): SettingsData => ({
+  defaultTimerMinutes: data.default_timer_minutes ?? 25,
+  notifications: data.notifications_enabled ?? false,
+  soundEnabled: data.sound_enabled ?? true,
+  confettiEnabled: data.confetti_enabled ?? true,
+  theme: data.theme ?? (data.dark_mode ? "dark" : "light"),
+  defaultTaskView: data.default_task_view ?? "all",
+  colorBlindMode: data.color_blind_mode ?? false,
+});
+
+const mapSettingsToDb = (settings: SettingsData, userId: string) => ({
+  user_id: userId,
+  dark_mode: settings.theme === "dark",
+  theme: settings.theme,
+  notifications_enabled: settings.notifications,
+  confetti_enabled: settings.confettiEnabled,
+  color_blind_mode: settings.colorBlindMode,
+
+  default_timer_minutes: settings.defaultTimerMinutes,
+  sound_enabled: settings.soundEnabled,
+  default_task_view: settings.defaultTaskView,
+  updated_at: new Date().toISOString(),
+});
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -136,6 +163,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
       };
     });
   };
+
+  useEffect(() => {
+  const loadLocalSettings = async () => {
+    try {
+      const stored = await AsyncStorage.getItem(SETTINGS_STORAGE_KEY);
+      if (stored) {
+        setSettings(JSON.parse(stored));
+      }
+    } catch (err) {
+      console.error("Error loading local settings:", err);
+    }
+  };
+
+  loadLocalSettings();
+  }, []);
 
   useEffect(() => {
     const subscription = Linking.addEventListener('url', async ({ url }) => {
@@ -341,6 +383,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const loadSettings = async (user_id: string) => {
+  const { data, error } = await supabase
+    .from('user_settings')
+    .select('*')
+    .eq('user_id', user_id)
+    .single();
+
+  if (error && error.code !== 'PGRST116') {
+    console.error("Error loading settings:", error);
+    return;
+  }
+
+  if (data) {
+    const mapped = mapDbToSettings(data);
+
+    setSettings(mapped);
+
+    await AsyncStorage.setItem(
+      SETTINGS_STORAGE_KEY,
+      JSON.stringify(mapped)
+    );
+  }
+  };
+
   const loadTasks = async (user_id:string | undefined) => {
       if (!user_id) {
         return;
@@ -481,14 +547,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
     
       // temp value because of state race conditions
       let temp = await init()
-      if(temp)loadTasks(temp.id);
+      if(temp) {
+        loadTasks(temp.id);
+        loadSettings(temp.id);
+      }
     }
     StartUp();
   }, []);
 
   //If user changes
   useEffect(() =>{
-    if(user) loadTasks(user.id)
+    if(user) {
+      loadTasks(user.id);
+      loadSettings(user.id);
+    }
   },[user])
 
   // Helper function to generate scheduled days for recurring tasks
@@ -716,9 +788,33 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [user,tasks]);
 
-  const updateSettings = useCallback((newSettings: SettingsData) => {
-    setSettings(newSettings);
-  }, []);
+const updateSettings = useCallback(async (newSettings: SettingsData) => {
+  setSettings(prev => {
+    if (JSON.stringify(prev) === JSON.stringify(newSettings)) {
+      return prev; // prevent unnecessary writes
+    }
+    return newSettings;
+  });
+
+  try {
+    await AsyncStorage.setItem(
+      SETTINGS_STORAGE_KEY,
+      JSON.stringify(newSettings)
+    );
+
+    if (user) {
+      const { error } = await supabase
+        .from('user_settings')
+        .upsert(mapSettingsToDb(newSettings, user.id));
+
+      if (error) {
+        console.error("Error saving settings:", error);
+      }
+    }
+  } catch (err) {
+    console.error("Error saving settings:", err);
+  }
+}, [user]);
 
   const updateTask = useCallback(async (id: string, fields: { title?: string; due_date?: Date; notes?: string;time?: Date; parent_id?: string; start_date?: Date; end_date?: Date; recurrence_interval?: number; days_selected?: Weekday[] }) => {
     const task = tasks.find(t => t.id === id);
