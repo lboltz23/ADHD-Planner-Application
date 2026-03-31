@@ -17,12 +17,20 @@ import {
   Eye,
 } from 'lucide-react-native';
 import Slider  from '@react-native-community/slider';
+import * as Notifications from "expo-notifications";
+import { disableNotifications, requestNotificationPermission,scheduleTimedNotification} from '@/lib/Notifications';
+import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { User } from '@supabase/supabase-js';
+import { signOut } from '@/lib/supabaseClient';
+import { DotLoader } from './DotLoader';
 import { AppThemeColors, resolveThemePreference, ThemeColors } from '../constants/theme';
 import { useColorScheme } from '../hooks/use-color-scheme';
 
 export interface SettingsData {
   defaultTimerMinutes: number;
   soundEnabled: boolean;
+  notifications: boolean;
   confettiEnabled: boolean;
   theme: "auto" | "light" | "dark";
   defaultTaskView: "all" | "routine" | "basic" | "related" | "long_interval" ;
@@ -33,6 +41,11 @@ interface SettingsProps {
   onNavigateBack: () => void;
   settings: SettingsData;
   onUpdateSettings: (settings: SettingsData) => void;
+  user : User | null;
+  username: {
+    username:string | null;
+    loading: boolean
+  }
 }
 
 interface SettingsSectionProps {
@@ -110,6 +123,8 @@ export function Settings({
   onNavigateBack,
   settings,
   onUpdateSettings,
+  user,
+  username
 }: SettingsProps) {
   const systemScheme = useColorScheme();
   const resolvedTheme = resolveThemePreference(settings.theme, systemScheme);
@@ -147,6 +162,11 @@ export function Settings({
       fontSize: 24,
       fontWeight: '700',
       color: colors.heading,
+    },
+    headerRight: {
+      flex:1,
+      alignItems:'flex-end',
+      alignContent:'flex-end',
     },
     settingRow: {
       flexDirection: 'row',
@@ -212,6 +232,20 @@ export function Settings({
       color: colors.textMuted,
       textAlign: 'center',
     },
+    mainButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#b8a4d9',
+      paddingVertical: 10,
+      paddingHorizontal: 14,
+      borderRadius: 8,
+      gap: 6,
+    },
+    mainButtonText: {
+      color: '#ffffff',
+      fontWeight: '600',
+      fontSize: 14,
+    },
   });
 
   const themeOptions: SettingsData['theme'][] = ['auto', 'light', 'dark'];
@@ -222,17 +256,42 @@ export function Settings({
     'related',
     'long_interval',
   ];
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+
+  //Add sign in and out stuff
+
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
+    <View style={[styles.container,{paddingTop:insets.top,}]}>
+      <ScrollView style={[styles.scrollContent,]} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={onNavigateBack}>
             <ArrowLeft size={20} color={colors.heading} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Settings</Text>
+          <View style={styles.headerRight}>
+            {!user ?
+            <TouchableOpacity
+              style={styles.mainButton}
+              onPress={() => router.replace('/login')}>
+              <Text style={styles.mainButtonText}>Login In</Text>
+            </TouchableOpacity>
+            :
+             <TouchableOpacity
+              style={styles.mainButton}
+              onPress={() => {signOut(); router.replace("/login")}}>
+              <Text style={styles.mainButtonText}>Sign Out</Text>
+            </TouchableOpacity>
+             }
+          </View>
         </View>
+        {username.username && <View style={styles.header}>
+          {username.loading ? <DotLoader/> :
+          <Text style={styles.headerTitle}>Hey {username.username}!</Text>
+          }
+        </View>}
 
         {/* Timer Settings */}
         <SettingsSection
@@ -370,6 +429,28 @@ export function Settings({
         >
           <View style={styles.settingRow}>
             <View style={styles.settingLabel}>
+              <Text style={styles.settingLabelText}>Enable Notifications</Text>
+              <Text style={styles.settingSubtext}>
+                Send notifications to remind you of your tasks and during One Thing Mode.
+              </Text>
+            </View>
+            <Switch
+              value={settings.notifications}
+              onValueChange={(checked) =>
+                {updateSetting('notifications', checked);
+                  if (checked){
+                    requestNotificationPermission();
+                  } else {
+                    disableNotifications();
+                  }
+                }
+              }
+              trackColor={{ false: '#e5d9f2', true: '#ffc9d4' }}
+              thumbColor="#fff"
+            />
+          </View>
+          <View style={styles.settingRow}>
+            <View style={styles.settingLabel}>
               <Text style={styles.settingLabelText}>Sound Effects</Text>
               <Text style={styles.settingSubtext}>
                 Play sounds for timer and completions
@@ -386,57 +467,6 @@ export function Settings({
           </View>
         </SettingsSection>
 
-        {/* Task View Settings */}
-        <SettingsSection
-          icon={Layout}
-          title="Task View"
-          subtitle="Default task filter on dashboard"
-          iconColor="#ffd89b"
-          themeColors={colors}
-        >
-          <View style={styles.settingRow}>
-            <View style={styles.settingLabel}>
-              <Text style={styles.settingLabelText}>Default Task Filter</Text>
-              <Text style={styles.settingSubtext}>
-                Show specific task types by default
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.selectOptions}>
-            {viewOptions.map((option, index) => (
-              <TouchableOpacity
-                key={option}
-                onPress={() => updateSetting('defaultTaskView', option)}
-                style={[
-                  styles.selectOption,
-                  index === viewOptions.length - 1 && {
-                    borderBottomWidth: 0,
-                  },
-                  settings.defaultTaskView === option && {
-                    backgroundColor: colors.surfaceMuted,
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.selectOptionText,
-                    settings.defaultTaskView === option && {
-                      fontWeight: '600',
-                      color: '#ffd89b',
-                    },
-                  ]}
-                >
-                  {option
-                    .split(/(?=[A-Z])/)
-                    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-                    .join(' ')}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </SettingsSection>
-
         {/* About Section */}
         <View style={styles.aboutSection}>
           <Text style={styles.aboutText}>Planner App v1.0</Text>
@@ -445,6 +475,6 @@ export function Settings({
           </Text>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }

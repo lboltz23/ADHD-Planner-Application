@@ -9,6 +9,20 @@ import TitleInput from "./TitleInput";
 import DateRangePicker from "./DateRangePicker";
 import RelatedTaskInput from "./RelatedTask";
 import NoteInput from "./NoteInput";
+import TimePicker from "./TimeInput";
+import { getAppColors, AppThemeColors, resolveThemePreference } from "../constants/theme";
+import { useColorScheme } from '../hooks/use-color-scheme';
+import { scheduleTimedNotification, scheduleWeeklyNotification } from '../../lib/Notifications';
+
+const WEEKDAY_TO_NUMBER: Record<string, 1 | 2 | 3 | 4 | 5 | 6 | 7> = {
+  Sunday: 1,
+  Monday: 2,
+  Tuesday: 3,
+  Wednesday: 4,
+  Thursday: 5,
+  Friday: 6,
+  Saturday: 7,
+};
 
 const ALL_WEEKDAYS: Weekday[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const WEEKDAY_ABBREVIATIONS: Record<Weekday, string> = {
@@ -26,8 +40,8 @@ interface AddTaskDialogProps {
   onClose: () => void;
   onAddTask: (params: CreateTaskParams) => void;
   initialTaskType: TaskType;
-  initialTitle?: string;
   colorBlindMode?: boolean;
+  isDarkMode?: boolean
   tasks?: Task[];
 }
 
@@ -36,12 +50,13 @@ export default function AddTaskDialog({
   onClose,
   onAddTask,
   initialTaskType,
-  initialTitle = "",
-  colorBlindMode = false,
   tasks = [],
+  colorBlindMode= false,
+  isDarkMode = false,
 }: AddTaskDialogProps) {
-  const [taskTitle, setTaskTitle] = useState(initialTitle);
+  const [taskTitle, setTaskTitle] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
+  const [editedTime, setEditedTime] = useState<Date | null>(null);
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [selectedDays, setSelectedDays] = useState<Weekday[]>([]);
@@ -55,16 +70,16 @@ export default function AddTaskDialog({
       prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
     );
   };
-  useEffect(() => {
-    setTaskTitle(initialTitle);
-  }, [initialTitle]);
 
-  const handleCreateTask = () => {
+  const handleCreateTask = async () => {
     // Validation
     if (!taskTitle.trim()) {
       alert("Please enter a task title");
       return;
     }
+
+    let scheduledDateTime: Date | null = null;
+    let notificationId: string | undefined;
 
     // Different validation based on task type
     if (initialTaskType === "routine" || initialTaskType === "long_interval") {
@@ -86,11 +101,32 @@ export default function AddTaskDialog({
         return;
       }
 
+      const notifTime = editedTime || new Date(new Date().setHours(23, 59, 0, 0));
+      scheduledDateTime = new Date(effectiveStartDate);
+      scheduledDateTime.setHours(notifTime.getHours(), notifTime.getMinutes(), 0, 0);
+
+      if (initialTaskType === "routine" && selectedDays.length > 0) {
+        const notificationIds = await Promise.all(
+          selectedDays.map((day) => {
+            const weekdayNum = WEEKDAY_TO_NUMBER[day];
+            return scheduleWeeklyNotification("Planable", taskTitle, weekdayNum, notifTime.getHours(), notifTime.getMinutes(), true);
+          })
+        );
+        notificationId = JSON.stringify(notificationIds);
+      } else {
+        const secondsUntil = Math.floor((scheduledDateTime.getTime() - Date.now()) / 1000);
+        if (secondsUntil > 0) {
+          notificationId = await scheduleTimedNotification("Planable", taskTitle, secondsUntil, true);
+        }
+      }
+
       // Use startDate as the primary task date
       onAddTask({
         title: taskTitle,
         due_date: effectiveStartDate,
+        time: editedTime || new Date(new Date().setHours(23, 59, 0, 0)),
         type: initialTaskType,
+        notification_id: notificationId,
         days_selected: initialTaskType === "routine" ? selectedDays : undefined,
         recurrence_interval: interval,
         notes,
@@ -113,10 +149,22 @@ export default function AddTaskDialog({
       // Convert selected date string to Date object in local timezone (not UTC) to avoid timezone issues
       const [year, month, day] = selectedDate.split('-').map(Number);
       const dueDate = new Date(year, month - 1, day);
+
+      const notifTime = editedTime || new Date(new Date().setHours(23, 59, 0, 0));
+      scheduledDateTime = new Date(dueDate);
+      scheduledDateTime.setHours(notifTime.getHours(), notifTime.getMinutes(), 0, 0);
+
+      const secondsUntil = Math.floor((scheduledDateTime.getTime() - Date.now()) / 1000);
+      if (secondsUntil > 0) {
+        notificationId = await scheduleTimedNotification("Planable", taskTitle, secondsUntil, true);
+      }
+
       onAddTask({
         title: taskTitle,
         due_date: dueDate,
+        time: editedTime || new Date(new Date().setHours(23, 59, 0, 0)),
         type: initialTaskType,
+        notification_id: notificationId,
         parent_task_id: initialTaskType === "related" ? parentTaskId : undefined,
         notes: notes,
       });
@@ -128,14 +176,11 @@ export default function AddTaskDialog({
   };
 
   const resetForm = () => {
-    if (initialTitle) {
-      setTaskTitle(initialTitle);
-    } else {
-      setTaskTitle("");
-    }
+    setTaskTitle("");
     setSelectedDate("");
     setStartDate(null);
     setEndDate(null);
+    setEditedTime(null);
     setSelectedDays([]);
     setIntervalMonths("");
     setParentTaskId("");
@@ -149,7 +194,12 @@ export default function AddTaskDialog({
 
   const handleInputChange = (text: string) => {
     setTaskTitle(text);
-  }
+  };
+  const handleIntervalChange = (text: string) => {
+    if (/^\d*$/.test(text)) {
+      setIntervalMonths(text);
+    }
+  };
 
   const getTypeColor = () => {
     return getTaskTypeColor(initialTaskType, colorBlindMode);
@@ -160,7 +210,7 @@ export default function AddTaskDialog({
     <Modal visible={isOpen} transparent animationType="fade">
       <View style={styles.overlay}>
         <ScrollView contentContainerStyle={styles.scrollContainer}>
-          <View style={styles.dialog}>
+          <View style={[styles.dialog,{ backgroundColor: isDarkMode ? '#1b2133' : 'white', borderColor: getAppColors(colorBlindMode, isDarkMode).border }]}>
             {/* Header */}
             <View style={styles.header}>
               <LinearGradient
@@ -169,16 +219,17 @@ export default function AddTaskDialog({
               >
                 <Plus color="white" size={20} />
               </LinearGradient>
-              <Text style={styles.title}>Create New Task</Text>
+              <Text style={[styles.title, { color: isDarkMode ? "white" : "#6b5b7f" }]}>Create New Task</Text>
               <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-                <X size={24} color="#6b5b7f" />
+                <X size={24} color={isDarkMode ? "white" : "#6b5b7f"} />
               </TouchableOpacity>
             </View>
             {initialTaskType === "basic" && (
-              <View style={styles.section}>
-                <TitleInput value={taskTitle} onChange={handleInputChange} />
-                <NoteInput value={notes} onChange={setNotes} />
-                <Text style={styles.label}>Select Date: </Text>
+              <View style={[styles.section, { borderColor: getAppColors(colorBlindMode, isDarkMode).sectionBorder }]}>
+                <TitleInput value={taskTitle} onChange={handleInputChange} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode} />
+                <NoteInput value={notes} onChange={setNotes} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode} />
+                <TimePicker time={editedTime} onTimeChange={setEditedTime} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode} selectedDate={selectedDate}/>
+                <Text style={[styles.label, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>Select Date: </Text>
                 {/* Calendar */}
                 <Calendar
                   onDayPress={(day) => setSelectedDate(day.dateString)}
@@ -197,32 +248,36 @@ export default function AddTaskDialog({
               </View>
             )}
             {initialTaskType === "routine" && (
-              <View style={styles.section}>
-                <TitleInput value={taskTitle} onChange={handleInputChange} />
-                <NoteInput value={notes} onChange={setNotes} />
+              <View style={[styles.section, { borderColor: getAppColors(colorBlindMode, isDarkMode).sectionBorder }]}>
+                <TitleInput value={taskTitle} onChange={handleInputChange} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode}/>
+                <NoteInput value={notes} onChange={setNotes} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode} />
+                <TimePicker time={editedTime} onTimeChange={setEditedTime} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode}/>
 
                 <DateRangePicker
                   startDate={startDate}
                   endDate={endDate}
                   onStartDateChange={setStartDate}
                   onEndDateChange={setEndDate}
+                  colorBlindMode={colorBlindMode} 
+                  isDarkMode={isDarkMode}
                 />
 
-                <Text style={styles.label}>Repeat On (select days): </Text>
+                <Text style={[styles.label, { color: isDarkMode ? "white" : "#6b5b7f" }]}>Repeat On (select days): </Text>
                 <View style={styles.frequencyRow}>
                   {ALL_WEEKDAYS.map((day) => (
                     <TouchableOpacity
                       key={day}
                       style={[
-                        styles.frequencyButton,
-                        selectedDays.includes(day) && styles.frequencyButtonActive,
-                      ]}
+                                              [styles.frequencyButton, { borderColor: getAppColors(colorBlindMode, isDarkMode).border, backgroundColor: getAppColors(colorBlindMode, isDarkMode).inputBackground }],
+                                              selectedDays.includes(day) && [styles.frequencyButtonActive, { backgroundColor: getAppColors(colorBlindMode, isDarkMode).border }],
+                                            ]}
                       onPress={() => toggleDay(day)}
                     >
                       <Text
                         style={[
                           styles.frequencyText,
                           selectedDays.includes(day) && styles.frequencyTextActive,
+                          { color: isDarkMode ? "white" : "#6b5b7f" }
                         ]}
                       >
                         {WEEKDAY_ABBREVIATIONS[day]}
@@ -233,16 +288,19 @@ export default function AddTaskDialog({
               </View>
             )}
             {initialTaskType === "related" && (
-              <View style={styles.section}>
-                <TitleInput value={taskTitle} onChange={handleInputChange} />
-                <NoteInput value={notes} onChange={setNotes} />
+              <View style={[styles.section, { borderColor: getAppColors(colorBlindMode, isDarkMode).sectionBorder }]}>
+                <TitleInput value={taskTitle} onChange={handleInputChange} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode}/>
+                <NoteInput value={notes} onChange={setNotes} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode}/>
+                <TimePicker time={editedTime} onTimeChange={setEditedTime} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode} selectedDate={selectedDate}/>
 
                 <RelatedTaskInput
                   tasks={tasks}
                   selectedTaskId={parentTaskId}
                   onSelect={setParentTaskId}
+                  colorBlindMode={colorBlindMode} 
+                  isDarkMode={isDarkMode}
                 />
-                <Text style={styles.label}>Select Date: </Text>
+                <Text style={[styles.label, { color: isDarkMode ? "white" : "#6b5b7f" }]}>Select Date: </Text>
                 <Calendar
                   onDayPress={(day) => setSelectedDate(day.dateString)}
                   markedDates={
@@ -260,24 +318,28 @@ export default function AddTaskDialog({
               </View>
             )}
             {initialTaskType === "long_interval" && (
-              <View style={styles.section}>
-                <TitleInput value={taskTitle} onChange={handleInputChange} />
-                <NoteInput value={notes} onChange={setNotes} />
+              <View style={[styles.section, { borderColor: getAppColors(colorBlindMode, isDarkMode).sectionBorder }]}>
+                <TitleInput value={taskTitle} onChange={handleInputChange} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode}/>
+                <NoteInput value={notes} onChange={setNotes} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode}/>
+                <TimePicker time={editedTime} onTimeChange={setEditedTime} colorBlindMode={colorBlindMode} isDarkMode={isDarkMode}/>
 
                 <DateRangePicker
                   startDate={startDate}
                   endDate={endDate}
                   onStartDateChange={setStartDate}
                   onEndDateChange={setEndDate}
+                  colorBlindMode={colorBlindMode}
+                   isDarkMode={isDarkMode}
                 />
 
                 <View style={styles.inputRow}>
-                  <Text style={styles.label}>Interval(months): </Text>
+                  <Text style={[styles.label, { color: isDarkMode ? "white" : "#6b5b7f" }]}>Interval (in months): </Text>
                   <TextInput
                     style={styles.dateInput}
                     value={intervalMonths}
-                    onChangeText={setIntervalMonths}
-                    placeholder="e.g., 3"
+                    onChangeText={handleIntervalChange}
+                    //onChangeText={setIntervalMonths}
+                    placeholder="1"
                     placeholderTextColor="#999"
                     keyboardType="numeric"
                   />

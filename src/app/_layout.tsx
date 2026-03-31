@@ -6,13 +6,24 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ConfettiOverlay } from '../components/ConfettiOverlay';
 import { AppProvider, useApp } from '../contexts/AppContext';
 import { useAppTheme } from '../hooks/use-app-theme';
+import * as Notifications from "expo-notifications"
+import { useEffect } from 'react';
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 function RootLayoutContent() {
   const { confettiTrigger } = useApp();
   const { colors, isDark } = useAppTheme();
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }} >
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <Stack
         screenOptions={{
@@ -24,6 +35,9 @@ function RootLayoutContent() {
         <Stack.Screen name="CalendarView" />
         <Stack.Screen name="OneThingMode" />
         <Stack.Screen name="Settings" />
+          <Stack.Screen name="login" />
+          <Stack.Screen name="signup" />
+        <Stack.Screen name ="ResetPass"/>
       </Stack>
       <ConfettiOverlay trigger={confettiTrigger} />
     </View>
@@ -32,7 +46,7 @@ function RootLayoutContent() {
 
 export default function Layout() {
   return (
-    <SafeAreaProvider>
+    <SafeAreaProvider >
       <AppProvider>
         <RootLayoutContent />
       </AppProvider>

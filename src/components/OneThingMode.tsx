@@ -13,6 +13,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
+  Vibration,
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -21,6 +22,7 @@ import { SettingsData } from './Settings';
 import { getTaskTypeColor } from './taskColors';
 import { AppThemeColors, resolveThemePreference } from '../constants/theme';
 import { useColorScheme } from '../hooks/use-color-scheme';
+import { scheduleTimedNotification, cancelNotification } from '@/lib/Notifications';
 
 interface OneThingModeProps {
   onNavigateBack: () => void;
@@ -51,6 +53,7 @@ export function OneThingMode({
   const [showAlertPopup, setShowAlertPopup] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [shownIntervals, setShownIntervals] = useState<Set<number>>(new Set());
+  const [notificationId, setNotificationId] = useState<string | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const popupTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -84,24 +87,22 @@ export function OneThingMode({
   useEffect(() => {
     if (isRunning && timeInSeconds > 0) {
       intervalRef.current = setInterval(() => {
-        setTimeInSeconds((prev) => {
-          const newTime = prev - 1;
-          const initialSeconds = settings.defaultTimerMinutes * 60;
+        const newTime = timeInSeconds - 1;
+        const initialSeconds = settings.defaultTimerMinutes * 60;
 
-          // Check for key intervals
-          checkKeyIntervals(newTime, initialSeconds);
+        // Check for key intervals
+        checkKeyIntervals(newTime, initialSeconds);
 
-          if (newTime <= 0) {
-            setIsRunning(false);
-            setHasCompleted(true);
-            if (settings.confettiEnabled && onTriggerConfetti) {
-              onTriggerConfetti();
-            }
-            triggerPulseAnimation();
-            return 0;
+        setTimeInSeconds(newTime <= 0 ? 0 : newTime);
+
+        if (newTime <= 0) {
+          setIsRunning(false);
+          setHasCompleted(true);
+          if (settings.confettiEnabled && onTriggerConfetti) {
+            onTriggerConfetti();
           }
-          return newTime;
-        });
+          triggerPulseAnimation();
+        }
       }, 1000);
     } else {
       if (intervalRef.current) {
@@ -164,6 +165,7 @@ export function OneThingMode({
 
   const showTimerAlert = (message: string) => {
     setAlertMessage(message);
+    Vibration.vibrate([500, 300, 200, 100, 500]);
     setShowAlertPopup(true);
     playSound();
 
@@ -192,10 +194,19 @@ export function OneThingMode({
     });
   };
 
-  const toggleTimer = () => {
+  const toggleTimer = async () => {
     // If timer is at 0, reset and start it
+    console.log(timeInSeconds);
     if (timeInSeconds === 0) {
-      setTimeInSeconds(settings.defaultTimerMinutes * 60);
+      const initialSeconds = settings.defaultTimerMinutes * 60;
+      setTimeInSeconds(initialSeconds);
+      if (selectedTask) {
+        const id = await scheduleTimedNotification("One Thing Mode Reminder", selectedTask.title, initialSeconds, settings.soundEnabled);
+        setNotificationId(id);
+        console.log(`Scheduled notification with ID: ${id}`);
+      } else {
+        console.warn('No task selected for notification');
+      }
       setShownIntervals(new Set());
       setIsRunning(true);
       setHasCompleted(false);
@@ -207,9 +218,13 @@ export function OneThingMode({
 
   const resetTimer = () => {
     setIsRunning(false);
-    setTimeInSeconds(settings.defaultTimerMinutes * 60);
+    setTimeInSeconds(0);
     setHasCompleted(false);
     setShownIntervals(new Set());
+    if (notificationId) {
+      cancelNotification(notificationId);
+      setNotificationId(null);
+    }
   };
 
   const handleCompleteTask = () => {
