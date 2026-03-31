@@ -56,6 +56,7 @@ export function Dashboard({
   const [now, setNow] = useState(() => new Date());
   const [showAddTaskDialog, setShowAddTaskDialog] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
+  const [taskSearch, setTaskSearch] = useState('');
   // Ref to track previous progress for confetti trigger
   const previousProgressRef = useRef(0);
 
@@ -104,7 +105,7 @@ export function Dashboard({
       const bTime = b.time ? combineAsDate(b.due_date, b.time).getTime() : new Date(b.due_date).setHours(0, 0, 0, 0);
       return aTime - bTime;
     });
-  }, [tasks, now]);
+  }, [tasks, now,taskSearch]);
 
   // Filter tasks from props for upcoming (next 5 tasks after today)
   const upcomingTasks = useMemo(() => {
@@ -119,11 +120,12 @@ export function Dashboard({
       })
       .sort((a, b) => new Date(combineAsDate(a.due_date,a.time || now)).getTime() -
                     new Date(combineAsDate(b.due_date,b.time || now)).getTime());
-  }, [tasks, now]);
+  }, [tasks, now,taskSearch]);
 
   const repeatingTasks = useMemo(() => {
-    return tasks.filter((task) => task.is_template === true);
-  }, [tasks]);
+    return tasks
+    .filter((task) => task.is_template === true);
+  }, [tasks,taskSearch]);
 
   const openTasks = useMemo(() => {
     return tasks
@@ -134,7 +136,7 @@ export function Dashboard({
       })
       .sort((a, b) => new Date(combineAsDate(a.due_date,a.time || now)).getTime() -
                       new Date(combineAsDate(b.due_date,b.time || now)).getTime());
-  }, [tasks, now]);
+  }, [tasks, now,taskSearch]);
  
   const handleAddTask = () => {
     if (!showAddTaskDialog) {
@@ -469,10 +471,28 @@ export function Dashboard({
     fontSize: 15,
     fontWeight: '600',
   },
+      inputRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: colors.inputBackground,
+      borderColor: colors.border,
+      borderWidth: 1,
+      borderRadius: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      marginBottom: 20,
+    },
+    input: {
+      flex: 1,
+      color: colors.text,
+      fontSize: 16,
+      padding: 0,
+      backgroundColor: "transparent",
+    },
   });
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container]}>
       <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
@@ -549,7 +569,6 @@ export function Dashboard({
           </View>
         </View>)}
 
-        {/* Streak Counter */}
 
         {/* Add Task Section */}
         <View style={styles.addTaskBorder}>
@@ -569,7 +588,15 @@ export function Dashboard({
             </TouchableOpacity>
           </View>
         
-            
+                {/* Task Search */}
+        <View style={styles.inputRow}>
+          <TextInput
+            style={styles.input}
+            placeholder="Search tasks..."
+            value={taskSearch}
+            onChangeText={setTaskSearch}
+          />
+        </View>
         {/* Task View Filter Buttons */}
         <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 8, marginBottom: 20 }}>
           <TouchableOpacity
@@ -637,14 +664,16 @@ export function Dashboard({
           </TouchableOpacity>
         </View>
 
+        <View style={{paddingBottom: 300}}>
         {taskView === 'today' ? (
-          <View style={styles.section}>
+          <View style={[styles.section]}>
             <Text style={styles.sectionTitle}>Today</Text>
             {todayTasks.length === 0 ? (
               <Text style={styles.noTasksMessage}>No tasks for today</Text>
             ) : (
-              <View style={styles.tasksList}>
-                {todayTasks.slice(0, visibleToday).map((task) => (
+              <View style={[styles.tasksList,{paddingBottom: 80}]}>
+                {todayTasks.filter((task) => task.title.toLowerCase().includes(taskSearch.toLowerCase()))
+                .slice(0, visibleToday).map((task) => (
                   <TaskCard
                     key={task.id}
                     task={task}
@@ -679,7 +708,8 @@ export function Dashboard({
               <Text style={styles.noTasksMessage}>No upcoming tasks</Text>
             ) : (
               <View style={styles.tasksList}>
-                {upcomingTasks.slice(0, visibleUpcoming).map((task) => (
+                {upcomingTasks.filter((task) => task.title.toLowerCase().includes(taskSearch.toLowerCase()))
+                .slice(0, visibleUpcoming).map((task) => (
                   <TaskCard
                     key={task.id}
                     task={task}
@@ -714,7 +744,8 @@ export function Dashboard({
               <Text style={styles.noTasksMessage}>No open tasks</Text>
             ) : (
               <View style={styles.tasksList}>
-                {openTasks.slice(0, visibleOpen).map((task) => (
+                {openTasks.filter((task) => task.title.toLowerCase().includes(taskSearch.toLowerCase()))
+                .slice(0, visibleOpen).map((task) => (
                   <TaskCard
                     key={task.id}
                     task={task}
@@ -747,7 +778,8 @@ export function Dashboard({
               <Text style={styles.noTasksMessage}>No repeating tasks</Text>
             ) : (
               <View style={styles.tasksList}>
-                {repeatingTasks.slice(0, visibleRepeating).map((task) => (
+                {repeatingTasks.filter((task) => task.title.toLowerCase().includes(taskSearch.toLowerCase()))
+                .slice(0, visibleRepeating).map((task) => (
                   <TaskCard
                     key={task.id}
                     task={task}
@@ -776,6 +808,7 @@ export function Dashboard({
             )}
           </View>
         )}
+        </View>
         <InfoPopup
           isOpen={showInfo}
           onClose={() => setShowInfo(false)}
