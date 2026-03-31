@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { AppColors } from "../constants/theme";
 import { getAppColors } from "../constants/theme";
+import { toLocalDateString } from "../types";
 import { Pencil } from "lucide-react-native";
 
 interface TimePickerProps {
@@ -10,15 +11,28 @@ interface TimePickerProps {
   onTimeChange: (date: Date) => void;
   colorBlindMode?: boolean;
   isDarkMode?: boolean;
+  selectedDate?: string; // "YYYY-MM-DD"
 }
 
 export default function TimePicker({
   time,
   onTimeChange,
   colorBlindMode = false,
-  isDarkMode = false
+  isDarkMode = false,
+  selectedDate,
 }: TimePickerProps) {
   const [showTime, setShowTime] = useState(false);
+
+  const getBaseDate = (): Date => {
+    if (time) return time;
+    if (selectedDate) {
+      const [year, month, day] = selectedDate.split('-').map(Number);
+      const base = new Date(year, month - 1, day);
+      base.setHours(new Date().getHours(), new Date().getMinutes(), 0, 0);
+      return base;
+    }
+    return new Date();
+  };
 
   const formatDate = (date: Date | null): string => {
     if (!date) return "Select time...";
@@ -55,8 +69,8 @@ export default function TimePicker({
           display="spinner"
           isDarkModeEnabled={isDarkMode}
           themeVariant={isDarkMode ? "dark" : "light"}
-          date={time || new Date()}
-          minimumDate={new Date()}
+          date={getBaseDate()}
+          minimumDate={selectedDate === toLocalDateString(new Date()) ? new Date() : undefined}
           onConfirm={(date) => {
             onTimeChange(date);
             setShowTime(false);

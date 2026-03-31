@@ -128,8 +128,8 @@ export function Dashboard({
   const openTasks = useMemo(() => {
     return tasks
       .filter((task) => {
-        if (task.is_template || task.type === 'routine' ||  task.type === 'long_interval' || task.completed) return false;
-        const taskDate = combineAsDate(task.due_date, task.time || now);
+        if (task.is_template || task.type === 'routine' || task.completed) return false;
+        const taskDate = combineAsDate(task.due_date, task.time || new Date());
         return taskDate < now;
       })
       .sort((a, b) => new Date(combineAsDate(a.due_date,a.time || now)).getTime() -
