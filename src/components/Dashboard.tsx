@@ -116,6 +116,7 @@ export function Dashboard({
         if (task.is_template) return false;
         if (!showRoutine && task.type == "routine"){
           return false;
+        }
         if(!showRoutine && task.type == "long_interval"){
           return false;
         }
