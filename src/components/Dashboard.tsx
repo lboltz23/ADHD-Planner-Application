@@ -197,74 +197,55 @@ export function Dashboard({
   // Calculate streak count
   const [streakCount, setStreakCount] = useState(0);
 
-  // Update streak count based on last login date
   const updateStreak = async () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // normalize to date only
-
-    try {
-      const lastLoginString = await AsyncStorage.getItem('lastLogin');
-      const streakString = await AsyncStorage.getItem('streakCount');
-
-      let streak = streakString ? parseInt(streakString) : 0;
-
-      if (lastLoginString) {
-        const lastLogin = new Date(lastLoginString);
-        lastLogin.setHours(0, 0, 0, 0);
-
-        const diffDays =
-          (today.getTime() - lastLogin.getTime()) / (1000 * 60 * 60 * 24);
-
-        if (diffDays === 1) {
-          // consecutive day
-          streak += 1;
-        } else if (diffDays > 1) {
-          // missed a day, reset streak
-          streak = 1;
-        }
-        // diffDays === 0 → same day login, do nothing
-      } else {
-        // first login ever
-        streak = 1;
-      }
-
-      await AsyncStorage.setItem('streakCount', streak.toString());
-      await AsyncStorage.setItem('lastLogin', today.toISOString());
-
-      setStreakCount(streak);
-    } catch (err) {
-      console.error('Error updating streak:', err);
-    }
-  };
-
-  // Initialize streak count on mount
-  useEffect(() => {
-    updateStreak();
-  }, []);
-
-  // Check streak on new day (when "now" changes) - if last login was yesterday, increment streak. If it was before yesterday, reset streak.
-  useEffect(() => {
+  try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const checkStreakForNewDay = async () => {
-      try {
-        const lastLoginString = await AsyncStorage.getItem('lastLogin');
-        if (!lastLoginString) return;
+    const lastLoginString = await AsyncStorage.getItem('lastLogin');
+    const streakString = await AsyncStorage.getItem('streakCount');
 
-        const lastLogin = new Date(lastLoginString);
-        lastLogin.setHours(0, 0, 0, 0);
+    let streak = Number(streakString) || 0;
 
-        if (today.getTime() > lastLogin.getTime()) {
-          await updateStreak();
-        }
-      } catch (err) {
-        console.error('Error checking streak for new day:', err);
+    if (!lastLoginString) {
+      // First time ever
+      streak = 1;
+    } else {
+      const lastLogin = new Date(lastLoginString);
+      lastLogin.setHours(0, 0, 0, 0);
+
+      const diffDays = Math.floor(
+        (today.getTime() - lastLogin.getTime()) / (1000 * 60 * 60 * 24)
+      );
+
+      if (diffDays === 0) {
+        // Already counted today → do nothing
+        setStreakCount(streak);
+        return;
+      } else if (diffDays === 1) {
+        // Consecutive day
+        streak += 1;
+      } else {
+        // Missed one or more days
+        streak = 1;
       }
-    };
+    }
 
-    checkStreakForNewDay();
-  }, [now]); //  Updating every minute
+    await AsyncStorage.setItem('streakCount', streak.toString());
+    await AsyncStorage.setItem('lastLogin', today.toISOString());
+
+    setStreakCount(streak);
+    } catch (err) {
+    console.error('Error updating streak:', err);
+    }
+  };
+
+  // Update streak when focused on page (in case they left and came back later)
+  useFocusEffect(
+  useCallback(() => {
+    updateStreak();
+  }, [])
+  );
 
   useEffect(() => {
     // Only trigger confetti if: all tasks are complete AND there's at least 1 task today
