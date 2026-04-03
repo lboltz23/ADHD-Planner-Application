@@ -593,6 +593,7 @@ export function Dashboard({
           <TextInput
             style={styles.input}
             placeholder="Search tasks..."
+            placeholderTextColor={getAppColors(settings.colorBlindMode, isDark).placeholder}
             value={taskSearch}
             onChangeText={setTaskSearch}
           />
