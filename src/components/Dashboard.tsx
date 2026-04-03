@@ -207,44 +207,47 @@ export function Dashboard({
       : 0;
 
   // Calculate streak count
-  const [streakCount, setStreakCount] = useState(0);
+    const [streakCount, setStreakCount] = useState<number>(0);
 
-const updateStreak = useCallback(async () => {
-  try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const updateStreak = useCallback(async () => {
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // local midnight
 
-    const lastLoginString = await AsyncStorage.getItem('lastLogin');
-    const streakString = await AsyncStorage.getItem('streakCount');
+      const lastLoginString = await AsyncStorage.getItem('lastLogin');
+      const streakString = await AsyncStorage.getItem('streakCount');
 
-    let streak = Number(streakString) || 0;
+      let streak = Number(streakString) || 0;
 
-    if (!lastLoginString) {
-      streak = 1;
-    } else {
-      const lastLogin = new Date(lastLoginString);
-      lastLogin.setHours(0, 0, 0, 0);
-
-      const diffDays = Math.floor(
-        (today.getTime() - lastLogin.getTime()) / (1000 * 60 * 60 * 24)
-      );
-
-      if (diffDays === 0) {
-        setStreakCount(streak);
-        return;
-      } else if (diffDays === 1) {
-        streak += 1;
-      } else {
+      if (!lastLoginString) {
         streak = 1;
+      } else {
+        const lastLogin = new Date(lastLoginString);
+        lastLogin.setHours(0, 0, 0, 0);
+
+        const diffDays = Math.floor(
+          (today.getTime() - lastLogin.getTime()) / (1000 * 60 * 60 * 24)
+        );
+
+        if (diffDays === 0) {
+          // Same day → do nothing
+          setStreakCount(streak);
+          return;
+        } else if (diffDays === 1) {
+          streak += 1;
+        } else {
+          streak = 1; // missed day(s)
+        }
       }
-    }
 
-    await AsyncStorage.setItem('streakCount', streak.toString());
-    await AsyncStorage.setItem('lastLogin', today.toISOString());
+      await AsyncStorage.multiSet([
+        ['streakCount', streak.toString()],
+        ['lastLogin', today.toISOString()],
+      ]);
 
-    setStreakCount(streak);
-  } catch (err) {
-    console.error('Error updating streak:', err);
+      setStreakCount(streak);
+    } catch (err) {
+      console.error('Error updating streak:', err);
     }
   }, []);
   
@@ -583,7 +586,7 @@ const updateStreak = useCallback(async () => {
             </View>
             <View style={styles.streakBadge}>
               <Text style={styles.streakBadgeText}>{streakCount}</Text>
-              <Text style={styles.streakBadgeLabel}>day</Text>
+              <Text style={styles.streakBadgeLabel}>{streakCount === 1 ? 'day' : 'days'}</Text>
             </View>
           </View>
         </View>
