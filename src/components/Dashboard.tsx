@@ -197,7 +197,7 @@ export function Dashboard({
   // Calculate streak count
   const [streakCount, setStreakCount] = useState(0);
 
-  const updateStreak = async () => {
+const updateStreak = useCallback(async () => {
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -208,7 +208,6 @@ export function Dashboard({
     let streak = Number(streakString) || 0;
 
     if (!lastLoginString) {
-      // First time ever
       streak = 1;
     } else {
       const lastLogin = new Date(lastLoginString);
@@ -219,14 +218,11 @@ export function Dashboard({
       );
 
       if (diffDays === 0) {
-        // Already counted today → do nothing
         setStreakCount(streak);
         return;
       } else if (diffDays === 1) {
-        // Consecutive day
         streak += 1;
       } else {
-        // Missed one or more days
         streak = 1;
       }
     }
@@ -235,17 +231,21 @@ export function Dashboard({
     await AsyncStorage.setItem('lastLogin', today.toISOString());
 
     setStreakCount(streak);
-    } catch (err) {
+  } catch (err) {
     console.error('Error updating streak:', err);
     }
-  };
-
-  // Update streak when focused on page (in case they left and came back later)
+  }, []);
+  
   useFocusEffect(
   useCallback(() => {
     updateStreak();
-  }, [])
+  }, [updateStreak])
   );
+
+  useEffect(() => {
+    const interval = setInterval(updateStreak, 60 * 60 * 1000); // every hour
+    return () => clearInterval(interval);
+  }, [updateStreak]);
 
   useEffect(() => {
     // Only trigger confetti if: all tasks are complete AND there's at least 1 task today
