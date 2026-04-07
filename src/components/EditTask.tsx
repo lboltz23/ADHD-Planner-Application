@@ -114,6 +114,7 @@ export default function EditTask({
 
   const handleToggleComplete = () => {
     onToggle(task.id);
+    onClose();      // close modal immediately to avoid stacking issues with confetti
   };
 
   const handleDateSelect = (day: any) => {

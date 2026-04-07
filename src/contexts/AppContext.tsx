@@ -700,12 +700,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [user,tasks]);
 
+  const triggerConfetti = useCallback(() => {
+    setConfettiTrigger(prev => prev + 1);
+  }, []);
+
   const toggleTask = useCallback(async (id: string) => {
     // Find the task to determine if it's a recurring instance
     const task = tasks.find(t => t.id === id);
     if (!task) return;
 
     const newCompletedState = !task.completed;
+
+    if (!task.completed && newCompletedState) {
+      triggerConfetti();
+    }
 
     // Optimistically update UI first
     setTasks(prev => prev.map(t =>
@@ -786,7 +794,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         ));
       }
     }
-  }, [user,tasks]);
+  }, [user, tasks, triggerConfetti]);
 
 const updateSettings = useCallback(async (newSettings: SettingsData) => {
   setSettings(prev => {
@@ -1079,11 +1087,6 @@ const updateSettings = useCallback(async (newSettings: SettingsData) => {
       }
     }
   }, [tasks]);
-  
-  const triggerConfetti = useCallback(() => {
-    setConfettiTrigger(prev => prev + 1);
-  }, []);
-
   
   const deleteTask = useCallback(async (id: string) => {
     const task = tasks.find(t => t.id === id);
