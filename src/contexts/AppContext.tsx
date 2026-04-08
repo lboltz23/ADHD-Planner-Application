@@ -712,7 +712,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const newCompletedState = !task.completed;
 
     if (!task.completed && newCompletedState) {
-      triggerConfetti();
+      //triggerConfetti();
+      //uncommenting this allows for confetti on EACH task completion
     }
 
     // Optimistically update UI first
