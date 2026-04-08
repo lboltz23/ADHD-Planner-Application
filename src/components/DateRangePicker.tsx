@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { getAppColors } from "../constants/theme";
+import { useColorScheme } from "react-native";
 
 interface DateRangePickerProps {
   startDate: Date | null;
@@ -22,8 +23,18 @@ export default function DateRangePicker({
   startLabel = "Start Date",
   endLabel = "End Date",
   colorBlindMode = false,
-  isDarkMode = false,
+  isDarkMode,
 }: DateRangePickerProps) {
+
+  const systemTheme = useColorScheme();
+
+  const actualTheme = isDarkMode !== undefined
+    ? (isDarkMode ? "dark" : "light")
+    : systemTheme;
+
+  const isDark = actualTheme === "dark";
+  
+
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
 
@@ -39,12 +50,12 @@ export default function DateRangePicker({
   return (
     <View style={styles.dateInputRow}>
       <View style={styles.dateInputContainer}>
-        <Text style={[styles.label, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>{startLabel}</Text>
+        <Text style={[styles.label, { color: getAppColors(colorBlindMode, isDark).primary }]}>{startLabel}</Text>
         <TouchableOpacity
-          style={[styles.dateInput, {backgroundColor: getAppColors(colorBlindMode, isDarkMode).inputBackground, borderColor: getAppColors(colorBlindMode, isDarkMode).border }]}
+          style={[styles.dateInput, {backgroundColor: getAppColors(colorBlindMode, isDark).inputBackground, borderColor: getAppColors(colorBlindMode, isDark).border }]}
           onPress={() => setShowStartPicker(true)}
         >
-          <Text style={startDate ? [styles.dateText, { color: getAppColors(colorBlindMode, isDarkMode).primary }] : [styles.datePlaceholder, {color: getAppColors(colorBlindMode, isDarkMode).placeholder }]}>
+          <Text style={startDate ? [styles.dateText, { color: getAppColors(colorBlindMode, isDark).primary }] : [styles.datePlaceholder, {color: getAppColors(colorBlindMode, isDark).placeholder }]}>
             {formatDate(startDate)}
           </Text>
         </TouchableOpacity>
@@ -52,6 +63,7 @@ export default function DateRangePicker({
           isVisible={showStartPicker}
           mode="date"
           display="spinner"
+          isDarkModeEnabled={isDarkMode}
           themeVariant={isDarkMode ? "dark" : "light"}
           date={startDate || new Date()}
           minimumDate={new Date()}
@@ -63,12 +75,12 @@ export default function DateRangePicker({
         />
       </View>
       <View style={styles.dateInputContainer}>
-        <Text style={[styles.label, { color: getAppColors(colorBlindMode, isDarkMode).primary }]}>{endLabel}</Text>
+        <Text style={[styles.label, { color: getAppColors(colorBlindMode, isDark).primary }]}>{endLabel}</Text>
         <TouchableOpacity
-          style={[styles.dateInput, {backgroundColor: getAppColors(colorBlindMode, isDarkMode).inputBackground, borderColor: getAppColors(colorBlindMode, isDarkMode).border }]}
+          style={[styles.dateInput, {backgroundColor: getAppColors(colorBlindMode, isDark).inputBackground, borderColor: getAppColors(colorBlindMode, isDark).border }]}
           onPress={() => setShowEndPicker(true)}
         >
-          <Text style={endDate ? [styles.dateText, { color: getAppColors(colorBlindMode, isDarkMode).primary }] : [styles.datePlaceholder, {color: getAppColors(colorBlindMode, isDarkMode).placeholder }]}>
+          <Text style={endDate ? [styles.dateText, { color: getAppColors(colorBlindMode, isDark).primary }] : [styles.datePlaceholder, {color: getAppColors(colorBlindMode, isDark).placeholder }]}>
             {formatDate(endDate)}
           </Text>
         </TouchableOpacity>
@@ -76,6 +88,7 @@ export default function DateRangePicker({
           isVisible={showEndPicker}
           mode="date"
           display="spinner"
+          isDarkModeEnabled={isDarkMode}
           themeVariant={isDarkMode ? "dark" : "light"}
           date={endDate || startDate || new Date()}
           minimumDate={startDate || new Date()}
