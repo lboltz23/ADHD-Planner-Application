@@ -218,7 +218,7 @@ export function OneThingMode({
 
   const resetTimer = () => {
     setIsRunning(false);
-    setTimeInSeconds(0);
+    setTimeInSeconds(settings.defaultTimerMinutes * 60); // use user’s allotted time instead of 0
     setHasCompleted(false);
     setShownIntervals(new Set());
     if (notificationId) {
@@ -545,7 +545,10 @@ export function OneThingMode({
                   ]}
                   onPress={() => {
                     setSelectedTaskId(task.id);
-                    resetTimer();
+                    setTimeInSeconds(settings.defaultTimerMinutes * 60); // always show allotted time
+                    setIsRunning(false);
+                    setHasCompleted(false);
+                    setShownIntervals(new Set());
                   }}
                   activeOpacity={0.7}
                 >
