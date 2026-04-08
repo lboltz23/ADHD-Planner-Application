@@ -22,6 +22,7 @@ import { AppThemeColors, resolveThemePreference } from '../constants/theme';
 import { useColorScheme } from '../hooks/use-color-scheme';
 import { useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useIsFocused } from '@react-navigation/native';
 // Dashboard Props
 interface DashboardProps {
   onNavigateToCalendar: () => void;
@@ -262,19 +263,29 @@ export function Dashboard({
     return () => clearInterval(interval);
   }, [updateStreak]);
 
+  const isFocused = useIsFocused();
+
   useEffect(() => {
-    // Only trigger confetti if: all tasks are complete AND there's at least 1 task today
-    if (
+    if (!isFocused) return;
+
+    const justFinishedAll =
       todayProgress === 100 &&
       previousProgressRef.current < 100 &&
       todayTasks.length > 0 &&
-      settings.confettiEnabled &&
-      onTriggerConfetti
-    ) {
-      onTriggerConfetti();
+      settings.confettiEnabled;
+
+    if (justFinishedAll) {
+      onTriggerConfetti?.();
     }
+
     previousProgressRef.current = todayProgress;
-  }, [todayProgress, todayTasks.length, settings.confettiEnabled, onTriggerConfetti]);
+  }, [
+    todayProgress,
+    todayTasks.length,
+    settings.confettiEnabled,
+    onTriggerConfetti,
+    isFocused
+  ]);
 
   const styles = StyleSheet.create({
     container: {
