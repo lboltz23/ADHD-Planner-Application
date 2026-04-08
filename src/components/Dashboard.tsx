@@ -21,6 +21,7 @@ import InfoPopup from './Info';
 import { AppThemeColors, resolveThemePreference } from '../constants/theme';
 import { useColorScheme } from '../hooks/use-color-scheme';
 import { useFocusEffect } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useIsFocused } from '@react-navigation/native';
 // Dashboard Props
 interface DashboardProps {
@@ -207,36 +208,60 @@ export function Dashboard({
       : 0;
 
   // Calculate streak count
-  const [streakCount, setStreakCount] = useState(0);
+    const [streakCount, setStreakCount] = useState<number>(0);
 
-  useEffect(() => {
-    const calculateStreak = () => {
-      let streak = 1;
-      let currentDate = new Date();
-      currentDate.setHours(0, 0, 0, 0);
+    const updateStreak = useCallback(async () => {
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // local midnight
 
-      while (streak < 30) {
-        const dateString = currentDate.toDateString();
-        const tasksForDate = tasks.filter((task) => {
-          const taskDate = new Date(task.due_date);
-          taskDate.setHours(0, 0, 0, 0);
-          return taskDate.toDateString() === dateString && task.completed;
-        });
+      const lastLoginString = await AsyncStorage.getItem('lastLogin');
+      const streakString = await AsyncStorage.getItem('streakCount');
 
-        if (tasksForDate.length > 0) {
-          streak++;
+      let streak = Number(streakString) || 0;
+
+      if (!lastLoginString) {
+        streak = 1;
+      } else {
+        const lastLogin = new Date(lastLoginString);
+        lastLogin.setHours(0, 0, 0, 0);
+
+        const diffDays = Math.floor(
+          (today.getTime() - lastLogin.getTime()) / (1000 * 60 * 60 * 24)
+        );
+
+        if (diffDays === 0) {
+          // Same day → do nothing
+          setStreakCount(streak);
+          return;
+        } else if (diffDays === 1) {
+          streak += 1;
         } else {
-          break;
+          streak = 1; // missed day(s)
         }
-
-        currentDate.setDate(currentDate.getDate() - 1);
       }
 
-      setStreakCount(streak);
-    };
+      await AsyncStorage.multiSet([
+        ['streakCount', streak.toString()],
+        ['lastLogin', today.toISOString()],
+      ]);
 
-    calculateStreak();
-  }, [tasks]);
+      setStreakCount(streak);
+    } catch (err) {
+      console.error('Error updating streak:', err);
+    }
+  }, []);
+  
+  useFocusEffect(
+  useCallback(() => {
+    updateStreak();
+  }, [updateStreak])
+  );
+
+  useEffect(() => {
+    const interval = setInterval(updateStreak, 60 * 60 * 1000); // every hour
+    return () => clearInterval(interval);
+  }, [updateStreak]);
 
   const isFocused = useIsFocused();
 
@@ -572,7 +597,7 @@ export function Dashboard({
             </View>
             <View style={styles.streakBadge}>
               <Text style={styles.streakBadgeText}>{streakCount}</Text>
-              <Text style={styles.streakBadgeLabel}>day</Text>
+              <Text style={styles.streakBadgeLabel}>{streakCount === 1 ? 'day' : 'days'}</Text>
             </View>
           </View>
         </View>
