@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Modal, Dimensions } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
-import { Dimensions } from 'react-native';
 
 
 const { width, height } = Dimensions.get('window');
@@ -15,9 +14,13 @@ export function ConfettiOverlay({ trigger }: ConfettiOverlayProps) {
   const [isActive, setIsActive] = useState(false);
 
   useEffect(() => {
-    if (trigger > 0 && confettiRef.current) {
+    if (trigger > 0) {
       setIsActive(true);
-      confettiRef.current.start();
+
+      // Start after modal mount
+       requestAnimationFrame(() => {
+        confettiRef.current?.start();
+      });
 
       // Hide confetti after animation completes
       setTimeout(() => {
@@ -25,6 +28,8 @@ export function ConfettiOverlay({ trigger }: ConfettiOverlayProps) {
       }, 3000);
     }
   }, [trigger]);
+
+  if (!isActive) return null;
 
   return (
     <View style={[styles.container, { opacity: isActive ? 1 : 0 }]} pointerEvents="none">
