@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { getAppColors } from "../constants/theme";
-import { useColorScheme } from "react-native";
 
 interface DateRangePickerProps {
   startDate: Date | null;
@@ -25,7 +24,6 @@ export default function DateRangePicker({
   colorBlindMode = false,
   isDarkMode = false,
 }: DateRangePickerProps) {
-  
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
 
