@@ -378,12 +378,12 @@ export function Dashboard({
     progressLabel: {
       fontSize: 16,
       fontWeight: '600',
-      color: settings.colorBlindMode ? '#3D3D3D' : '#6b5b7f',
+      color: settings.colorBlindMode ? '#d6d6d6' : '#6b5b7f',
       marginBottom: 4,
     },
     progressSub: {
       fontSize: 13,
-      color: settings.colorBlindMode ? '#3D3D3D' :'#8e7fb2',
+      color: settings.colorBlindMode ? '#dbd8d8' :'#8e7fb2',
       marginBottom: 12,
     },
     progressBarBackground: {
