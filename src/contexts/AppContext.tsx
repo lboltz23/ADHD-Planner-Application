@@ -1015,6 +1015,7 @@ const updateSettings = useCallback(async (newSettings: SettingsData) => {
         title: newTitle,
         type: task.type,
         notes: newNotes,
+        due_date: supabaseUpdate.due_date ?? (task.due_date ? toLocalDateString(task.due_date) + toLocalTimeString(task.time ?? task.due_date) : null),
         start_date: newStartDate ? toLocalDateString(newStartDate) : null,
         end_date: newEndDate ? toLocalDateString(newEndDate) : null,
         days_selected: newDaysSelected,
