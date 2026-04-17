@@ -344,7 +344,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
         const startDate = row.start_date ? parseLocalDate(row.start_date) : parseLocalDate(row.due_date);
         const timeOfDay = row.due_date ? parseLocalTime(row.due_date) : new Date(1970, 0, 1, 23, 59, 0);
-        const endDate = row.end_date ? parseLocalDate(row.end_date) : undefined;
+        const endDate = row.end_date ? parseLocalDate(row.end_date) : new Date(new Date().getFullYear() + 1, 0, 1);
 
         const nextOccurrence = getNextLongIntervalOccurrence(startDate, intervalMonths, timeOfDay, endDate);
         if (!nextOccurrence) {
@@ -433,11 +433,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
           data.forEach((row: any) => {
             // Recurring instance overrides have parent_task_id but are NOT "related" type
             if (!row.is_template && row.parent_task_id && row.type !== 'related') {
+              const key = row.original_due_date 
+                ? toLocalDateString(parseLocalDate(row.original_due_date))
+                : toLocalDateString(parseLocalDate(row.due_date));
+
               if (!overridesByTemplate.has(row.parent_task_id)) {
                 overridesByTemplate.set(row.parent_task_id, new Map());
               }
-              const dateStr = row.due_date ? toLocalDateString(new Date(row.due_date)) : '';
-              overridesByTemplate.get(row.parent_task_id)!.set(dateStr, row);
+              
+              overridesByTemplate.get(row.parent_task_id)!.set(key, row);
             }
           });
 
@@ -464,13 +468,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 days_selected: row.days_selected,
                 recurrence_interval: row.recurrence_interval,
                 start_date: new Date(row.start_date),
-                end_date: new Date(row.end_date),
+                end_date: row.end_date ? new Date(row.end_date) : undefined,
               });
 
               // Generate instances from the template, skipping dates with override rows
               const instances = generateTaskInstancesFromTemplate(row);
               const templateOverrides = overridesByTemplate.get(row.id);
-
               instances.forEach(instance => {
                 const dateStr = toLocalDateString(instance.due_date);
                 if (templateOverrides?.has(dateStr)) {
@@ -490,6 +493,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                     notification_id: override.notification_id || undefined,
                     is_template: false,
                     parent_task_id: override.parent_task_id,
+                    original_due_date: override.original_due_date ? parseLocalDate(override.original_due_date) : undefined,
                   });
                 } else {
                   allTasks.push(instance);
@@ -555,8 +559,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     StartUp();
   }, []);
 
-  //If user changes
+  //If user changes after initial mount (e.g. sign-out then sign-in)
+  const isInitialMount = React.useRef(true);
   useEffect(() =>{
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
     if(user) {
       loadTasks(user.id);
       loadSettings(user.id);
@@ -932,6 +941,7 @@ const updateSettings = useCallback(async (newSettings: SettingsData) => {
         start_date: newStartDate ? toLocalDateString(newStartDate) : null,
         end_date: newEndDate ? toLocalDateString(newEndDate) : null,
         recurrence_interval: newInterval || null,
+        original_due_date: toLocalDateString(task.due_date), // Track original date for future instance regeneration
       };
 
       const { error } = await supabase.from('tasks').insert(overrideRow);
@@ -961,6 +971,7 @@ const updateSettings = useCallback(async (newSettings: SettingsData) => {
               created_at: now,
               updated_at: now,
               notification_id: replacementNotificationId,
+              original_due_date: task.due_date, // preserve original date for correct excluded_dates on delete
             }
           : t
       ));
@@ -1097,6 +1108,11 @@ const updateSettings = useCallback(async (newSettings: SettingsData) => {
     const isRecurringInstance = task.parent_task_id && !task.is_template && task.type !== 'related';
     const isInMemoryInstance = isRecurringInstance && id.includes('_') && /\d{4}-\d{2}-\d{2}$/.test(id);
 
+    // Capture instances before removal so they can be restored on error
+    const removedInstances = task.is_template
+      ? tasks.filter(t => t.parent_task_id === id)
+      : [];
+
     // Optimistically update UI
     setTasks(prev => prev.filter(t => {
       if (t.id === id) return false;
@@ -1138,9 +1154,9 @@ const updateSettings = useCallback(async (newSettings: SettingsData) => {
     }
 
     if (isRecurringInstance) {
-      // Persisted override row — delete it from Supabase and add its date to
-      // the template's excluded_dates so it won't regenerate
-      const dateStr = toLocalDateString(task.due_date);
+      // Persisted override row — delete it and exclude the original occurrence date
+      const originalDate = task.original_due_date ?? task.due_date;
+      const originalDateStr = toLocalDateString(originalDate);
 
       const { error: deleteError } = await supabase
         .from('tasks')
@@ -1160,10 +1176,10 @@ const updateSettings = useCallback(async (newSettings: SettingsData) => {
         .single();
 
       const currentDates: string[] = templateData?.excluded_dates || [];
-      if (!currentDates.includes(dateStr)) {
+      if (!currentDates.includes(originalDateStr)) {
         await supabase
           .from('tasks')
-          .update({ excluded_dates: [...currentDates, dateStr] })
+          .update({ excluded_dates: [...currentDates, originalDateStr] })
           .eq('id', task.parent_task_id);
       }
 
@@ -1219,8 +1235,8 @@ const updateSettings = useCallback(async (newSettings: SettingsData) => {
 
     if (error) {
       console.error('Error deleting task:', error);
-      // Revert — add the task back to local state
-      setTasks(prev => [...prev, task]);
+      // Revert — restore the task and any instances that were optimistically removed
+      setTasks(prev => [...prev, task, ...removedInstances]);
       return;
     }
 

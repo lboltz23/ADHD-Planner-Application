@@ -91,6 +91,8 @@ export type Database = {
           type: string
           updated_at: string | null
           user_id: string
+          excluded_dates: string[] | null
+          original_due_date: string | null
         }
         Insert: {
           completed?: boolean | null
@@ -110,6 +112,8 @@ export type Database = {
           type: string
           updated_at?: string | null
           user_id: string
+          original_due_date?: string | null
+          excluded_dates?: string[] | null
         }
         Update: {
           completed?: boolean | null
@@ -129,6 +133,8 @@ export type Database = {
           type?: string
           updated_at?: string | null
           user_id?: string
+          excluded_dates?: string[] | null
+          original_due_date?: string | null
         }
         Relationships: []
       }
