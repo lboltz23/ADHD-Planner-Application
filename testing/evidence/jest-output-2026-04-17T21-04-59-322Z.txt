@@ -1,0 +1,251 @@
+Timestamp: 2026-04-17T21:05:12.425Z
+Command: jest --coverage --coverageReporters=text --coverageReporters=text-summary --coverageReporters=json-summary --logHeapUsage --verbose --testLocationInResults --json --outputFile C:\Users\Lacey\Desktop\Planner\planner-prototype\testing\evidence\jest-results-2026-04-17T21-04-59-322Z.json
+Exit Code: 0
+PASS testing/unit/smoke.test.ts (50 MB heap size)
+  √ jest is wired correctly (23 ms)
+
+PASS testing/unit/theme.test.ts (53 MB heap size)
+  theme utilities
+    √ resolves explicit dark and light preferences (21 ms)
+    √ resolves auto preference from system scheme (3 ms)
+    √ exposes expected app palette keys (2 ms)
+
+PASS testing/unit/notifications-lib.test.ts (51 MB heap size)
+  Notifications helpers
+    √ requests permission and configures Android channels (181 ms)
+    √ schedules timed and weekly notifications with expected trigger payloads (19 ms)
+    √ cancels one or all notifications (11 ms)
+
+PASS testing/unit/types.test.ts (69 MB heap size)
+  toLocalDateString
+    √ formats single digit month/day with padding (29 ms)
+    √ formats double digit month/day correctly (1 ms)
+
+PASS testing/unit/confirmation.test.ts (54 MB heap size)
+  confirm
+    √ resolves true when user confirms (150 ms)
+    √ resolves false when user cancels (2 ms)
+
+PASS testing/unit/task-colors.test.ts (73 MB heap size)
+  task color helpers
+    √ returns default task colors when color blind mode is off (3 ms)
+    √ returns color blind task colors when color blind mode is on (2 ms)
+    √ returns enhanced colors for task creation flow (2 ms)
+    √ returns filter colors for both palettes (2 ms)
+
+PASS testing/unit/native-color-scheme.test.tsx (5.983 s, 75 MB heap size)
+  native use-color-scheme hook
+    √ re-exports react-native useColorScheme (2349 ms)
+
+PASS testing/unit/use-safe-back.test.tsx (6.148 s, 78 MB heap size)
+  useSafeBack
+    √ goes back when navigation stack has a previous route (2362 ms)
+    √ replaces with root route when there is no previous route (8 ms)
+
+PASS testing/unit/dot-loader.test.tsx (5.879 s, 73 MB heap size)
+  DotLoader
+    √ cycles dot count over time (2265 ms)
+
+PASS testing/integration/title-input.integration.test.tsx (5.993 s, 79 MB heap size)
+  TitleInput integration
+    √ renders label and forwards text changes (1944 ms)
+    √ supports a custom placeholder (13 ms)
+
+PASS testing/integration/app-routes.integration.test.tsx (6.049 s, 61 MB heap size)
+  app route screens
+    √ index route wires dashboard actions and navigation (2305 ms)
+    √ calendar route passes safe back and settings navigation (20 ms)
+    √ settings route passes state and handlers (33 ms)
+    √ one thing mode route passes state and handlers (38 ms)
+    √ layout renders stack, status bar, and confetti overlay (26 ms)
+
+PASS testing/unit/hooks-and-lib.test.tsx (6.39 s, 63 MB heap size)
+  hooks and lib utilities
+    √ useAppTheme resolves theme and colors from app settings (2373 ms)
+    √ useThemeColor prefers explicit prop color over palette color (20 ms)
+    √ web useColorScheme resolves to system scheme after hydration (36 ms)
+    √ supabase client is created from env vars (184 ms)
+
+PASS testing/integration/auth-screens.integration.test.tsx (6.36 s, 75 MB heap size)
+  auth screens
+    √ login signs in and routes to root (2102 ms)
+    √ login reset-password modal submits recovery email (77 ms)
+    √ signup validates and then submits valid account data (109 ms)
+    √ reset password rejects invalid input and updates when valid (43 ms)
+
+  console.error
+    An update to Dashboard inside a test was not wrapped in act(...).
+    
+    When testing, code that causes React state updates should be wrapped into act(...):
+    
+    act(() => {
+      /* fire events that update state */
+    });
+    /* assert on the output */
+    
+    This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+    [0m [90m 247 |[39m       ])[33m;[39m
+     [90m 248 |[39m
+    [31m[1m>[22m[39m[90m 249 |[39m       setStreakCount(streak)[33m;[39m
+     [90m     |[39m       [31m[1m^[22m[39m
+     [90m 250 |[39m     } [36mcatch[39m (err) {
+     [90m 251 |[39m       console[33m.[39merror([32m'Error updating streak:'[39m[33m,[39m err)[33m;[39m
+     [90m 252 |[39m     }[0m
+
+      at node_modules/react-test-renderer/cjs/react-test-renderer.development.js:11801:19
+      at runWithFiberInDEV (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:1574:13)
+      at warnIfUpdatesNotWrappedWithActDEV (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:11800:9)
+      at scheduleUpdateOnFiber (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:10326:9)
+      at dispatchSetStateInternal (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:4148:13)
+      at dispatchSetState (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:4107:7)
+      at setStreakCount (src/components/Dashboard.tsx:249:7)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+
+PASS testing/unit/components-extra.test.tsx (7.231 s, 70 MB heap size)
+  extra UI components
+    √ NoteInput renders and calls onChange (1234 ms)
+    √ DateRangePicker opens both pickers and emits selected dates (89 ms)
+    √ RelatedTaskInput handles empty and selectable task lists (12 ms)
+    √ TaskTypeSelector emits selected type (32 ms)
+    √ TaskCard opens edit dialog and shows formatted date (58 ms)
+    √ ProgressCircle renders rounded percentage and labels (24 ms)
+    √ ConfettiOverlay starts animation when trigger increments (12 ms)
+
+PASS testing/unit/dialogs-and-context.test.tsx (7.231 s, 96 MB heap size)
+  dialogs
+    √ AddTaskDialog creates basic, routine, related, and long interval tasks (2298 ms)
+    √ EditTask saves, toggles completion, and deletes after confirm (178 ms)
+  AppContext
+    √ AppProvider supports task lifecycle, settings updates, and monthly fetch (209 ms)
+
+  console.error
+    An update to Dashboard inside a test was not wrapped in act(...).
+    
+    When testing, code that causes React state updates should be wrapped into act(...):
+    
+    act(() => {
+      /* fire events that update state */
+    });
+    /* assert on the output */
+    
+    This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+    [0m [90m 233 |[39m         [36mif[39m (diffDays [33m===[39m [35m0[39m) {
+     [90m 234 |[39m           [90m// Same day → do nothing[39m
+    [31m[1m>[22m[39m[90m 235 |[39m           setStreakCount(streak)[33m;[39m
+     [90m     |[39m           [31m[1m^[22m[39m
+     [90m 236 |[39m           [36mreturn[39m[33m;[39m
+     [90m 237 |[39m         } [36melse[39m [36mif[39m (diffDays [33m===[39m [35m1[39m) {
+     [90m 238 |[39m           streak [33m+=[39m [35m1[39m[33m;[39m[0m
+
+      at node_modules/react-test-renderer/cjs/react-test-renderer.development.js:11801:19
+      at runWithFiberInDEV (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:1574:13)
+      at warnIfUpdatesNotWrappedWithActDEV (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:11800:9)
+      at scheduleUpdateOnFiber (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:10326:9)
+      at dispatchSetStateInternal (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:4148:13)
+      at dispatchSetState (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:4107:7)
+      at setStreakCount (src/components/Dashboard.tsx:235:11)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+
+PASS testing/integration/main-components.integration.test.tsx (7.117 s, 110 MB heap size)
+  main screen components
+    √ Dashboard renders and opens add task dialog (1968 ms)
+    √ WeeklyView renders tasks from context and base layout (81 ms)
+    √ Settings updates selected theme option (66 ms)
+    √ OneThingMode completes selected task (208 ms)
+    √ Dashboard supports filters, pagination, and search across task views (309 ms)
+
+
+=============================== Coverage summary ===============================
+Statements   : 67.06% ( 1016/1515 )
+Branches     : 50.86% ( 649/1276 )
+Functions    : 66.57% ( 243/365 )
+Lines        : 68.82% ( 969/1408 )
+================================================================================
+Test Suites: 16 passed, 16 total
+Tests:       49 passed, 49 total
+Snapshots:   0 total
+Time:        11.555 s, estimated 31 s
+Ran all test suites.
+Test results written to: testing\evidence\jest-results-2026-04-17T21-04-59-322Z.json
+
+
+=== Evidence Metadata ===
+Started: 2026-04-17T21:04:59.322Z
+Finished: 2026-04-17T21:05:12.425Z
+Wall Time (ms): 13103
+Working Directory: C:\Users\Lacey\Desktop\Planner\planner-prototype
+Node Version: v24.11.0
+Platform: win32 x64
+Watch Mode: false
+Coverage Requested: true
+
+=== Jest Metrics ===
+Success: true
+Suites: 16/16 passed, 0 failed, 0 pending
+Tests: 49/49 passed, 0 failed, 0 pending, 0 todo
+Total Suite Runtime (ms): 81011
+Snapshots: 0 matched, 0 unmatched, 0 added
+
+=== Slowest Test Files (ms) ===
+7231ms - testing\unit\components-extra.test.tsx
+7231ms - testing\unit\dialogs-and-context.test.tsx
+7117ms - testing\integration\main-components.integration.test.tsx
+6390ms - testing\unit\hooks-and-lib.test.tsx
+6360ms - testing\integration\auth-screens.integration.test.tsx
+6148ms - testing\unit\use-safe-back.test.tsx
+6049ms - testing\integration\app-routes.integration.test.tsx
+5993ms - testing\integration\title-input.integration.test.tsx
+5983ms - testing\unit\native-color-scheme.test.tsx
+5879ms - testing\unit\dot-loader.test.tsx
+
+=== Failed Assertions ===
+None
+
+=== Coverage Totals ===
+Lines: 68.82% (969/1408)
+Statements: 67.06% (1016/1515)
+Functions: 66.57% (243/365)
+Branches: 50.86% (649/1276)
+
+=== Coverage by File ===
+C:\Users\Lacey\Desktop\Planner\planner-prototype\lib\Notifications.ts | lines 94.11% (16/17) | stmts 94.11% (16/17) | funcs 100% (6/6) | branches 45.45% (5/11)
+C:\Users\Lacey\Desktop\Planner\planner-prototype\lib\supabaseClient.ts | lines 20% (4/20) | stmts 19.04% (4/21) | funcs 0% (0/3) | branches 10% (1/10)
+C:\Users\Lacey\Desktop\Planner\planner-prototype\src\app\_layout.tsx | lines 83.33% (5/6) | stmts 83.33% (5/6) | funcs 66.66% (2/3) | branches 50% (1/2)
+C:\Users\Lacey\Desktop\Planner\planner-prototype\src\app\CalendarView.tsx | lines 100% (7/7) | stmts 100% (7/7) | funcs 100% (2/2) | branches 100% (0/0)
+C:\Users\Lacey\Desktop\Planner\planner-prototype\src\app\index.tsx | lines 100% (8/8) | stmts 100% (8/8) | funcs 100% (4/4) | branches 100% (0/0)
+C:\Users\Lacey\Desktop\Planner\planner-prototype\src\app\login.tsx | lines 75% (21/28) | stmts 70% (21/30) | funcs 46.15% (6/13) | branches 66.66% (4/6)
+C:\Users\Lacey\Desktop\Planner\planner-prototype\src\app\OneThingMode.tsx | lines 100% (6/6) | stmts 100% (6/6) | funcs 100% (1/1) | branches 100% (0/0)
+C:\Users\Lacey\Desktop\Planner\planner-prototype\src\app\ResetPass.tsx | lines 87.5% (28/32) | stmts 87.5% (28/32) | funcs 77.77% (7/9) | branches 78.57% (22/28)
+C:\Users\Lacey\Desktop\Planner\planner-prototype\src\app\Settings.tsx | lines 85.18% (23/27) | stmts 85.18% (23/27) | funcs 71.42% (5/7) | branches 50% (3/6)
+C:\Users\Lacey\Desktop\Planner\planner-prototype\src\app\signup.tsx | lines 82.05% (32/39) | stmts 82.05% (32/39) | funcs 72.72% (8/11) | branches 76.19% (32/42)
+C:\Users\Lacey\Desktop\Planner\planner-prototype\src\components\AddTaskDialog.tsx | lines 83.33% (70/84) | stmts 82.35% (70/85) | funcs 86.66% (13/15) | branches 77.1% (64/83)
+C:\Users\Lacey\Desktop\Planner\planner-prototype\src\components\CalendarView.tsx | lines 90.21% (83/92) | stmts 88% (88/100) | funcs 77.77% (21/27) | branches 61.53% (24/39)
+C:\Users\Lacey\Desktop\Planner\planner-prototype\src\components\ConfettiOverlay.tsx | lines 100% (13/13) | stmts 100% (14/14) | funcs 100% (4/4) | branches 83.33% (5/6)
+C:\Users\Lacey\Desktop\Planner\planner-prototype\src\components\Confirmation.tsx | lines 100% (5/5) | stmts 100% (5/5) | funcs 100% (4/4) | branches 100% (0/0)
+C:\Users\Lacey\Desktop\Planner\planner-prototype\src\components\Dashboard.tsx | lines 76.82% (116/151) | stmts 72.83% (126/173) | funcs 63.33% (38/60) | branches 57.31% (94/164)
+C:\Users\Lacey\Desktop\Planner\planner-prototype\src\components\DateRangePicker.tsx | lines 80% (12/15) | stmts 81.25% (13/16) | funcs 75% (6/8) | branches 76.19% (16/21)
+C:\Users\Lacey\Desktop\Planner\planner-prototype\src\components\DotLoader.tsx | lines 100% (7/7) | stmts 100% (9/9) | funcs 100% (5/5) | branches 100% (2/2)
+C:\Users\Lacey\Desktop\Planner\planner-prototype\src\components\EditTask.tsx | lines 80.95% (51/63) | stmts 79.68% (51/64) | funcs 57.14% (8/14) | branches 39.5% (32/81)
+C:\Users\Lacey\Desktop\Planner\planner-prototype\src\components\Info.tsx | lines 100% (2/2) | stmts 100% (2/2) | funcs 100% (1/1) | branches 0% (0/2)
+C:\Users\Lacey\Desktop\Planner\planner-prototype\src\components\NoteInput.tsx | lines 100% (2/2) | stmts 100% (2/2) | funcs 100% (1/1) | branches 100% (3/3)
+C:\Users\Lacey\Desktop\Planner\planner-prototype\src\components\OneThingMode.tsx | lines 47.61% (60/126) | stmts 47.65% (61/128) | funcs 59.09% (13/22) | branches 43.05% (31/72)
+C:\Users\Lacey\Desktop\Planner\planner-prototype\src\components\ProgressCircle.tsx | lines 100% (5/5) | stmts 100% (5/5) | funcs 100% (1/1) | branches 80% (4/5)
+C:\Users\Lacey\Desktop\Planner\planner-prototype\src\components\RelatedTask.tsx | lines 90% (9/10) | stmts 90.9% (10/11) | funcs 100% (3/3) | branches 90% (9/10)
+C:\Users\Lacey\Desktop\Planner\planner-prototype\src\components\Settings.tsx | lines 64% (16/25) | stmts 61.53% (16/26) | funcs 50% (6/12) | branches 57.14% (8/14)
+C:\Users\Lacey\Desktop\Planner\planner-prototype\src\components\TaskCard.tsx | lines 65.38% (17/26) | stmts 62.96% (17/27) | funcs 57.14% (4/7) | branches 30.66% (23/75)
+C:\Users\Lacey\Desktop\Planner\planner-prototype\src\components\taskColors.ts | lines 100% (11/11) | stmts 100% (11/11) | funcs 100% (3/3) | branches 100% (6/6)
+C:\Users\Lacey\Desktop\Planner\planner-prototype\src\components\TaskTypeSelector.tsx | lines 91.66% (11/12) | stmts 91.66% (11/12) | funcs 100% (4/4) | branches 48.48% (16/33)
+C:\Users\Lacey\Desktop\Planner\planner-prototype\src\components\TimeInput.tsx | lines 77.77% (14/18) | stmts 80% (16/20) | funcs 50% (3/6) | branches 75% (12/16)
+C:\Users\Lacey\Desktop\Planner\planner-prototype\src\components\TitleInput.tsx | lines 100% (2/2) | stmts 100% (2/2) | funcs 100% (1/1) | branches 100% (3/3)
+C:\Users\Lacey\Desktop\Planner\planner-prototype\src\constants\theme.ts | lines 83.33% (15/18) | stmts 85% (17/20) | funcs 100% (2/2) | branches 71.42% (10/14)
+C:\Users\Lacey\Desktop\Planner\planner-prototype\src\contexts\AppContext.tsx | lines 53.11% (264/497) | stmts 51.35% (285/555) | funcs 53.12% (51/96) | branches 41.24% (212/514)
+C:\Users\Lacey\Desktop\Planner\planner-prototype\src\hooks\use-app-theme.ts | lines 100% (6/6) | stmts 100% (7/7) | funcs 100% (2/2) | branches 100% (0/0)
+C:\Users\Lacey\Desktop\Planner\planner-prototype\src\hooks\use-color-scheme.ts | lines 100% (0/0) | stmts 100% (0/0) | funcs 100% (0/0) | branches 100% (0/0)
+C:\Users\Lacey\Desktop\Planner\planner-prototype\src\hooks\use-color-scheme.web.ts | lines 100% (7/7) | stmts 100% (7/7) | funcs 100% (2/2) | branches 100% (2/2)
+C:\Users\Lacey\Desktop\Planner\planner-prototype\src\hooks\use-Safe-Back.ts | lines 100% (5/5) | stmts 100% (5/5) | funcs 100% (2/2) | branches 100% (2/2)
+C:\Users\Lacey\Desktop\Planner\planner-prototype\src\hooks\use-theme-color.ts | lines 100% (5/5) | stmts 100% (5/5) | funcs 100% (1/1) | branches 75% (3/4)
+C:\Users\Lacey\Desktop\Planner\planner-prototype\src\types\index.ts | lines 100% (11/11) | stmts 100% (11/11) | funcs 100% (3/3) | branches 100% (0/0)

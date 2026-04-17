@@ -56,8 +56,7 @@ Thumbs.db
 # Testing / coverage
 coverage/
 .nyc_output/
-testing/evidence/*.txt
-testing/evidence/*.json
+
 
 # Supabase local dev (if you run supabase start)
 supabase/.temp/
