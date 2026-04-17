@@ -24,6 +24,7 @@ export interface Task {
   is_template?: boolean; // Whether this is a recurring template
   completed_dates?: string[]; // For recurring templates, tracks which dates have been completed
   excluded_dates?: string[]; // For recurring templates, tracks which instance dates have been deleted
+  original_due_date?: Date; // For recurring instance overrides, tracks the original due date before override
 }
 
 export interface CreateTaskParams {
