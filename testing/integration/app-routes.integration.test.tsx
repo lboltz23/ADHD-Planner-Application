@@ -85,6 +85,22 @@ jest.mock('../../src/hooks/use-Safe-Back', () => ({
   useSafeBack: () => mockSafeBack,
 }));
 
+jest.mock('@/lib/supabaseClient', () => ({
+  supabase: {
+    auth: {
+      getSession: jest.fn().mockResolvedValue({ data: { session: null } }),
+      onAuthStateChange: jest.fn(() => ({
+        data: {
+          subscription: {
+            unsubscribe: jest.fn(),
+          },
+        },
+      })),
+    },
+  },
+  getProfile: jest.fn().mockResolvedValue(null),
+}));
+
 jest.mock('../../src/components/Dashboard', () => ({
   Dashboard: (props: unknown) => {
     const { Text } = require('react-native');

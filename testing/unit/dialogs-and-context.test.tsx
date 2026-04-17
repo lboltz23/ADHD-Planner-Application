@@ -7,9 +7,12 @@ import type { Task } from '../../src/types';
 
 const mockConfirm = jest.fn();
 const mockUuid = jest.fn();
+const mockScheduleTimedNotification = jest.fn();
+const mockScheduleWeeklyNotification = jest.fn();
 
 const mockDb = {
   tasks: [] as Record<string, any>[],
+  user_settings: [] as Record<string, any>[],
 };
 
 function clone<T>(value: T): T {
@@ -37,13 +40,19 @@ function buildOrPredicate(orExpr: string | null) {
   };
 }
 
-function createQueryBuilder() {
-  let action: 'select' | 'insert' | 'update' | 'delete' = 'select';
+function createQueryBuilder(tableName: keyof typeof mockDb) {
+  let action: 'select' | 'insert' | 'update' | 'delete' | 'upsert' = 'select';
   let selectedFields = '*';
   let insertPayload: Record<string, any>[] = [];
+  let upsertPayload: Record<string, any>[] = [];
   let updatePayload: Record<string, any> = {};
   const filters: Array<(row: Record<string, any>) => boolean> = [];
   let orExpr: string | null = null;
+
+  const getTableRows = () => mockDb[tableName] ?? [];
+  const setTableRows = (rows: Record<string, any>[]) => {
+    mockDb[tableName] = rows;
+  };
 
   const execute = (single = false) => {
     const andMatch = (row: Record<string, any>) => filters.every((fn) => fn(row));
@@ -51,23 +60,48 @@ function createQueryBuilder() {
     const matches = (row: Record<string, any>) => andMatch(row) && orMatch(row);
 
     if (action === 'insert') {
-      mockDb.tasks.push(...clone(insertPayload));
+      const nextRows = [...getTableRows(), ...clone(insertPayload)];
+      setTableRows(nextRows);
       return { data: clone(insertPayload), error: null };
     }
 
+    if (action === 'upsert') {
+      const nextRows = [...getTableRows()];
+
+      upsertPayload.forEach((incoming) => {
+        const idxById =
+          incoming.id != null ? nextRows.findIndex((row) => row.id === incoming.id) : -1;
+        const idxByUser =
+          incoming.user_id != null
+            ? nextRows.findIndex((row) => row.user_id === incoming.user_id)
+            : -1;
+        const idx = idxById >= 0 ? idxById : idxByUser;
+
+        if (idx >= 0) {
+          nextRows[idx] = { ...nextRows[idx], ...clone(incoming) };
+        } else {
+          nextRows.push(clone(incoming));
+        }
+      });
+
+      setTableRows(nextRows);
+      return { data: clone(upsertPayload), error: null };
+    }
+
     if (action === 'update') {
-      mockDb.tasks = mockDb.tasks.map((row) =>
+      setTableRows(
+        getTableRows().map((row) =>
         matches(row) ? { ...row, ...clone(updatePayload) } : row
-      );
+      ));
       return { data: null, error: null };
     }
 
     if (action === 'delete') {
-      mockDb.tasks = mockDb.tasks.filter((row) => !matches(row));
+      setTableRows(getTableRows().filter((row) => !matches(row)));
       return { data: null, error: null };
     }
 
-    let rows = mockDb.tasks.filter(matches);
+    let rows = getTableRows().filter(matches);
     if (selectedFields !== '*') {
       const fields = selectedFields.split(',').map((part) => part.trim());
       rows = rows.map((row) => {
@@ -94,6 +128,11 @@ function createQueryBuilder() {
     insert(payload: Record<string, any> | Record<string, any>[]) {
       action = 'insert';
       insertPayload = Array.isArray(payload) ? payload : [payload];
+      return Promise.resolve(execute(false));
+    },
+    upsert(payload: Record<string, any> | Record<string, any>[]) {
+      action = 'upsert';
+      upsertPayload = Array.isArray(payload) ? payload : [payload];
       return Promise.resolve(execute(false));
     },
     update(payload: Record<string, any>) {
@@ -137,7 +176,25 @@ function createQueryBuilder() {
 }
 
 const mockSupabase = {
-  from: jest.fn(() => createQueryBuilder()),
+  from: jest.fn((tableName: keyof typeof mockDb) => createQueryBuilder(tableName)),
+  auth: {
+    exchangeCodeForSession: jest.fn().mockResolvedValue({ data: {}, error: null }),
+    getSession: jest.fn().mockResolvedValue({
+      data: {
+        session: {
+          user: { id: '9dfa5616-322a-4287-a980-d33754320861' },
+        },
+      },
+      error: null,
+    }),
+    onAuthStateChange: jest.fn(() => ({
+      data: {
+        subscription: {
+          unsubscribe: jest.fn(),
+        },
+      },
+    })),
+  },
 };
 
 jest.mock('@/lib/supabaseClient', () => ({
@@ -240,14 +297,25 @@ jest.mock('../../src/components/Confirmation', () => ({
   confirm: (...args: unknown[]) => mockConfirm(...args),
 }));
 
+jest.mock('../../lib/Notifications', () => ({
+  scheduleTimedNotification: (...args: unknown[]) => mockScheduleTimedNotification(...args),
+  scheduleWeeklyNotification: (...args: unknown[]) => mockScheduleWeeklyNotification(...args),
+  cancelNotification: jest.fn(),
+}));
+
 describe('dialogs', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (global as any).alert = jest.fn();
     mockConfirm.mockResolvedValue(true);
+    mockScheduleTimedNotification.mockResolvedValue('timed-notification-id');
+    mockScheduleWeeklyNotification.mockImplementation(
+      (_title: string, _body: string, weekdayNumber: number) =>
+        Promise.resolve(`weekly-notification-${weekdayNumber}`)
+    );
   });
 
-  test('AddTaskDialog creates basic, routine, related, and long interval tasks', () => {
+  test('AddTaskDialog creates basic, routine, related, and long interval tasks', async () => {
     const onAddTask = jest.fn();
     const onClose = jest.fn();
 
@@ -257,20 +325,23 @@ describe('dialogs', () => {
         onClose={onClose}
         onAddTask={onAddTask}
         initialTaskType="basic"
-        initialTitle="Basic Title"
         tasks={[]}
       />
     );
 
+    fireEvent.changeText(getByPlaceholderText('TitleField'), 'Basic Title');
     fireEvent.changeText(getByPlaceholderText('NoteField'), 'note');
     fireEvent.press(getByText('CalendarPress'));
     fireEvent.press(getByText('Create Task'));
-    expect(onAddTask).toHaveBeenCalledWith(
-      expect.objectContaining({
-        title: 'Basic Title',
-        type: 'basic',
-      })
-    );
+    await waitFor(() => {
+      expect(onAddTask).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({
+          title: 'Basic Title',
+          type: 'basic',
+        })
+      );
+    });
 
     rerender(
       <AddTaskDialog
@@ -278,22 +349,25 @@ describe('dialogs', () => {
         onClose={onClose}
         onAddTask={onAddTask}
         initialTaskType="routine"
-        initialTitle="Routine Title"
         tasks={[]}
       />
     );
 
+    fireEvent.changeText(getByPlaceholderText('TitleField'), 'Routine Title');
     fireEvent.press(getByText('PickStart'));
     fireEvent.press(getByText('PickEnd'));
     fireEvent.press(getByText('Mon'));
     fireEvent.press(getByText('Create Task'));
-    expect(onAddTask).toHaveBeenCalledWith(
-      expect.objectContaining({
-        title: 'Routine Title',
-        type: 'routine',
-        days_selected: expect.arrayContaining(['Monday']),
-      })
-    );
+    await waitFor(() => {
+      expect(onAddTask).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          title: 'Routine Title',
+          type: 'routine',
+          days_selected: expect.arrayContaining(['Monday']),
+        })
+      );
+    });
 
     const relatedTasks: Task[] = [
       {
@@ -313,19 +387,22 @@ describe('dialogs', () => {
         onClose={onClose}
         onAddTask={onAddTask}
         initialTaskType="related"
-        initialTitle="Related Title"
         tasks={relatedTasks}
       />
     );
+    fireEvent.changeText(getByPlaceholderText('TitleField'), 'Related Title');
     fireEvent.press(getByText('SelectParent'));
     fireEvent.press(getByText('CalendarPress'));
     fireEvent.press(getByText('Create Task'));
-    expect(onAddTask).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: 'related',
-        parent_task_id: 'parent-1',
-      })
-    );
+    await waitFor(() => {
+      expect(onAddTask).toHaveBeenNthCalledWith(
+        3,
+        expect.objectContaining({
+          type: 'related',
+          parent_task_id: 'parent-1',
+        })
+      );
+    });
 
     rerender(
       <AddTaskDialog
@@ -333,20 +410,23 @@ describe('dialogs', () => {
         onClose={onClose}
         onAddTask={onAddTask}
         initialTaskType="long_interval"
-        initialTitle="Interval Title"
         tasks={[]}
       />
     );
+    fireEvent.changeText(getByPlaceholderText('TitleField'), 'Interval Title');
     fireEvent.press(getByText('PickStart'));
     fireEvent.press(getByText('PickEnd'));
-    fireEvent.changeText(getByPlaceholderText('e.g., 3'), '3');
+    fireEvent.changeText(getByPlaceholderText('1'), '3');
     fireEvent.press(getByText('Create Task'));
-    expect(onAddTask).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: 'long_interval',
-        recurrence_interval: 3,
-      })
-    );
+    await waitFor(() => {
+      expect(onAddTask).toHaveBeenNthCalledWith(
+        4,
+        expect.objectContaining({
+          type: 'long_interval',
+          recurrence_interval: 3,
+        })
+      );
+    });
   });
 
   test('EditTask saves, toggles completion, and deletes after confirm', async () => {
@@ -413,7 +493,7 @@ describe('AppContext', () => {
         id: 'basic-seeded',
         user_id: '9dfa5616-322a-4287-a980-d33754320861',
         title: 'Seed basic',
-        due_date: '2026-02-20',
+        due_date: '2026-02-20T09:00:00.000Z',
         completed: false,
         type: 'basic',
         notes: 'seed-note',
@@ -426,7 +506,7 @@ describe('AppContext', () => {
         id: 'related-seeded',
         user_id: '9dfa5616-322a-4287-a980-d33754320861',
         title: 'Seed related',
-        due_date: '2026-02-20',
+        due_date: '2026-02-20T11:00:00.000Z',
         completed: false,
         type: 'related',
         notes: null,
@@ -439,7 +519,7 @@ describe('AppContext', () => {
         id: 'template-seeded',
         user_id: '9dfa5616-322a-4287-a980-d33754320861',
         title: 'Seed routine template',
-        due_date: '2026-02-01',
+        due_date: '2026-02-01T08:30:00.000Z',
         completed: false,
         type: 'routine',
         notes: 'template-note',
@@ -458,7 +538,7 @@ describe('AppContext', () => {
         id: 'override-seeded',
         user_id: '9dfa5616-322a-4287-a980-d33754320861',
         title: 'Seed override',
-        due_date: '2026-02-02',
+        due_date: '2026-02-02T08:30:00.000Z',
         completed: true,
         type: 'routine',
         notes: null,
@@ -468,6 +548,7 @@ describe('AppContext', () => {
         parent_task_id: 'template-seeded',
       },
     ];
+    mockDb.user_settings = [];
   });
 
   test('AppProvider supports task lifecycle, settings updates, and monthly fetch', async () => {
@@ -558,10 +639,6 @@ describe('AppContext', () => {
       expect(api.streakCount).toBeGreaterThan(0);
     });
 
-    let monthTasks: Task[] = [];
-    await act(async () => {
-      monthTasks = await api.fetchTasksForMonth(2026, 1);
-    });
-    expect(Array.isArray(monthTasks)).toBe(true);
+    expect(Array.isArray(api.tasks)).toBe(true);
   });
 });

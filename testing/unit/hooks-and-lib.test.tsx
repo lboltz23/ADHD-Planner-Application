@@ -93,7 +93,14 @@ describe('hooks and lib utilities', () => {
 
     expect(mockCreateClient).toHaveBeenCalledWith(
       'https://example.supabase.co',
-      'anon-key'
+      'anon-key',
+      expect.objectContaining({
+        auth: expect.objectContaining({
+          autoRefreshToken: true,
+          persistSession: true,
+          detectSessionInUrl: false,
+        }),
+      })
     );
 
     process.env.EXPO_PUBLIC_SUPABASE_URL = originalUrl;

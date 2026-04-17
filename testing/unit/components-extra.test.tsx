@@ -199,12 +199,27 @@ describe('extra UI components', () => {
 
   test('ConfettiOverlay starts animation when trigger increments', () => {
     jest.useFakeTimers();
+    const animationCallbacks: FrameRequestCallback[] = [];
+    const rafSpy = jest
+      .spyOn(global, 'requestAnimationFrame')
+      .mockImplementation((cb: FrameRequestCallback) => {
+        animationCallbacks.push(cb);
+        return animationCallbacks.length;
+      });
+
     const { rerender } = render(<ConfettiOverlay trigger={0} />);
-    rerender(<ConfettiOverlay trigger={1} />);
+    act(() => {
+      rerender(<ConfettiOverlay trigger={1} />);
+    });
+
+    act(() => {
+      animationCallbacks.forEach((cb) => cb(0));
+    });
     expect(mockConfettiStart).toHaveBeenCalledTimes(1);
     act(() => {
       jest.runOnlyPendingTimers();
     });
+    rafSpy.mockRestore();
     jest.useRealTimers();
   });
 });
