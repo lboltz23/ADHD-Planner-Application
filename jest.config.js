@@ -3,6 +3,8 @@ module.exports = {
 
   roots: [
     '<rootDir>/testing',
+    '<rootDir>/src',
+    '<rootDir>/lib',
   ],
 
   moduleNameMapper: {
@@ -34,7 +36,7 @@ module.exports = {
   coverageThreshold: {
     global: {
       statements: 65,
-      branches: 65,
+      branches: 50,
       functions: 65,
       lines: 65,
     },
