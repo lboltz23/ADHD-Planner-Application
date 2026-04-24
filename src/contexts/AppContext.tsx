@@ -467,8 +467,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 is_template: true,
                 days_selected: row.days_selected,
                 recurrence_interval: row.recurrence_interval,
-                start_date: new Date(row.start_date),
-                end_date: row.end_date ? new Date(row.end_date) : undefined,
+                start_date: parseLocalDate(row.start_date),
+                end_date: row.end_date ? parseLocalDate(row.end_date) : undefined,
               });
 
               // Generate instances from the template, skipping dates with override rows

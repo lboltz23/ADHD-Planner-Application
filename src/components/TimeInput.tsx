@@ -12,6 +12,7 @@ interface TimePickerProps {
   colorBlindMode?: boolean;
   isDarkMode?: boolean;
   selectedDate?: string; // "YYYY-MM-DD"
+  allowPastTimes?: boolean;
 }
 
 export default function TimePicker({
@@ -20,6 +21,7 @@ export default function TimePicker({
   colorBlindMode = false,
   isDarkMode = false,
   selectedDate,
+  allowPastTimes = false,
 }: TimePickerProps) {
   const [showTime, setShowTime] = useState(false);
 
@@ -70,7 +72,7 @@ export default function TimePicker({
           isDarkModeEnabled={isDarkMode}
           themeVariant={isDarkMode ? "dark" : "light"}
           date={getBaseDate()}
-          minimumDate={selectedDate === toLocalDateString(new Date()) ? new Date() : undefined}
+          minimumDate={!allowPastTimes && selectedDate === toLocalDateString(new Date()) ? new Date() : undefined}
           onConfirm={(date) => {
             onTimeChange(date);
             setShowTime(false);
