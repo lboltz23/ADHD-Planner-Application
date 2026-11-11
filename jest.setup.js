@@ -50,13 +50,11 @@ jest.mock('expo-router', () => {
     useFocusEffect: (effect) => {
       React.useEffect(() => effect(), [effect]);
     },
+    useIsFocused: () => true,
     Stack,
   };
 });
 
-jest.mock('@react-navigation/native', () => ({
-  useIsFocused: () => true,
-}));
 
 // Expo mocks
 jest.mock('expo-constants', () => ({
