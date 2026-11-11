@@ -82,21 +82,21 @@ describe('extra UI components', () => {
     });
   });
 
-  test('NoteInput renders and calls onChange', () => {
+  test('NoteInput renders and calls onChange', async () => {
     const onChange = jest.fn();
-    const { getByPlaceholderText, getByText } = render(
+    const { getByPlaceholderText, getByText } = await render(
       <NoteInput value="" onChange={onChange} />
     );
 
     expect(getByText('Notes: ')).toBeTruthy();
-    fireEvent.changeText(getByPlaceholderText('Enter notes here...'), 'details');
+    await fireEvent.changeText(getByPlaceholderText('Enter notes here...'), 'details');
     expect(onChange).toHaveBeenCalledWith('details');
   });
 
-  test('DateRangePicker opens both pickers and emits selected dates', () => {
+  test('DateRangePicker opens both pickers and emits selected dates', async () => {
     const onStartDateChange = jest.fn();
     const onEndDateChange = jest.fn();
-    const { getAllByText, getByText } = render(
+    const { getAllByText, getByText } = await render(
       <DateRangePicker
         startDate={null}
         endDate={null}
@@ -105,17 +105,17 @@ describe('extra UI components', () => {
       />
     );
 
-    fireEvent.press(getAllByText('Select date')[0]);
-    fireEvent.press(getByText('confirm-picker'));
+    await fireEvent.press(getAllByText('Select date')[0]);
+    await fireEvent.press(getByText('confirm-picker'));
     expect(onStartDateChange).toHaveBeenCalledWith(mockPickerDate);
 
-    fireEvent.press(getAllByText('Select date')[1]);
-    fireEvent.press(getByText('confirm-picker'));
+    await fireEvent.press(getAllByText('Select date')[1]);
+    await fireEvent.press(getByText('confirm-picker'));
     expect(onEndDateChange).toHaveBeenCalledWith(mockPickerDate);
   });
 
-  test('RelatedTaskInput handles empty and selectable task lists', () => {
-    const { getByText, rerender } = render(
+  test('RelatedTaskInput handles empty and selectable task lists', async () => {
+    const { getByText, rerender } = await render(
       <RelatedTaskInput tasks={[]} selectedTaskId="" onSelect={jest.fn()} />
     );
     expect(getByText(/No tasks available/)).toBeTruthy();
@@ -144,23 +144,23 @@ describe('extra UI components', () => {
       },
     ];
 
-    rerender(<RelatedTaskInput tasks={tasks} selectedTaskId="" onSelect={onSelect} />);
-    fireEvent.press(getByText('DropdownMock'));
+    await rerender(<RelatedTaskInput tasks={tasks} selectedTaskId="" onSelect={onSelect} />);
+    await fireEvent.press(getByText('DropdownMock'));
     expect(mockDropdownData).toHaveBeenCalled();
     expect(onSelect).toHaveBeenCalledWith('basic-1');
   });
 
-  test('TaskTypeSelector emits selected type', () => {
+  test('TaskTypeSelector emits selected type', async () => {
     const onSelectType = jest.fn();
-    const { getByText } = render(
+    const { getByText } = await render(
       <TaskTypeSelector selectedType="basic" onSelectType={onSelectType} />
     );
 
-    fireEvent.press(getByText('Routine'));
+    await fireEvent.press(getByText('Routine'));
     expect(onSelectType).toHaveBeenCalledWith('routine');
   });
 
-  test('TaskCard opens edit dialog and shows formatted date', () => {
+  test('TaskCard opens edit dialog and shows formatted date', async () => {
     const task: Task = {
       id: 'task-1',
       user_id: 'u1',
@@ -172,7 +172,7 @@ describe('extra UI components', () => {
       updated_at: new Date(),
     };
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <TaskCard
         task={task}
         onToggle={jest.fn()}
@@ -183,12 +183,12 @@ describe('extra UI components', () => {
     );
 
     expect(getByText('Write docs')).toBeTruthy();
-    fireEvent.press(getByText('Write docs'));
+    await fireEvent.press(getByText('Write docs'));
     expect(getByText('EditTask:true')).toBeTruthy();
   });
 
-  test('ProgressCircle renders rounded percentage and labels', () => {
-    const { getByText } = render(
+  test('ProgressCircle renders rounded percentage and labels', async () => {
+    const { getByText } = await render(
       <ProgressCircle percentage={42.6} label="Daily" sublabel="4/10 tasks" />
     );
 
@@ -197,7 +197,7 @@ describe('extra UI components', () => {
     expect(getByText('4/10 tasks')).toBeTruthy();
   });
 
-  test('ConfettiOverlay starts animation when trigger increments', () => {
+  test('ConfettiOverlay starts animation when trigger increments', async () => {
     jest.useFakeTimers();
     const animationCallbacks: FrameRequestCallback[] = [];
     const rafSpy = jest
@@ -207,16 +207,16 @@ describe('extra UI components', () => {
         return animationCallbacks.length;
       });
 
-    const { rerender } = render(<ConfettiOverlay trigger={0} />);
-    act(() => {
-      rerender(<ConfettiOverlay trigger={1} />);
+    const { rerender } = await render(<ConfettiOverlay trigger={0} />);
+    await act(async () => {
+      await rerender(<ConfettiOverlay trigger={1} />);
     });
 
-    act(() => {
+    await act(async () => {
       animationCallbacks.forEach((cb) => cb(0));
     });
     expect(mockConfettiStart).toHaveBeenCalledTimes(1);
-    act(() => {
+    await act(async () => {
       jest.runOnlyPendingTimers();
     });
     rafSpy.mockRestore();

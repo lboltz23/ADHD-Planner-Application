@@ -29,25 +29,25 @@ describe('useSafeBack', () => {
     jest.clearAllMocks();
   });
 
-  test('goes back when navigation stack has a previous route', () => {
+  test('goes back when navigation stack has a previous route', async () => {
     mockCanGoBack.mockReturnValue(true);
     let handler = () => {};
 
-    render(<HookHarness onReady={(fn) => (handler = fn)} />);
+    await render(<HookHarness onReady={(fn) => (handler = fn)} />);
 
-    act(() => handler());
+    await act(async () => handler());
 
     expect(mockBack).toHaveBeenCalledTimes(1);
     expect(mockReplace).not.toHaveBeenCalled();
   });
 
-  test('replaces with root route when there is no previous route', () => {
+  test('replaces with root route when there is no previous route', async () => {
     mockCanGoBack.mockReturnValue(false);
     let handler = () => {};
 
-    render(<HookHarness onReady={(fn) => (handler = fn)} />);
+    await render(<HookHarness onReady={(fn) => (handler = fn)} />);
 
-    act(() => handler());
+    await act(async () => handler());
 
     expect(mockReplace).toHaveBeenCalledWith('/');
     expect(mockBack).not.toHaveBeenCalled();

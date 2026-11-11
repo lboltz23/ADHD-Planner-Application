@@ -418,7 +418,7 @@ export function OneThingMode({
       flex: 1,
     },
     alertPopupOverlay: {
-      ...StyleSheet.absoluteFillObject,
+      ...StyleSheet.absoluteFill,
       backgroundColor: 'rgba(0, 0, 0, 0.5)',
       justifyContent: 'center',
       alignItems: 'center',

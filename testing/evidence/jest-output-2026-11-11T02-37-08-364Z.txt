@@ -1,0 +1,143 @@
+Timestamp: 2026-11-11T02:37:16.430Z
+Command: jest --coverage --coverageReporters=text --coverageReporters=text-summary --coverageReporters=json-summary --logHeapUsage --verbose --testLocationInResults --json --outputFile C:\Users\lacey\Projects\Repos\ADHD-Planner-Application\testing\evidence\jest-results-2026-11-11T02-37-08-364Z.json
+Exit Code: 0
+--------------------------|---------|----------|---------|---------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+File                      | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s                                                                                                                                                                                                                                                                                                              
+--------------------------|---------|----------|---------|---------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+All files                 |   66.99 |    50.74 |    66.3 |   68.75 |                                                                                                                                                                                                                                                                                                                                
+ lib                      |   52.63 |    28.57 |   66.66 |   54.05 |                                                                                                                                                                                                                                                                                                                                
+  Notifications.ts        |   94.11 |    45.45 |     100 |   94.11 | 9                                                                                                                                                                                                                                                                                                                              
+  supabaseClient.ts       |   19.04 |       10 |       0 |      20 | 34-69                                                                                                                                                                                                                                                                                                                          
+ src/app                  |   83.87 |    70.23 |      70 |   84.96 |                                                                                                                                                                                                                                                                                                                                
+  CalendarView.tsx        |     100 |      100 |     100 |     100 |                                                                                                                                                                                                                                                                                                                                
+  OneThingMode.tsx        |     100 |      100 |     100 |     100 |                                                                                                                                                                                                                                                                                                                                
+  ResetPass.tsx           |    87.5 |       75 |   77.77 |    87.5 | 23-24,68,83                                                                                                                                                                                                                                                                                                                    
+  Settings.tsx            |   85.18 |       50 |   71.42 |   85.18 | 31,45-46,49                                                                                                                                                                                                                                                                                                                    
+  _layout.tsx             |   83.33 |       50 |   66.66 |   83.33 | 13                                                                                                                                                                                                                                                                                                                             
+  index.tsx               |     100 |      100 |     100 |     100 |                                                                                                                                                                                                                                                                                                                                
+  login.tsx               |      70 |       50 |   46.15 |      75 | 68-79,98-146                                                                                                                                                                                                                                                                                                                   
+  signup.tsx              |   82.05 |     73.8 |   72.72 |   82.05 | 81-84,102,176-181                                                                                                                                                                                                                                                                                                              
+ src/components           |   74.15 |    55.64 |   69.69 |   75.48 |                                                                                                                                                                                                                                                                                                                                
+  AddTaskDialog.tsx       |   82.35 |     77.1 |   86.66 |   83.33 | 77-78,91-92,100-101,119,139-140,145-146,159,191-192                                                                                                                                                                                                                                                                            
+  CalendarView.tsx        |      87 |    61.53 |   74.07 |   89.13 | 62,135-138,142,161,183-203                                                                                                                                                                                                                                                                                                     
+  ConfettiOverlay.tsx     |     100 |    83.33 |     100 |     100 | 35                                                                                                                                                                                                                                                                                                                             
+  Confirmation.tsx        |     100 |      100 |     100 |     100 |                                                                                                                                                                                                                                                                                                                                
+  Dashboard.tsx           |   72.83 |    57.31 |   63.33 |   76.82 | 75,105,121,124,130,146,157-158,162,169,173-174,191-193,197-200,237-240,251,278,579,685,761-777,803-809,837-843,873-891                                                                                                                                                                                                         
+  DateRangePicker.tsx     |   81.25 |    76.19 |      75 |      80 | 32,63,88                                                                                                                                                                                                                                                                                                                       
+  DotLoader.tsx           |     100 |      100 |     100 |     100 |                                                                                                                                                                                                                                                                                                                                
+  EditTask.tsx            |   79.68 |     39.5 |   57.14 |   80.95 | 85,89-95,105-106,199-236                                                                                                                                                                                                                                                                                                       
+  Info.tsx                |     100 |        0 |     100 |     100 | 17-18                                                                                                                                                                                                                                                                                                                          
+  NoteInput.tsx           |     100 |      100 |     100 |     100 |                                                                                                                                                                                                                                                                                                                                
+  OneThingMode.tsx        |   47.65 |    43.05 |   59.09 |   47.61 | 65,89-104,109,115,137-162,167-177,182-192,199-215,225-226,243,245,547-551                                                                                                                                                                                                                                                      
+  ProgressCircle.tsx      |     100 |       80 |     100 |     100 | 21                                                                                                                                                                                                                                                                                                                             
+  RelatedTask.tsx         |    90.9 |       90 |     100 |      90 | 28                                                                                                                                                                                                                                                                                                                             
+  Settings.tsx            |   61.53 |    57.14 |      50 |      64 | 284-319,388-462                                                                                                                                                                                                                                                                                                                
+  TaskCard.tsx            |   62.96 |    30.66 |   57.14 |   65.38 | 65,77,95-104,127-128,169-197                                                                                                                                                                                                                                                                                                   
+  TaskTypeSelector.tsx    |   91.66 |    48.48 |     100 |   91.66 | 36                                                                                                                                                                                                                                                                                                                             
+  TimeInput.tsx           |      80 |    78.94 |      50 |   77.77 | 56-80                                                                                                                                                                                                                                                                                                                          
+  TitleInput.tsx          |     100 |      100 |     100 |     100 |                                                                                                                                                                                                                                                                                                                                
+  taskColors.ts           |     100 |      100 |     100 |     100 |                                                                                                                                                                                                                                                                                                                                
+ src/constants            |      85 |    71.42 |     100 |   83.33 |                                                                                                                                                                                                                                                                                                                                
+  theme.ts                |      85 |    71.42 |     100 |   83.33 | 103,106,109                                                                                                                                                                                                                                                                                                                    
+ src/contexts             |   51.35 |    41.24 |   53.12 |   53.11 |                                                                                                                                                                                                                                                                                                                                
+  AppContext.tsx          |   51.35 |    41.24 |   53.12 |   53.11 | 25,135,172-175,184-187,200-221,229-238,247-251,267-323,336-382,394-395,399-403,412,422-423,526,538-539,548,599-609,643,705,739-747,761-765,775-778,787-789,800-803,812,829-833,855-858,872-878,903-917,950-958,962,980-997,1001-1076,1088-1095,1099,1113,1127-1153,1158-1187,1192-1193,1206,1219-1226,1237-1240,1250-1255,1293 
+ src/hooks                |     100 |     87.5 |     100 |     100 |                                                                                                                                                                                                                                                                                                                                
+  use-Safe-Back.ts        |     100 |      100 |     100 |     100 |                                                                                                                                                                                                                                                                                                                                
+  use-app-theme.ts        |     100 |      100 |     100 |     100 |                                                                                                                                                                                                                                                                                                                                
+  use-color-scheme.ts     |       0 |        0 |       0 |       0 |                                                                                                                                                                                                                                                                                                                                
+  use-color-scheme.web.ts |     100 |      100 |     100 |     100 |                                                                                                                                                                                                                                                                                                                                
+  use-theme-color.ts      |     100 |       75 |     100 |     100 | 13                                                                                                                                                                                                                                                                                                                             
+ src/types                |     100 |      100 |     100 |     100 |                                                                                                                                                                                                                                                                                                                                
+  index.ts                |     100 |      100 |     100 |     100 |                                                                                                                                                                                                                                                                                                                                
+--------------------------|---------|----------|---------|---------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+=============================== Coverage summary ===============================
+Statements   : 66.99% ( 1015/1515 )
+Branches     : 50.74% ( 649/1279 )
+Functions    : 66.3% ( 242/365 )
+Lines        : 68.75% ( 968/1408 )
+================================================================================
+Test Suites: 16 passed, 16 total
+Tests:       49 passed, 49 total
+Snapshots:   0 total
+Time:        7.686 s
+Ran all test suites.
+Test results written to: testing\evidence\jest-results-2026-11-11T02-37-08-364Z.json
+
+
+=== Evidence Metadata ===
+Started: 2026-11-11T02:37:08.364Z
+Finished: 2026-11-11T02:37:16.430Z
+Wall Time (ms): 8066
+Working Directory: C:\Users\lacey\Projects\Repos\ADHD-Planner-Application
+Node Version: v26.13.0
+Platform: win32 x64
+Watch Mode: false
+Coverage Requested: true
+
+=== Jest Metrics ===
+Success: true
+Suites: 16/16 passed, 0 failed, 0 pending
+Tests: 49/49 passed, 0 failed, 0 pending, 0 todo
+Total Suite Runtime (ms): 51841
+Snapshots: 0 matched, 0 unmatched, 0 added
+
+=== Slowest Test Files (ms) ===
+6863ms - testing\unit\dialogs-and-context.test.tsx
+6857ms - testing\integration\main-components.integration.test.tsx
+6368ms - testing\integration\auth-screens.integration.test.tsx
+5542ms - testing\unit\components-extra.test.tsx
+4764ms - testing\integration\title-input.integration.test.tsx
+3843ms - testing\unit\hooks-and-lib.test.tsx
+3777ms - testing\integration\app-routes.integration.test.tsx
+3625ms - testing\unit\native-color-scheme.test.tsx
+3603ms - testing\unit\dot-loader.test.tsx
+2778ms - testing\unit\confirmation.test.ts
+
+=== Failed Assertions ===
+None
+
+=== Coverage Totals ===
+Lines: 68.75% (968/1408)
+Statements: 66.99% (1015/1515)
+Functions: 66.3% (242/365)
+Branches: 50.74% (649/1279)
+
+=== Coverage by File ===
+C:\Users\lacey\Projects\Repos\ADHD-Planner-Application\lib\Notifications.ts | lines 94.11% (16/17) | stmts 94.11% (16/17) | funcs 100% (6/6) | branches 45.45% (5/11)
+C:\Users\lacey\Projects\Repos\ADHD-Planner-Application\lib\supabaseClient.ts | lines 20% (4/20) | stmts 19.04% (4/21) | funcs 0% (0/3) | branches 10% (1/10)
+C:\Users\lacey\Projects\Repos\ADHD-Planner-Application\src\app\_layout.tsx | lines 83.33% (5/6) | stmts 83.33% (5/6) | funcs 66.66% (2/3) | branches 50% (1/2)
+C:\Users\lacey\Projects\Repos\ADHD-Planner-Application\src\app\CalendarView.tsx | lines 100% (7/7) | stmts 100% (7/7) | funcs 100% (2/2) | branches 100% (0/0)
+C:\Users\lacey\Projects\Repos\ADHD-Planner-Application\src\app\index.tsx | lines 100% (8/8) | stmts 100% (8/8) | funcs 100% (4/4) | branches 100% (0/0)
+C:\Users\lacey\Projects\Repos\ADHD-Planner-Application\src\app\login.tsx | lines 75% (21/28) | stmts 70% (21/30) | funcs 46.15% (6/13) | branches 50% (3/6)
+C:\Users\lacey\Projects\Repos\ADHD-Planner-Application\src\app\OneThingMode.tsx | lines 100% (6/6) | stmts 100% (6/6) | funcs 100% (1/1) | branches 100% (0/0)
+C:\Users\lacey\Projects\Repos\ADHD-Planner-Application\src\app\ResetPass.tsx | lines 87.5% (28/32) | stmts 87.5% (28/32) | funcs 77.77% (7/9) | branches 75% (21/28)
+C:\Users\lacey\Projects\Repos\ADHD-Planner-Application\src\app\Settings.tsx | lines 85.18% (23/27) | stmts 85.18% (23/27) | funcs 71.42% (5/7) | branches 50% (3/6)
+C:\Users\lacey\Projects\Repos\ADHD-Planner-Application\src\app\signup.tsx | lines 82.05% (32/39) | stmts 82.05% (32/39) | funcs 72.72% (8/11) | branches 73.8% (31/42)
+C:\Users\lacey\Projects\Repos\ADHD-Planner-Application\src\components\AddTaskDialog.tsx | lines 83.33% (70/84) | stmts 82.35% (70/85) | funcs 86.66% (13/15) | branches 77.1% (64/83)
+C:\Users\lacey\Projects\Repos\ADHD-Planner-Application\src\components\CalendarView.tsx | lines 89.13% (82/92) | stmts 87% (87/100) | funcs 74.07% (20/27) | branches 61.53% (24/39)
+C:\Users\lacey\Projects\Repos\ADHD-Planner-Application\src\components\ConfettiOverlay.tsx | lines 100% (13/13) | stmts 100% (14/14) | funcs 100% (4/4) | branches 83.33% (5/6)
+C:\Users\lacey\Projects\Repos\ADHD-Planner-Application\src\components\Confirmation.tsx | lines 100% (5/5) | stmts 100% (5/5) | funcs 100% (4/4) | branches 100% (0/0)
+C:\Users\lacey\Projects\Repos\ADHD-Planner-Application\src\components\Dashboard.tsx | lines 76.82% (116/151) | stmts 72.83% (126/173) | funcs 63.33% (38/60) | branches 57.31% (94/164)
+C:\Users\lacey\Projects\Repos\ADHD-Planner-Application\src\components\DateRangePicker.tsx | lines 80% (12/15) | stmts 81.25% (13/16) | funcs 75% (6/8) | branches 76.19% (16/21)
+C:\Users\lacey\Projects\Repos\ADHD-Planner-Application\src\components\DotLoader.tsx | lines 100% (7/7) | stmts 100% (9/9) | funcs 100% (5/5) | branches 100% (2/2)
+C:\Users\lacey\Projects\Repos\ADHD-Planner-Application\src\components\EditTask.tsx | lines 80.95% (51/63) | stmts 79.68% (51/64) | funcs 57.14% (8/14) | branches 39.5% (32/81)
+C:\Users\lacey\Projects\Repos\ADHD-Planner-Application\src\components\Info.tsx | lines 100% (2/2) | stmts 100% (2/2) | funcs 100% (1/1) | branches 0% (0/2)
+C:\Users\lacey\Projects\Repos\ADHD-Planner-Application\src\components\NoteInput.tsx | lines 100% (2/2) | stmts 100% (2/2) | funcs 100% (1/1) | branches 100% (3/3)
+C:\Users\lacey\Projects\Repos\ADHD-Planner-Application\src\components\OneThingMode.tsx | lines 47.61% (60/126) | stmts 47.65% (61/128) | funcs 59.09% (13/22) | branches 43.05% (31/72)
+C:\Users\lacey\Projects\Repos\ADHD-Planner-Application\src\components\ProgressCircle.tsx | lines 100% (5/5) | stmts 100% (5/5) | funcs 100% (1/1) | branches 80% (4/5)
+C:\Users\lacey\Projects\Repos\ADHD-Planner-Application\src\components\RelatedTask.tsx | lines 90% (9/10) | stmts 90.9% (10/11) | funcs 100% (3/3) | branches 90% (9/10)
+C:\Users\lacey\Projects\Repos\ADHD-Planner-Application\src\components\Settings.tsx | lines 64% (16/25) | stmts 61.53% (16/26) | funcs 50% (6/12) | branches 57.14% (8/14)
+C:\Users\lacey\Projects\Repos\ADHD-Planner-Application\src\components\TaskCard.tsx | lines 65.38% (17/26) | stmts 62.96% (17/27) | funcs 57.14% (4/7) | branches 30.66% (23/75)
+C:\Users\lacey\Projects\Repos\ADHD-Planner-Application\src\components\taskColors.ts | lines 100% (11/11) | stmts 100% (11/11) | funcs 100% (3/3) | branches 100% (6/6)
+C:\Users\lacey\Projects\Repos\ADHD-Planner-Application\src\components\TaskTypeSelector.tsx | lines 91.66% (11/12) | stmts 91.66% (11/12) | funcs 100% (4/4) | branches 48.48% (16/33)
+C:\Users\lacey\Projects\Repos\ADHD-Planner-Application\src\components\TimeInput.tsx | lines 77.77% (14/18) | stmts 80% (16/20) | funcs 50% (3/6) | branches 78.94% (15/19)
+C:\Users\lacey\Projects\Repos\ADHD-Planner-Application\src\components\TitleInput.tsx | lines 100% (2/2) | stmts 100% (2/2) | funcs 100% (1/1) | branches 100% (3/3)
+C:\Users\lacey\Projects\Repos\ADHD-Planner-Application\src\constants\theme.ts | lines 83.33% (15/18) | stmts 85% (17/20) | funcs 100% (2/2) | branches 71.42% (10/14)
+C:\Users\lacey\Projects\Repos\ADHD-Planner-Application\src\contexts\AppContext.tsx | lines 53.11% (264/497) | stmts 51.35% (285/555) | funcs 53.12% (51/96) | branches 41.24% (212/514)
+C:\Users\lacey\Projects\Repos\ADHD-Planner-Application\src\hooks\use-app-theme.ts | lines 100% (6/6) | stmts 100% (7/7) | funcs 100% (2/2) | branches 100% (0/0)
+C:\Users\lacey\Projects\Repos\ADHD-Planner-Application\src\hooks\use-color-scheme.ts | lines 100% (0/0) | stmts 100% (0/0) | funcs 100% (0/0) | branches 100% (0/0)
+C:\Users\lacey\Projects\Repos\ADHD-Planner-Application\src\hooks\use-color-scheme.web.ts | lines 100% (7/7) | stmts 100% (7/7) | funcs 100% (2/2) | branches 100% (2/2)
+C:\Users\lacey\Projects\Repos\ADHD-Planner-Application\src\hooks\use-Safe-Back.ts | lines 100% (5/5) | stmts 100% (5/5) | funcs 100% (2/2) | branches 100% (2/2)
+C:\Users\lacey\Projects\Repos\ADHD-Planner-Application\src\hooks\use-theme-color.ts | lines 100% (5/5) | stmts 100% (5/5) | funcs 100% (1/1) | branches 75% (3/4)
+C:\Users\lacey\Projects\Repos\ADHD-Planner-Application\src\types\index.ts | lines 100% (11/11) | stmts 100% (11/11) | funcs 100% (3/3) | branches 100% (0/0)

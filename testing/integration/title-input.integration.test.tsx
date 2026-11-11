@@ -7,20 +7,20 @@ jest.mock('lucide-react-native', () => ({
 }));
 
 describe('TitleInput integration', () => {
-  test('renders label and forwards text changes', () => {
+  test('renders label and forwards text changes', async () => {
     const onChange = jest.fn();
-    const { getByText, getByPlaceholderText } = render(
+    const { getByText, getByPlaceholderText } = await render(
       <TitleInput value="" onChange={onChange} />
     );
 
     expect(getByText(/Title:/)).toBeTruthy();
 
-    fireEvent.changeText(getByPlaceholderText('Enter task title'), 'Plan sprint');
+    await fireEvent.changeText(getByPlaceholderText('Enter task title'), 'Plan sprint');
     expect(onChange).toHaveBeenCalledWith('Plan sprint');
   });
 
-  test('supports a custom placeholder', () => {
-    const { getByPlaceholderText } = render(
+  test('supports a custom placeholder', async () => {
+    const { getByPlaceholderText } = await render(
       <TitleInput
         value=""
         onChange={() => {}}

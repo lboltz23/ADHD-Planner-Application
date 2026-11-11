@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Dimensions, TouchableOpacity, type ScrollViewInstance } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, Settings, ChevronDown, Plus } from 'lucide-react-native';
 import { TaskCard } from './TaskCard';
@@ -30,7 +30,7 @@ export function WeeklyView({ onToggleTask, onEditTask, onDeleteTask, colorBlindM
   const styles = useMemo(() => getStyles(colors), [colors]);
 
   const screenWidth = Dimensions.get('window').width;
-  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollViewRef = useRef<ScrollViewInstance>(null);
 
   // State for month selection and visible days
   const [selectedMonth, setSelectedMonth] = useState(() => {
@@ -164,7 +164,7 @@ export function WeeklyView({ onToggleTask, onEditTask, onDeleteTask, colorBlindM
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style={isDark ? 'light' : 'dark'} backgroundColor={colors.background} />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <View style={styles.header}>
         <TouchableOpacity onPress={onNavigateBack} style={styles.backButton}>
           <ArrowLeft size={20} color={colors.heading} />

@@ -146,37 +146,37 @@ describe('app route screens', () => {
     jest.clearAllMocks();
   });
 
-  test('index route wires dashboard actions and navigation', () => {
+  test('index route wires dashboard actions and navigation', async () => {
     const Screen = require('../../src/app/index').default;
-    render(<Screen />);
+    await render(<Screen />);
 
     const props = mockDashboardProps.mock.calls[0][0];
     expect(props.tasks).toBe(mockAppState.tasks);
     expect(props.settings).toBe(mockAppState.settings);
 
-    act(() => props.onNavigateToCalendar());
-    act(() => props.onNavigateToOneThingMode());
-    act(() => props.onNavigateToSettings());
+    await act(async () => props.onNavigateToCalendar());
+    await act(async () => props.onNavigateToOneThingMode());
+    await act(async () => props.onNavigateToSettings());
 
     expect(mockPush).toHaveBeenCalledWith('/CalendarView');
     expect(mockPush).toHaveBeenCalledWith('/OneThingMode');
     expect(mockPush).toHaveBeenCalledWith('/Settings');
   });
 
-  test('calendar route passes safe back and settings navigation', () => {
+  test('calendar route passes safe back and settings navigation', async () => {
     const Screen = require('../../src/app/CalendarView').default;
-    render(<Screen />);
+    await render(<Screen />);
 
     const props = mockCalendarProps.mock.calls[0][0];
     expect(props.onNavigateBack).toBe(mockSafeBack);
 
-    act(() => props.onNavigateSettings());
+    await act(async () => props.onNavigateSettings());
     expect(mockPush).toHaveBeenCalledWith('/Settings');
   });
 
-  test('settings route passes state and handlers', () => {
+  test('settings route passes state and handlers', async () => {
     const Screen = require('../../src/app/Settings').default;
-    render(<Screen />);
+    await render(<Screen />);
 
     const props = mockSettingsProps.mock.calls[0][0];
     expect(props.onNavigateBack).toBe(mockSafeBack);
@@ -184,9 +184,9 @@ describe('app route screens', () => {
     expect(props.onUpdateSettings).toBe(mockAppState.updateSettings);
   });
 
-  test('one thing mode route passes state and handlers', () => {
+  test('one thing mode route passes state and handlers', async () => {
     const Screen = require('../../src/app/OneThingMode').default;
-    render(<Screen />);
+    await render(<Screen />);
 
     const props = mockOneThingProps.mock.calls[0][0];
     expect(props.onNavigateBack).toBe(mockSafeBack);
@@ -194,9 +194,9 @@ describe('app route screens', () => {
     expect(props.onToggleTask).toBe(mockAppState.toggleTask);
   });
 
-  test('layout renders stack, status bar, and confetti overlay', () => {
+  test('layout renders stack, status bar, and confetti overlay', async () => {
     const Layout = require('../../src/app/_layout').default;
-    const { getByText } = render(<Layout />);
+    const { getByText } = await render(<Layout />);
 
     expect(getByText('screen:index')).toBeTruthy();
     expect(getByText('screen:CalendarView')).toBeTruthy();

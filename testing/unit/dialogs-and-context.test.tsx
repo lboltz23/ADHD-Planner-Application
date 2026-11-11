@@ -319,7 +319,7 @@ describe('dialogs', () => {
     const onAddTask = jest.fn();
     const onClose = jest.fn();
 
-    const { getByText, rerender, getByPlaceholderText } = render(
+    const { getByText, rerender, getByPlaceholderText } = await render(
       <AddTaskDialog
         isOpen={true}
         onClose={onClose}
@@ -329,10 +329,10 @@ describe('dialogs', () => {
       />
     );
 
-    fireEvent.changeText(getByPlaceholderText('TitleField'), 'Basic Title');
-    fireEvent.changeText(getByPlaceholderText('NoteField'), 'note');
-    fireEvent.press(getByText('CalendarPress'));
-    fireEvent.press(getByText('Create Task'));
+    await fireEvent.changeText(getByPlaceholderText('TitleField'), 'Basic Title');
+    await fireEvent.changeText(getByPlaceholderText('NoteField'), 'note');
+    await fireEvent.press(getByText('CalendarPress'));
+    await fireEvent.press(getByText('Create Task'));
     await waitFor(() => {
       expect(onAddTask).toHaveBeenNthCalledWith(
         1,
@@ -343,7 +343,7 @@ describe('dialogs', () => {
       );
     });
 
-    rerender(
+    await rerender(
       <AddTaskDialog
         isOpen={true}
         onClose={onClose}
@@ -353,11 +353,11 @@ describe('dialogs', () => {
       />
     );
 
-    fireEvent.changeText(getByPlaceholderText('TitleField'), 'Routine Title');
-    fireEvent.press(getByText('PickStart'));
-    fireEvent.press(getByText('PickEnd'));
-    fireEvent.press(getByText('Mon'));
-    fireEvent.press(getByText('Create Task'));
+    await fireEvent.changeText(getByPlaceholderText('TitleField'), 'Routine Title');
+    await fireEvent.press(getByText('PickStart'));
+    await fireEvent.press(getByText('PickEnd'));
+    await fireEvent.press(getByText('Mon'));
+    await fireEvent.press(getByText('Create Task'));
     await waitFor(() => {
       expect(onAddTask).toHaveBeenNthCalledWith(
         2,
@@ -381,7 +381,7 @@ describe('dialogs', () => {
         updated_at: new Date(),
       },
     ];
-    rerender(
+    await rerender(
       <AddTaskDialog
         isOpen={true}
         onClose={onClose}
@@ -390,10 +390,10 @@ describe('dialogs', () => {
         tasks={relatedTasks}
       />
     );
-    fireEvent.changeText(getByPlaceholderText('TitleField'), 'Related Title');
-    fireEvent.press(getByText('SelectParent'));
-    fireEvent.press(getByText('CalendarPress'));
-    fireEvent.press(getByText('Create Task'));
+    await fireEvent.changeText(getByPlaceholderText('TitleField'), 'Related Title');
+    await fireEvent.press(getByText('SelectParent'));
+    await fireEvent.press(getByText('CalendarPress'));
+    await fireEvent.press(getByText('Create Task'));
     await waitFor(() => {
       expect(onAddTask).toHaveBeenNthCalledWith(
         3,
@@ -404,7 +404,7 @@ describe('dialogs', () => {
       );
     });
 
-    rerender(
+    await rerender(
       <AddTaskDialog
         isOpen={true}
         onClose={onClose}
@@ -413,11 +413,11 @@ describe('dialogs', () => {
         tasks={[]}
       />
     );
-    fireEvent.changeText(getByPlaceholderText('TitleField'), 'Interval Title');
-    fireEvent.press(getByText('PickStart'));
-    fireEvent.press(getByText('PickEnd'));
-    fireEvent.changeText(getByPlaceholderText('1'), '3');
-    fireEvent.press(getByText('Create Task'));
+    await fireEvent.changeText(getByPlaceholderText('TitleField'), 'Interval Title');
+    await fireEvent.press(getByText('PickStart'));
+    await fireEvent.press(getByText('PickEnd'));
+    await fireEvent.changeText(getByPlaceholderText('1'), '3');
+    await fireEvent.press(getByText('Create Task'));
     await waitFor(() => {
       expect(onAddTask).toHaveBeenNthCalledWith(
         4,
@@ -447,7 +447,7 @@ describe('dialogs', () => {
       is_template: false,
     };
 
-    const { getByText, getByPlaceholderText } = render(
+    const { getByText, getByPlaceholderText } = await render(
       <EditTask
         isOpen={true}
         onClose={onClose}
@@ -459,9 +459,9 @@ describe('dialogs', () => {
       />
     );
 
-    fireEvent.changeText(getByPlaceholderText('TitleField'), 'Updated title');
-    fireEvent.press(getByText('CalendarPress'));
-    fireEvent.press(getByText('Save'));
+    await fireEvent.changeText(getByPlaceholderText('TitleField'), 'Updated title');
+    await fireEvent.press(getByText('CalendarPress'));
+    await fireEvent.press(getByText('Save'));
     expect(onSave).toHaveBeenCalledWith(
       'task-1',
       expect.objectContaining({
@@ -469,10 +469,10 @@ describe('dialogs', () => {
       })
     );
 
-    fireEvent.press(getByText('Complete'));
+    await fireEvent.press(getByText('Complete'));
     expect(onToggle).toHaveBeenCalledWith('task-1');
 
-    fireEvent.press(getByText('Delete'));
+    await fireEvent.press(getByText('Delete'));
     await waitFor(() => {
       expect(onDelete).toHaveBeenCalledWith('task-1');
     });
@@ -562,7 +562,7 @@ describe('AppContext', () => {
       );
     }
 
-    render(
+    await render(
       <AppProvider>
         <Probe />
       </AppProvider>

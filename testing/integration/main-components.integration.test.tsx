@@ -102,10 +102,10 @@ describe('main screen components', () => {
     mockUseAppTasks.splice(0, mockUseAppTasks.length);
   });
 
-  test('Dashboard renders and opens add task dialog', () => {
+  test('Dashboard renders and opens add task dialog', async () => {
     const onNavigateToCalendar = jest.fn();
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <Dashboard
         onNavigateToCalendar={onNavigateToCalendar}
         onNavigateToOneThingMode={jest.fn()}
@@ -123,14 +123,14 @@ describe('main screen components', () => {
     expect(getByText('No tasks for today')).toBeTruthy();
     expect(getByText('AddTaskDialog:closed')).toBeTruthy();
 
-    fireEvent.press(getByText('Calendar'));
+    await fireEvent.press(getByText('Calendar'));
     expect(onNavigateToCalendar).toHaveBeenCalledTimes(1);
 
-    fireEvent.press(getByText('+'));
+    await fireEvent.press(getByText('+'));
     expect(getByText('AddTaskDialog:open')).toBeTruthy();
   });
 
-  test('WeeklyView renders tasks from context and base layout', () => {
+  test('WeeklyView renders tasks from context and base layout', async () => {
     mockUseAppTasks.push({
       id: 'week-1',
       user_id: 'user-1',
@@ -142,7 +142,7 @@ describe('main screen components', () => {
       updated_at: new Date(),
     });
 
-    const { getByText } = render(
+    const { getByText } = await render(
       <WeeklyView
         onToggleTask={jest.fn()}
         onEditTask={jest.fn()}
@@ -158,9 +158,9 @@ describe('main screen components', () => {
     expect(getByText('TaskCard:Weekly task')).toBeTruthy();
   });
 
-  test('Settings updates selected theme option', () => {
+  test('Settings updates selected theme option', async () => {
     const onUpdateSettings = jest.fn();
-    const { getByText } = render(
+    const { getByText } = await render(
       <Settings
         onNavigateBack={jest.fn()}
         settings={baseSettings}
@@ -170,13 +170,13 @@ describe('main screen components', () => {
       />
     );
 
-    fireEvent.press(getByText('Dark'));
+    await fireEvent.press(getByText('Dark'));
     expect(onUpdateSettings).toHaveBeenCalledWith({
       ...baseSettings,
       theme: 'dark',
     });
 
-    fireEvent.press(getByText('Login In'));
+    await fireEvent.press(getByText('Login In'));
     expect(router.replace).toHaveBeenCalledWith('/login');
   });
 
@@ -194,7 +194,7 @@ describe('main screen components', () => {
       updated_at: new Date(),
     };
 
-    const { getAllByText, getByText } = render(
+    const { getAllByText, getByText } = await render(
       <OneThingMode
         onNavigateBack={jest.fn()}
         tasks={[task]}
@@ -208,12 +208,12 @@ describe('main screen components', () => {
       expect(getAllByText('Deep work').length).toBeGreaterThan(0);
     });
 
-    fireEvent.press(getByText('Complete Task'));
+    await fireEvent.press(getByText('Complete Task'));
     expect(onToggleTask).toHaveBeenCalledWith('focus-1');
     expect(onTriggerConfetti).toHaveBeenCalledTimes(1);
   });
 
-  test('Dashboard supports filters, pagination, and search across task views', () => {
+  test('Dashboard supports filters, pagination, and search across task views', async () => {
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(today.getDate() - 1);
@@ -269,7 +269,7 @@ describe('main screen components', () => {
     ];
 
     const onNavigateToOneThingMode = jest.fn();
-    const { getByText, getByPlaceholderText } = render(
+    const { getByText, getByPlaceholderText } = await render(
       <Dashboard
         onNavigateToCalendar={jest.fn()}
         onNavigateToOneThingMode={onNavigateToOneThingMode}
@@ -284,23 +284,23 @@ describe('main screen components', () => {
     );
 
     expect(getByText('Show More Tasks')).toBeTruthy();
-    fireEvent.press(getByText('Show More Tasks'));
+    await fireEvent.press(getByText('Show More Tasks'));
     expect(getByText('Show Less Tasks')).toBeTruthy();
 
-    fireEvent.changeText(getByPlaceholderText('Search tasks...'), 'Today 8');
+    await fireEvent.changeText(getByPlaceholderText('Search tasks...'), 'Today 8');
     expect(getByText('TaskCard:Today 8')).toBeTruthy();
 
-    fireEvent.changeText(getByPlaceholderText('Search tasks...'), '');
-    fireEvent.press(getByText('Open'));
+    await fireEvent.changeText(getByPlaceholderText('Search tasks...'), '');
+    await fireEvent.press(getByText('Open'));
     expect(getByText('TaskCard:Overdue')).toBeTruthy();
 
-    fireEvent.press(getByText('Upcoming'));
+    await fireEvent.press(getByText('Upcoming'));
     expect(getByText('TaskCard:Tomorrow task')).toBeTruthy();
 
-    fireEvent.press(getByText('Repeating'));
+    await fireEvent.press(getByText('Repeating'));
     expect(getByText('TaskCard:Repeating template')).toBeTruthy();
 
-    fireEvent.press(getByText('One Thing Mode'));
+    await fireEvent.press(getByText('One Thing Mode'));
     expect(onNavigateToOneThingMode).toHaveBeenCalledTimes(1);
   });
 });

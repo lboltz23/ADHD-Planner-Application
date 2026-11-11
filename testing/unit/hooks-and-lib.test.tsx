@@ -39,7 +39,7 @@ describe('hooks and lib utilities', () => {
     mockUseScheme.mockReturnValue('dark');
   });
 
-  test('useAppTheme resolves theme and colors from app settings', () => {
+  test('useAppTheme resolves theme and colors from app settings', async () => {
     const { useAppTheme } = require('../../src/hooks/use-app-theme');
 
     function Probe() {
@@ -51,11 +51,11 @@ describe('hooks and lib utilities', () => {
       );
     }
 
-    const { getByText } = render(<Probe />);
+    const { getByText } = await render(<Probe />);
     expect(getByText(/dark\|true\|/)).toBeTruthy();
   });
 
-  test('useThemeColor prefers explicit prop color over palette color', () => {
+  test('useThemeColor prefers explicit prop color over palette color', async () => {
     const { useThemeColor } = require('../../src/hooks/use-theme-color');
 
     function Probe() {
@@ -64,11 +64,11 @@ describe('hooks and lib utilities', () => {
       return <Text>{`${explicit}|${fallback}`}</Text>;
     }
 
-    const { getByText } = render(<Probe />);
+    const { getByText } = await render(<Probe />);
     expect(getByText(/#101010\|/)).toBeTruthy();
   });
 
-  test('web useColorScheme resolves to system scheme after hydration', () => {
+  test('web useColorScheme resolves to system scheme after hydration', async () => {
     jest.spyOn(ReactNative, 'useColorScheme').mockReturnValue('dark');
     const { useColorScheme } = require('../../src/hooks/use-color-scheme.web');
 
@@ -77,11 +77,11 @@ describe('hooks and lib utilities', () => {
       return <Text>{scheme}</Text>;
     }
 
-    const { getByText } = render(<Probe />);
+    const { getByText } = await render(<Probe />);
     expect(getByText('dark')).toBeTruthy();
   });
 
-  test('supabase client is created from env vars', () => {
+  test('supabase client is created from env vars', async () => {
     const originalUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
     const originalKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
     process.env.EXPO_PUBLIC_SUPABASE_URL = 'https://example.supabase.co';

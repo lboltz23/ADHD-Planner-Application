@@ -48,7 +48,7 @@ export function ConfettiOverlay({ trigger }: ConfettiOverlayProps) {
 
 const styles = StyleSheet.create({
   container: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     zIndex: 9999,
   },
 });
