@@ -1,5 +1,5 @@
 import React from 'react';
-import { Alert, TextInput } from 'react-native';
+import { Alert } from 'react-native';
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import LoginScreen from '../../src/app/login';
 import SignupScreen from '../../src/app/signup';
@@ -58,18 +58,18 @@ jest.mock('@/lib/supabaseClient', () => ({
   getCurrentUser: jest.fn(),
 }));
 
-function setTextInputValue(
-  getAllTextInputs: () => TextInput[],
+async function setTextInputValue(
+  getAllTextInputs: () => Parameters<typeof fireEvent.changeText>[0][],
   inputIndex: number,
   value: string
 ) {
   const inputs = getAllTextInputs();
-  fireEvent.changeText(inputs[inputIndex], value);
+  await fireEvent.changeText(inputs[inputIndex], value);
 }
 
-function pressLastByText(screen: ReturnType<typeof render>, label: string) {
+async function pressLastByText(screen: Awaited<ReturnType<typeof render>>, label: string) {
   const matches = screen.getAllByText(label);
-  fireEvent.press(matches[matches.length - 1]);
+  await fireEvent.press(matches[matches.length - 1]);
 }
 
 describe('auth screens', () => {
@@ -92,13 +92,13 @@ describe('auth screens', () => {
   });
 
   test('login signs in and routes to root', async () => {
-    const screen = render(<LoginScreen />);
-    const getAllTextInputs = () => screen.UNSAFE_getAllByType(TextInput);
+    const screen = await render(<LoginScreen />);
+    const getAllTextInputs = () => screen.container.queryAll((node) => node.type === 'TextInput');
 
-    setTextInputValue(getAllTextInputs, 0, 'user@example.com');
-    setTextInputValue(getAllTextInputs, 1, 'Password!1');
+    await setTextInputValue(getAllTextInputs, 0, 'user@example.com');
+    await setTextInputValue(getAllTextInputs, 1, 'Password!1');
 
-    pressLastByText(screen, 'Login');
+    await pressLastByText(screen, 'Login');
 
     await waitFor(() => {
       expect(mockSignInWithPassword).toHaveBeenCalledWith({
@@ -111,12 +111,12 @@ describe('auth screens', () => {
   });
 
   test('login reset-password modal submits recovery email', async () => {
-    const screen = render(<LoginScreen />);
-    const getAllTextInputs = () => screen.UNSAFE_getAllByType(TextInput);
+    const screen = await render(<LoginScreen />);
+    const getAllTextInputs = () => screen.container.queryAll((node) => node.type === 'TextInput');
 
-    setTextInputValue(getAllTextInputs, 0, 'recover@example.com');
-    fireEvent.press(screen.getByText('Forgot Password?'));
-    fireEvent.press(screen.getByText('Send Email'));
+    await setTextInputValue(getAllTextInputs, 0, 'recover@example.com');
+    await fireEvent.press(screen.getByText('Forgot Password?'));
+    await fireEvent.press(screen.getByText('Send Email'));
 
     await waitFor(() => {
       expect(mockResetPasswordForEmail).toHaveBeenCalledWith('recover@example.com', {
@@ -130,17 +130,17 @@ describe('auth screens', () => {
   });
 
   test('signup validates and then submits valid account data', async () => {
-    const screen = render(<SignupScreen />);
-    const getAllTextInputs = () => screen.UNSAFE_getAllByType(TextInput);
+    const screen = await render(<SignupScreen />);
+    const getAllTextInputs = () => screen.container.queryAll((node) => node.type === 'TextInput');
 
-    pressLastByText(screen, 'Sign Up');
+    await pressLastByText(screen, 'Sign Up');
     expect(mockAlert).toHaveBeenCalledWith('Invalid Sign Up Credentials');
 
-    setTextInputValue(getAllTextInputs, 0, 'newuser');
-    setTextInputValue(getAllTextInputs, 1, 'newuser@example.com');
-    setTextInputValue(getAllTextInputs, 2, 'Password!1');
-    setTextInputValue(getAllTextInputs, 3, 'Password!1');
-    pressLastByText(screen, 'Sign Up');
+    await setTextInputValue(getAllTextInputs, 0, 'newuser');
+    await setTextInputValue(getAllTextInputs, 1, 'newuser@example.com');
+    await setTextInputValue(getAllTextInputs, 2, 'Password!1');
+    await setTextInputValue(getAllTextInputs, 3, 'Password!1');
+    await pressLastByText(screen, 'Sign Up');
 
     await waitFor(() => {
       expect(mockSignUp).toHaveBeenCalledWith({
@@ -159,15 +159,15 @@ describe('auth screens', () => {
   });
 
   test('reset password rejects invalid input and updates when valid', async () => {
-    const screen = render(<ResetPassScreen />);
-    const getAllTextInputs = () => screen.UNSAFE_getAllByType(TextInput);
+    const screen = await render(<ResetPassScreen />);
+    const getAllTextInputs = () => screen.container.queryAll((node) => node.type === 'TextInput');
 
-    pressLastByText(screen, 'Reset Password');
+    await pressLastByText(screen, 'Reset Password');
     expect(mockAlert).toHaveBeenCalledWith('Invalid Password');
 
-    setTextInputValue(getAllTextInputs, 0, 'Valid!123');
-    setTextInputValue(getAllTextInputs, 1, 'Valid!123');
-    pressLastByText(screen, 'Reset Password');
+    await setTextInputValue(getAllTextInputs, 0, 'Valid!123');
+    await setTextInputValue(getAllTextInputs, 1, 'Valid!123');
+    await pressLastByText(screen, 'Reset Password');
 
     await waitFor(() => {
       expect(mockUpdateUser).toHaveBeenCalledWith({

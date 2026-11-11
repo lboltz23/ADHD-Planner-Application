@@ -8,7 +8,7 @@ describe('native use-color-scheme hook', () => {
     jest.restoreAllMocks();
   });
 
-  test('re-exports react-native useColorScheme', () => {
+  test('re-exports react-native useColorScheme', async () => {
     jest.spyOn(ReactNative, 'useColorScheme').mockReturnValue('light');
     const { useColorScheme } = require('../../src/hooks/use-color-scheme');
 
@@ -17,7 +17,7 @@ describe('native use-color-scheme hook', () => {
       return <Text>{scheme}</Text>;
     }
 
-    const { getByText } = render(<Probe />);
+    const { getByText } = await render(<Probe />);
     expect(getByText('light')).toBeTruthy();
   });
 });
