@@ -20,9 +20,8 @@ import { getAppColors } from '../constants/theme';
 import InfoPopup from './Info';
 import { AppThemeColors, resolveThemePreference } from '../constants/theme';
 import { useColorScheme } from '../hooks/use-color-scheme';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useIsFocused } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useIsFocused } from '@react-navigation/native';
 // Dashboard Props
 interface DashboardProps {
   onNavigateToCalendar: () => void;
